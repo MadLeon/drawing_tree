@@ -926,3 +926,10 @@
 2026-06-03T16:25:11.511-04:00 [INFO] [DrawingEditorControl.ExportToJson] - Drawing Number: RT-CEPC-25-0052T, Path: G:\A.E.C.L (CANDU)\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\DWG\RT-CEPC-25-0052T.pdf
 2026-06-03T16:25:11.511-04:00 [INFO] [DrawingEditorControl.ExportToJson] - === End of Drawing Information ===
 2026-06-03T16:25:19.359-04:00 [INFO] [DrawingEditorControl.ConfirmButton_Click] - Drawing information confirmed and exported successfully
+2026-06-03T16:40:39.998-04:00 [INFO] [MainWindow..ctor] - MainWindow initialized
+2026-06-03T16:49:05.830-04:00 [INFO] [MainWindow.ImportDrawingButton_Click] - Import Drawing button clicked
+2026-06-03T16:49:07.105-04:00 [INFO] [MainWindow.ImportDrawingButton_Click] - Selected folder: G:\A.E.C.L (CANDU)\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\DWG
+2026-06-03T16:49:07.106-04:00 [INFO] [DrawingExtractor.ScanFolder] - Scanning folder: G:\A.E.C.L (CANDU)\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\DWG for PDF files
+2026-06-03T16:49:07.107-04:00 [INFO] [DrawingExtractor.ScanFolder] - Scan completed with 197 unique drawing entries
+2026-06-03T16:49:07.136-04:00 [INFO] [DrawingEditorControl.LoadDrawings] - Loaded 197 drawings into editor
+2026-06-03T16:49:07.138-04:00 [INFO] [MainWindow.ShowDrawingEditor] - Drawing editor control displayed
