@@ -1,0 +1,197 @@
+<UserControl x:Class="DrawingTree.Controls.DrawingEditorControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DrawingTree.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1000">
+    <Grid Background="White">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Control buttons area (at the top of main display area) -->
+        <Border Grid.Row="0" 
+                BorderBrush="#CCCCCC" 
+                BorderThickness="0,0,0,1" 
+                Background="#F0F0F0"
+                Padding="10,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Purchase Order input (left) -->
+                <StackPanel Grid.Column="0" 
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Margin="0,0,20,0">
+                    <TextBlock Text="Purchase Order" 
+                               FontWeight="Bold"
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,0"/>
+                    <TextBox x:Name="PurchaseOrderTextBox" 
+                             Width="150"
+                             Height="32"
+                             VerticalContentAlignment="Center"
+                             Padding="5"/>
+                </StackPanel>
+
+                <!-- Status display (middle) -->
+                <TextBlock x:Name="StatusText" 
+                           Grid.Column="1"
+                           VerticalAlignment="Center"
+                           FontSize="14"
+                           Foreground="#666666"/>
+
+                <!-- Buttons (right aligned) -->
+                <StackPanel Grid.Column="2" 
+                            Orientation="Horizontal">
+                    <Button x:Name="AddDrawingButton" 
+                            Content="Add Drawing" 
+                            Width="120" 
+                            Height="32"
+                            Margin="0,0,10,0"
+                            Click="AddDrawingButton_Click"/>
+                    <Button x:Name="ConfirmButton" 
+                            Content="Confirm" 
+                            Width="100" 
+                            Height="32"
+                            Margin="0,0,10,0"
+                            Click="ConfirmButton_Click"/>
+                    <Button x:Name="ReturnButton" 
+                            Content="Return" 
+                            Width="100" 
+                            Height="32"
+                            Click="ReturnButton_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Column headers -->
+        <Border Grid.Row="1" 
+                BorderBrush="#CCCCCC" 
+                BorderThickness="0,0,0,1" 
+                Background="#FAFAFA"
+                Padding="10,8">
+            <Grid HorizontalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="40"/>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="250"/>
+                    <ColumnDefinition Width="400"/>
+                    <ColumnDefinition Width="100"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- No header for delete button column -->
+
+                <!-- Index header -->
+                <TextBlock Grid.Column="1" 
+                           Text="No." 
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Right"
+                           Margin="5,0"/>
+
+                <!-- Drawing number header -->
+                <TextBlock Grid.Column="2" 
+                           Text="Drawing Number" 
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"
+                           Margin="5,0"/>
+
+                <!-- File name header -->
+                <TextBlock Grid.Column="3" 
+                           Text="File Name" 
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"
+                           Margin="5,0"/>
+
+                <!-- No header for browse button column -->
+            </Grid>
+        </Border>
+
+        <!-- Drawing list area -->
+        <ScrollViewer Grid.Row="2" 
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="10">
+            <ItemsControl x:Name="DrawingListControl" 
+                          ItemsSource="{Binding}"
+                          HorizontalAlignment="Center">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderThickness="2" 
+                                BorderBrush="{Binding BorderBrush}"
+                                Background="Transparent"
+                                Padding="5"
+                                Margin="0,2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="40"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="250"/>
+                                    <ColumnDefinition Width="400"/>
+                                    <ColumnDefinition Width="100"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Delete button -->
+                                <Button Grid.Column="0" 
+                                        Content="-" 
+                                        Width="30" 
+                                        Height="30"
+                                        FontSize="16"
+                                        FontWeight="Bold"
+                                        Click="DeleteButton_Click"
+                                        Tag="{Binding}"/>
+
+                                <!-- Index number -->
+                                <TextBlock Grid.Column="1" 
+                                           x:Name="IndexText"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Right"
+                                           Margin="5,0"
+                                           FontSize="14"
+                                           Loaded="IndexText_Loaded"
+                                           Tag="{Binding}"/>
+
+                                <!-- Drawing number (editable) -->
+                                <TextBox Grid.Column="2" 
+                                         Text="{Binding DrawingNumber, UpdateSourceTrigger=PropertyChanged}" 
+                                         VerticalAlignment="Center"
+                                         Margin="5,0"
+                                         Padding="5"
+                                         Height="30"
+                                         TextChanged="DrawingNumber_TextChanged"
+                                         Tag="{Binding}"/>
+
+                                <!-- File name (display only) -->
+                                <TextBox Grid.Column="3" 
+                                         Text="{Binding FileName, Mode=OneWay}" 
+                                         VerticalAlignment="Center"
+                                         Margin="5,0"
+                                         Padding="5"
+                                         Height="30"
+                                         IsReadOnly="True"
+                                         Background="#F5F5F5"
+                                         ToolTip="{Binding PdfPath}"/>
+
+                                <!-- Browse button -->
+                                <Button Grid.Column="4" 
+                                        Content="Browse" 
+                                        Width="90" 
+                                        Height="30"
+                                        Click="SelectFileButton_Click"
+                                        Tag="{Binding}"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

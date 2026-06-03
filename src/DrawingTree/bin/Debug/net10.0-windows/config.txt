@@ -1,0 +1,10 @@
+# DrawingTree Application Configuration
+# Format: key=value
+
+# Logging Configuration
+# MinimumLogLevel: DEBUG, INFO, WARNING, ERROR
+MinimumLogLevel=INFO
+
+# Log Retention (days)
+LogRetentionDays=7
+

@@ -1,0 +1,992 @@
+{
+  "PurchaseOrder": "RT98-87250-PN-R008",
+  "ExportDate": "2026-06-03 16:25:11",
+  "TotalDrawings": 197,
+  "Drawings": [
+    {
+      "DrawingNumber": "RT-87250-0604-5002-ED-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-0604-5002-ed-d.pdf",
+      "FileName": "rt-87250-0604-5002-ed-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-0604-5003-ED-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-0604-5003-ed-d.pdf",
+      "FileName": "rt-87250-0604-5003-ed-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-0604-5006-GA-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-0604-5006-ga-d.pdf",
+      "FileName": "rt-87250-0604-5006-ga-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70000-01-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70000-01-ga-e.pdf",
+      "FileName": "rt-87250-70000-01-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70000-02-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70000-02-ga-e.pdf",
+      "FileName": "rt-87250-70000-02-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70000-1-GA-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70000-1-ga-d.pdf",
+      "FileName": "rt-87250-70000-1-ga-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70000-2-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70000-2-ga-e.pdf",
+      "FileName": "rt-87250-70000-2-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70001-01-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70001-01-ga-e.pdf",
+      "FileName": "rt-87250-70001-01-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70001-1-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70001-1-ga-e.pdf",
+      "FileName": "rt-87250-70001-1-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70002-01-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70002-01-ga-e.pdf",
+      "FileName": "rt-87250-70002-01-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70002-1-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70002-1-ga-e.pdf",
+      "FileName": "rt-87250-70002-1-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70003-01-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70003-01-ga-e.pdf",
+      "FileName": "rt-87250-70003-01-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70003-1-GA-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70003-1-ga-d.pdf",
+      "FileName": "rt-87250-70003-1-ga-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70004-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70004-01-ga-c.pdf",
+      "FileName": "rt-87250-70004-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70004-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70004-1-ga-c.pdf",
+      "FileName": "rt-87250-70004-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70005-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70005-01-ga-c.pdf",
+      "FileName": "rt-87250-70005-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70005-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70005-1-ga-c.pdf",
+      "FileName": "rt-87250-70005-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70006-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70006-01-ga-c.pdf",
+      "FileName": "rt-87250-70006-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70006-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70006-1-ga-c.pdf",
+      "FileName": "rt-87250-70006-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70007-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70007-01-ga-c.pdf",
+      "FileName": "rt-87250-70007-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70007-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70007-1-ga-c.pdf",
+      "FileName": "rt-87250-70007-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70008-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70008-01-ga-c.pdf",
+      "FileName": "rt-87250-70008-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70008-02-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70008-02-ga-c.pdf",
+      "FileName": "rt-87250-70008-02-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70008-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70008-1-ga-c.pdf",
+      "FileName": "rt-87250-70008-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70008-2-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70008-2-ga-c.pdf",
+      "FileName": "rt-87250-70008-2-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70009-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70009-01-ga-c.pdf",
+      "FileName": "rt-87250-70009-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70009-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70009-1-ga-c.pdf",
+      "FileName": "rt-87250-70009-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70010-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70010-01-ga-c.pdf",
+      "FileName": "rt-87250-70010-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70011-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70011-01-ga-c.pdf",
+      "FileName": "rt-87250-70011-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70011-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70011-1-ga-c.pdf",
+      "FileName": "rt-87250-70011-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70012-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70012-01-ga-c.pdf",
+      "FileName": "rt-87250-70012-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70012-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70012-1-ga-c.pdf",
+      "FileName": "rt-87250-70012-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70013-01-GA-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70013-01-ga-d.pdf",
+      "FileName": "rt-87250-70013-01-ga-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70013-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70013-1-ga-c.pdf",
+      "FileName": "rt-87250-70013-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70014-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70014-01-ga-c.pdf",
+      "FileName": "rt-87250-70014-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70014-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70014-1-ga-c.pdf",
+      "FileName": "rt-87250-70014-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70015-01-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70015-01-ga-e.pdf",
+      "FileName": "rt-87250-70015-01-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70015-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70015-1-ga-c.pdf",
+      "FileName": "rt-87250-70015-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70016-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70016-1-dd-b.pdf",
+      "FileName": "rt-87250-70016-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70017-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70017-01-ga-c.pdf",
+      "FileName": "rt-87250-70017-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70017-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70017-1-ga-c.pdf",
+      "FileName": "rt-87250-70017-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70018-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70018-01-ga-c.pdf",
+      "FileName": "rt-87250-70018-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70018-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70018-1-ga-c.pdf",
+      "FileName": "rt-87250-70018-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70019-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70019-01-ga-c.pdf",
+      "FileName": "rt-87250-70019-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70019-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70019-1-ga-c.pdf",
+      "FileName": "rt-87250-70019-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70020-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70020-01-ga-c.pdf",
+      "FileName": "rt-87250-70020-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70020-1-GA-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70020-1-ga-b.pdf",
+      "FileName": "rt-87250-70020-1-ga-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70021-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70021-1-ga-c.pdf",
+      "FileName": "rt-87250-70021-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70022-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70022-01-ga-c.pdf",
+      "FileName": "rt-87250-70022-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70022-1-GA-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70022-1-ga-b.pdf",
+      "FileName": "rt-87250-70022-1-ga-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70023-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70023-01-ga-c.pdf",
+      "FileName": "rt-87250-70023-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70023-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70023-1-ga-c.pdf",
+      "FileName": "rt-87250-70023-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70024-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70024-01-ga-c.pdf",
+      "FileName": "rt-87250-70024-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70024-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70024-1-ga-c.pdf",
+      "FileName": "rt-87250-70024-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70025-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70025-01-ga-c.pdf",
+      "FileName": "rt-87250-70025-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70025-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70025-1-ga-c.pdf",
+      "FileName": "rt-87250-70025-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70026-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70026-01-ga-c.pdf",
+      "FileName": "rt-87250-70026-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70026-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70026-1-ga-c.pdf",
+      "FileName": "rt-87250-70026-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70027-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70027-01-ga-c.pdf",
+      "FileName": "rt-87250-70027-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70027-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70027-1-ga-c.pdf",
+      "FileName": "rt-87250-70027-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70028-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70028-01-ga-c.pdf",
+      "FileName": "rt-87250-70028-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70028-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70028-1-ga-c.pdf",
+      "FileName": "rt-87250-70028-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70029-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70029-01-ga-c.pdf",
+      "FileName": "rt-87250-70029-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70029-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70029-1-ga-c.pdf",
+      "FileName": "rt-87250-70029-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70030-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70030-01-ga-c.pdf",
+      "FileName": "rt-87250-70030-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70030-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70030-1-ga-c.pdf",
+      "FileName": "rt-87250-70030-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70031-01-GA-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70031-01-ga-d.pdf",
+      "FileName": "rt-87250-70031-01-ga-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70031-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70031-1-ga-c.pdf",
+      "FileName": "rt-87250-70031-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70032-01-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70032-01-ga-e.pdf",
+      "FileName": "rt-87250-70032-01-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70032-1-GA-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70032-1-ga-d.pdf",
+      "FileName": "rt-87250-70032-1-ga-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70033-01-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70033-01-ga-e.pdf",
+      "FileName": "rt-87250-70033-01-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70033-1-GA-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70033-1-ga-d.pdf",
+      "FileName": "rt-87250-70033-1-ga-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70034-01-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70034-01-ga-e.pdf",
+      "FileName": "rt-87250-70034-01-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70034-1-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70034-1-ga-e.pdf",
+      "FileName": "rt-87250-70034-1-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70035-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70035-1-dd-e.pdf",
+      "FileName": "rt-87250-70035-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70035-1-GA-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70035-1-ga-d.pdf",
+      "FileName": "rt-87250-70035-1-ga-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70035-1-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70035-1-ga-e.pdf",
+      "FileName": "rt-87250-70035-1-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70036-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70036-01-ga-c.pdf",
+      "FileName": "rt-87250-70036-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70036-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70036-1-ga-c.pdf",
+      "FileName": "rt-87250-70036-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70037-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70037-01-ga-c.pdf",
+      "FileName": "rt-87250-70037-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70037-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70037-1-ga-c.pdf",
+      "FileName": "rt-87250-70037-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70038-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70038-01-ga-c.pdf",
+      "FileName": "rt-87250-70038-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70038-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70038-1-ga-c.pdf",
+      "FileName": "rt-87250-70038-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70039-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70039-1-dd-c.pdf",
+      "FileName": "rt-87250-70039-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70040-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70040-1-dd-c.pdf",
+      "FileName": "rt-87250-70040-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70041-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70041-1-dd-c.pdf",
+      "FileName": "rt-87250-70041-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70042-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70042-1-dd-c.pdf",
+      "FileName": "rt-87250-70042-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70043-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70043-1-dd-c.pdf",
+      "FileName": "rt-87250-70043-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70044-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70044-1-dd-c.pdf",
+      "FileName": "rt-87250-70044-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70045-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70045-1-dd-c.pdf",
+      "FileName": "rt-87250-70045-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70046-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70046-1-dd-c.pdf",
+      "FileName": "rt-87250-70046-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70047-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70047-1-dd-c.pdf",
+      "FileName": "rt-87250-70047-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70048-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70048-1-dd-c.pdf",
+      "FileName": "rt-87250-70048-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70049-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70049-1-dd-c.pdf",
+      "FileName": "rt-87250-70049-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70050-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70050-1-dd-b.pdf",
+      "FileName": "rt-87250-70050-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70051-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70051-1-dd-c.pdf",
+      "FileName": "rt-87250-70051-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70052-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70052-1-dd-c.pdf",
+      "FileName": "rt-87250-70052-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70053-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70053-1-dd-c.pdf",
+      "FileName": "rt-87250-70053-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70054-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70054-01-ga-c.pdf",
+      "FileName": "rt-87250-70054-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70054-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70054-1-ga-c.pdf",
+      "FileName": "rt-87250-70054-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70055-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70055-1-dd-d.pdf",
+      "FileName": "rt-87250-70055-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70056-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70056-1-dd-c.pdf",
+      "FileName": "rt-87250-70056-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70057-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70057-1-dd-c.pdf",
+      "FileName": "rt-87250-70057-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70058-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70058-1-dd-c.pdf",
+      "FileName": "rt-87250-70058-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70059-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70059-1-dd-c.pdf",
+      "FileName": "rt-87250-70059-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70060-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70060-1-dd-c.pdf",
+      "FileName": "rt-87250-70060-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70061-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70061-1-dd-c.pdf",
+      "FileName": "rt-87250-70061-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70062-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70062-1-dd-b.pdf",
+      "FileName": "rt-87250-70062-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70063-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70063-1-dd-c.pdf",
+      "FileName": "rt-87250-70063-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70064-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70064-1-dd-c.pdf",
+      "FileName": "rt-87250-70064-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70065-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70065-1-dd-c.pdf",
+      "FileName": "rt-87250-70065-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70066-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70066-1-dd-c.pdf",
+      "FileName": "rt-87250-70066-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70067-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70067-1-dd-c.pdf",
+      "FileName": "rt-87250-70067-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70068-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70068-1-dd-b.pdf",
+      "FileName": "rt-87250-70068-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70069-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70069-1-dd-c.pdf",
+      "FileName": "rt-87250-70069-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70070-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70070-1-dd-c.pdf",
+      "FileName": "rt-87250-70070-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70071-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70071-1-dd-c.pdf",
+      "FileName": "rt-87250-70071-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70072-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70072-1-dd-b.pdf",
+      "FileName": "rt-87250-70072-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70072-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70072-1-dd-c.pdf",
+      "FileName": "rt-87250-70072-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70073-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70073-1-dd-b.pdf",
+      "FileName": "rt-87250-70073-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70074-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70074-1-dd-b.pdf",
+      "FileName": "rt-87250-70074-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70075-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70075-1-dd-b.pdf",
+      "FileName": "rt-87250-70075-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70076-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70076-1-dd-c.pdf",
+      "FileName": "rt-87250-70076-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70078-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70078-1-dd-b.pdf",
+      "FileName": "rt-87250-70078-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70079-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70079-1-dd-c.pdf",
+      "FileName": "rt-87250-70079-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70080-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70080-1-dd-c.pdf",
+      "FileName": "rt-87250-70080-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70081-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70081-1-dd-c.pdf",
+      "FileName": "rt-87250-70081-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70082-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70082-1-dd-c.pdf",
+      "FileName": "rt-87250-70082-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70083-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70083-1-dd-b.pdf",
+      "FileName": "rt-87250-70083-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70084-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70084-1-dd-c.pdf",
+      "FileName": "rt-87250-70084-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70085-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70085-1-dd-c.pdf",
+      "FileName": "rt-87250-70085-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70086-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70086-1-dd-c.pdf",
+      "FileName": "rt-87250-70086-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70087-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70087-1-dd-b.pdf",
+      "FileName": "rt-87250-70087-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70088-01-GA-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70088-01-ga-d.pdf",
+      "FileName": "rt-87250-70088-01-ga-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70088-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70088-1-ga-c.pdf",
+      "FileName": "rt-87250-70088-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70089-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70089-1-dd-c.pdf",
+      "FileName": "rt-87250-70089-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70090-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70090-1-dd-c.pdf",
+      "FileName": "rt-87250-70090-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70092-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70092-1-dd-c.pdf",
+      "FileName": "rt-87250-70092-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70093-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70093-1-dd-c.pdf",
+      "FileName": "rt-87250-70093-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70094-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70094-1-dd-c.pdf",
+      "FileName": "rt-87250-70094-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70095-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70095-1-ga-c.pdf",
+      "FileName": "rt-87250-70095-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70096-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70096-1-dd-c.pdf",
+      "FileName": "rt-87250-70096-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70097-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70097-1-dd-c.pdf",
+      "FileName": "rt-87250-70097-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70098-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70098-1-dd-c.pdf",
+      "FileName": "rt-87250-70098-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70099-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70099-1-dd-c.pdf",
+      "FileName": "rt-87250-70099-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70100-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70100-1-dd-c.pdf",
+      "FileName": "rt-87250-70100-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70101-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70101-1-dd-c.pdf",
+      "FileName": "rt-87250-70101-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70101-2-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70101-2-dd-c.pdf",
+      "FileName": "rt-87250-70101-2-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70101-3-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70101-3-dd-c.pdf",
+      "FileName": "rt-87250-70101-3-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70102-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70102-1-dd-b.pdf",
+      "FileName": "rt-87250-70102-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70102-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70102-1-dd-c.pdf",
+      "FileName": "rt-87250-70102-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70103-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70103-1-dd-c.pdf",
+      "FileName": "rt-87250-70103-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70104-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70104-1-dd-b.pdf",
+      "FileName": "rt-87250-70104-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70105-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70105-1-dd-c.pdf",
+      "FileName": "rt-87250-70105-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70106-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70106-1-dd-b.pdf",
+      "FileName": "rt-87250-70106-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70107-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70107-1-dd-b.pdf",
+      "FileName": "rt-87250-70107-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70107-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70107-1-dd-c.pdf",
+      "FileName": "rt-87250-70107-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70108-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70108-1-dd-c.pdf",
+      "FileName": "rt-87250-70108-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70109-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70109-1-dd-c.pdf",
+      "FileName": "rt-87250-70109-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70110-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70110-1-dd-b.pdf",
+      "FileName": "rt-87250-70110-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70110-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70110-1-dd-c.pdf",
+      "FileName": "rt-87250-70110-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70111-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70111-01-ga-c.pdf",
+      "FileName": "rt-87250-70111-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70111-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70111-1-dd-c.pdf",
+      "FileName": "rt-87250-70111-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70112-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70112-1-dd-b.pdf",
+      "FileName": "rt-87250-70112-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70113-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70113-1-dd-c.pdf",
+      "FileName": "rt-87250-70113-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70114-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70114-1-dd-b.pdf",
+      "FileName": "rt-87250-70114-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70115-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70115-1-dd-b.pdf",
+      "FileName": "rt-87250-70115-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70116-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70116-1-dd-b.pdf",
+      "FileName": "rt-87250-70116-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70117-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70117-01-ga-c.pdf",
+      "FileName": "rt-87250-70117-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70117-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70117-1-dd-c.pdf",
+      "FileName": "rt-87250-70117-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70118-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70118-1-dd-c.pdf",
+      "FileName": "rt-87250-70118-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70119-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70119-1-dd-c.pdf",
+      "FileName": "rt-87250-70119-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70120-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70120-1-dd-c.pdf",
+      "FileName": "rt-87250-70120-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70121-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70121-1-dd-b.pdf",
+      "FileName": "rt-87250-70121-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70122-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70122-1-dd-c.pdf",
+      "FileName": "rt-87250-70122-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70123-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70123-1-dd-c.pdf",
+      "FileName": "rt-87250-70123-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70124-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70124-1-dd-c.pdf",
+      "FileName": "rt-87250-70124-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70125-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70125-1-dd-c.pdf",
+      "FileName": "rt-87250-70125-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70126-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70126-1-dd-c.pdf",
+      "FileName": "rt-87250-70126-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70127-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70127-01-ga-c.pdf",
+      "FileName": "rt-87250-70127-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70127-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70127-1-dd-c.pdf",
+      "FileName": "rt-87250-70127-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70128-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70128-1-dd-b.pdf",
+      "FileName": "rt-87250-70128-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70129-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70129-1-dd-c.pdf",
+      "FileName": "rt-87250-70129-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70130-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70130-1-dd-b.pdf",
+      "FileName": "rt-87250-70130-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70131-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70131-1-dd-c.pdf",
+      "FileName": "rt-87250-70131-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70132-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70132-1-dd-c.pdf",
+      "FileName": "rt-87250-70132-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70133-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70133-01-ga-c.pdf",
+      "FileName": "rt-87250-70133-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70133-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70133-1-ga-c.pdf",
+      "FileName": "rt-87250-70133-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70134-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70134-1-dd-c.pdf",
+      "FileName": "rt-87250-70134-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70135-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70135-1-dd-c.pdf",
+      "FileName": "rt-87250-70135-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70136-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70136-1-dd-c.pdf",
+      "FileName": "rt-87250-70136-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70137-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70137-1-dd-c.pdf",
+      "FileName": "rt-87250-70137-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70138-01-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70138-01-ga-c.pdf",
+      "FileName": "rt-87250-70138-01-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70138-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70138-1-ga-c.pdf",
+      "FileName": "rt-87250-70138-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70139-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70139-1-dd-c.pdf",
+      "FileName": "rt-87250-70139-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87250-70140-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\rt-87250-70140-1-dd-c.pdf",
+      "FileName": "rt-87250-70140-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-CEPC-25-0052T",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87250-RFP-R008 - NARROW WORKTABLE FOR QINSHAN\\DWG\\RT-CEPC-25-0052T.pdf",
+      "FileName": "RT-CEPC-25-0052T.pdf"
+    }
+  ]
+}

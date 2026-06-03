@@ -1,0 +1,41 @@
+<Window x:Class="DrawingTree.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DrawingTree"
+        mc:Ignorable="d"
+        Title="Drawing Tree Manager" Height="800" Width="1200">
+    <DockPanel>
+        <!-- Toolbar at the top -->
+        <Border DockPanel.Dock="Top" 
+                BorderBrush="#CCCCCC" 
+                BorderThickness="0,0,0,1" 
+                Background="#F5F5F5">
+            <StackPanel Orientation="Horizontal" 
+                        Margin="10,8" 
+                        Height="32">
+                <Button x:Name="SearchButton" 
+                        Content="Search" 
+                        Width="100" 
+                        Margin="0,0,10,0"
+                        Click="SearchButton_Click"/>
+                <Button x:Name="ImportDrawingButton" 
+                        Content="Import Drawing" 
+                        Width="120" 
+                        Margin="0,0,10,0"
+                        Click="ImportDrawingButton_Click"/>
+                <Button x:Name="BuildDrawingTreeButton" 
+                        Content="Build Drawing Tree" 
+                        Width="140" 
+                        Margin="0,0,10,0"
+                        Click="BuildDrawingTreeButton_Click"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main display area -->
+        <Grid x:Name="MainDisplayArea" Background="#F5F5F5">
+            <!-- Content will be dynamically loaded here -->
+        </Grid>
+    </DockPanel>
+</Window>
