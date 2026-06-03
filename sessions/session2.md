@@ -96,7 +96,10 @@
 - [x] 4. 实现MainWindow中的Import Drawing按钮功能
 - [x] 5. 实现DrawingEditorControl的交互功能
 - [x] 6. 测试完整流程
-- [x] 7. 实现所有UI改进需求
+- [x] 7. 实现所有UI改进需求（9项）
+- [x] 8. 添加Purchase Order输入功能
+- [x] 9. 实现JSON文件导出功能
+- [x] 10. 优化确认流程（停留在当前页面）
 
 ---
 
@@ -112,6 +115,8 @@
   - 支持图纸信息的添加、删除、修改操作
   - 实现了实时重复检测和视觉反馈
   - 提供了状态显示和用户确认机制
+  - 添加了Purchase Order输入框，作为必填字段
+  - 实现了JSON格式数据导出功能
 - 实现了MainWindow与DrawingEditorControl的集成
   - 使用WinForms的FolderBrowserDialog进行文件夹选择
   - 动态切换主显示区域内容
@@ -120,7 +125,7 @@
   1. ✅ 移除了文件夹选择对话框的提示文本
   2. ✅ 图纸路径显示为文件名，完整路径通过tooltip查看
   3. ✅ 控制按钮右对齐，添加了列标题行
-  4. ✅ 在删除按钮后添加了序号列（格式：1.）
+  4. ✅ 在删除按钮后添加了序号列（格式：1.，右对齐）
   5. ✅ 实现了重复检查机制，使用红色边框标记重复项
   6. ✅ Return按钮添加了确认对话框（有内容时）
   7. ✅ Confirm按钮添加了重复检查，拒绝确认有重复的数据
@@ -130,6 +135,12 @@
   - 序号列右对齐显示
   - 文件名列固定宽度400px
   - 整个表格在主显示区域居中显示
+- 实现了Purchase Order和JSON导出功能：
+  - Purchase Order输入框位于控制按钮区域最左侧
+  - Confirm前验证Purchase Order是否填写
+  - 数据以JSON格式导出到程序目录
+  - 文件名自动转换为大写
+  - Confirm成功后停留在当前页面，不返回主界面
 
 ---
 
@@ -178,7 +189,27 @@
 - 重复项用红色边框高亮显示，直观明确
 - 文件名显示简洁，完整路径通过tooltip查看
 - 状态栏实时显示图纸数量
-- 确认后将所有图纸信息输出到日志文件
+- Purchase Order作为必填字段，Confirm前验证
+- 成功提示显示完整的JSON文件保存路径
+- Confirm成功后停留在当前页面，允许继续编辑
+- 所有图纸信息同时输出到日志文件和JSON文件
+
+**JSON导出功能**:
+- 使用System.Text.Json进行序列化
+- 导出格式包含：PurchaseOrder、ExportDate、TotalDrawings、Drawings数组
+- 文件名使用Purchase Order值，自动转换为大写
+- 保存到程序实际目录（AppDomain.CurrentDomain.BaseDirectory）
+- JSON格式化输出，易于阅读和解析
+- 每个Drawing包含：DrawingNumber、PdfPath、FileName
+
+**确认流程优化**:
+- Confirm按钮执行三重验证：
+  1. Purchase Order是否填写
+  2. 是否存在重复的图纸号或路径
+  3. JSON文件是否成功导出
+- 验证失败时给出明确的错误提示
+- 成功后停留在当前界面，不返回主页
+- 用户可以查看结果、继续编辑或点击Return返回
 
 **技术难点解决**:
 - 解决了WPF ItemsControl中动态显示序号的问题（使用Loaded事件）
