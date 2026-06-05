@@ -1,5 +1,8 @@
 C:\Users\ee\drawing_tree\src\DrawingTree\bin\Debug\net10.0-windows\DrawingTree.exe
+C:\Users\ee\drawing_tree\src\DrawingTree\bin\Debug\net10.0-windows\DrawingTree.deps.json
+C:\Users\ee\drawing_tree\src\DrawingTree\bin\Debug\net10.0-windows\DrawingTree.runtimeconfig.json
 C:\Users\ee\drawing_tree\src\DrawingTree\bin\Debug\net10.0-windows\DrawingTree.dll
+C:\Users\ee\drawing_tree\src\DrawingTree\bin\Debug\net10.0-windows\DrawingTree.pdb
 C:\Users\ee\drawing_tree\src\DrawingTree\obj\Debug\net10.0-windows\Dialogs\PoSelectionDialog.baml
 C:\Users\ee\drawing_tree\src\DrawingTree\obj\Debug\net10.0-windows\Controls\DrawingEditorControl.g.cs
 C:\Users\ee\drawing_tree\src\DrawingTree\obj\Debug\net10.0-windows\Controls\TreeBuilderControl.g.cs
@@ -21,8 +24,5 @@ C:\Users\ee\drawing_tree\src\DrawingTree\obj\Debug\net10.0-windows\DrawingTree.s
 C:\Users\ee\drawing_tree\src\DrawingTree\obj\Debug\net10.0-windows\DrawingTree.dll
 C:\Users\ee\drawing_tree\src\DrawingTree\obj\Debug\net10.0-windows\refint\DrawingTree.dll
 C:\Users\ee\drawing_tree\src\DrawingTree\obj\Debug\net10.0-windows\DrawingTree.pdb
-C:\Users\ee\drawing_tree\src\DrawingTree\bin\Debug\net10.0-windows\DrawingTree.deps.json
-C:\Users\ee\drawing_tree\src\DrawingTree\bin\Debug\net10.0-windows\DrawingTree.runtimeconfig.json
-C:\Users\ee\drawing_tree\src\DrawingTree\bin\Debug\net10.0-windows\DrawingTree.pdb
 C:\Users\ee\drawing_tree\src\DrawingTree\obj\Debug\net10.0-windows\DrawingTree.genruntimeconfig.cache
 C:\Users\ee\drawing_tree\src\DrawingTree\obj\Debug\net10.0-windows\ref\DrawingTree.dll

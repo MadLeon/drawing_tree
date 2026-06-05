@@ -19,6 +19,7 @@ public class DrawingInfo : INotifyPropertyChanged
     private string _quantityInAssembly = string.Empty;
     private bool _isAssembly = false;
     private bool _isDragging = false;
+    private bool _isSelected = false;
 
     /// <summary>
     /// Drawing number extracted from PDF filename
@@ -104,6 +105,15 @@ public class DrawingInfo : INotifyPropertyChanged
     {
         get => _isDragging;
         set { if (_isDragging != value) { _isDragging = value; OnPropertyChanged(); } }
+    }
+
+    /// <summary>
+    /// True when this item is selected in the left panel or tree view
+    /// </summary>
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set { if (_isSelected != value) { _isSelected = value; OnPropertyChanged(); } }
     }
 
     /// <summary>

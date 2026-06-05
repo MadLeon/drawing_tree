@@ -10,10 +10,8 @@
     <UserControl.Resources>
 
         <!-- ── Material Icons path geometries (viewBox 0 -960 960 960, Y-flipped via RenderTransform) ── -->
-        <Geometry x:Key="ArrowOutwardGeo">m256-240-56-56 384-384H240v-80h480v480h-80v-344L256-240Z</Geometry>
-        <Geometry x:Key="AddBoxGeo">M440-280h80v-160h160v-80H520v-160h-80v160H280v80h160v160ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z</Geometry>
-        <Geometry x:Key="IndetermCheckBoxGeo">M280-440h400v-80H280v80Zm-80 320q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z</Geometry>
-        <Geometry x:Key="DoNotDisturbOnGeo">M280-440h400v-80H280v80ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z</Geometry>
+        <Geometry x:Key="OpenInNewGeo">M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z</Geometry>
+<Geometry x:Key="DoNotDisturbOnGeo">M280-440h400v-80H280v80ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z</Geometry>
 
         <!-- Path style: apply Y-flip transform so Material Icons render correctly in WPF -->
         <Style x:Key="IconPath" TargetType="Path">
@@ -81,7 +79,7 @@
                 <ColumnDefinition Width="5"/>
                 <ColumnDefinition Width="*" MinWidth="200"/>
                 <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="260" MinWidth="160"/>
+                <ColumnDefinition Width="300" MinWidth="200"/>
             </Grid.ColumnDefinitions>
 
             <!-- ── Left panel ──────────────────────────────────────── -->
@@ -112,8 +110,8 @@
                                                        VerticalAlignment="Center" Margin="0,0,4,0"/>
                                             <Button Style="{StaticResource IconBtn}" Width="20" Height="20"
                                                     ToolTip="Open PDF" Click="LeftOpenPdfButton_Click">
-                                                <Path Data="{StaticResource ArrowOutwardGeo}"
-                                                      Style="{StaticResource IconPath}"
+                                                <Path Data="{StaticResource OpenInNewGeo}"
+                                                      Stretch="Uniform"
                                                       Fill="#1976D2" Width="13" Height="13"/>
                                             </Button>
                                         </StackPanel>
@@ -122,6 +120,10 @@
                                         <DataTrigger Binding="{Binding IsDragging}" Value="True">
                                             <Setter TargetName="LeftItemBorder" Property="Opacity" Value="0.25"/>
                                             <Setter TargetName="LeftItemBorder" Property="Background" Value="#F0F0F0"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                            <Setter TargetName="LeftItemBorder" Property="Background" Value="#E3F2FD"/>
+                                            <Setter TargetName="LeftItemBorder" Property="BorderBrush" Value="#1976D2"/>
                                         </DataTrigger>
                                     </DataTemplate.Triggers>
                                 </DataTemplate>
@@ -155,48 +157,17 @@
                               PreviewMouseMove="TreeView_PreviewMouseMove">
 
                         <TreeView.Resources>
-                            <!--
-                                Tree node template.
-                                Grid columns:
-                                  Col 0 (10px) — horizontal connector line (connects to parent vertical line)
-                                  Col 1 (22px) — expand/collapse toggle button (outside the content border)
-                                  Col 2 (Auto) — content border (drawing number + icon buttons)
-                            -->
                             <HierarchicalDataTemplate DataType="{x:Type models:DrawingNode}"
                                                       ItemsSource="{Binding Children}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="10"/>
-                                        <ColumnDefinition Width="22"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <!-- Horizontal connector line -->
-                                    <Border Grid.Column="0"
-                                            Background="#CCCCCC" Height="1" VerticalAlignment="Center"/>
-
-                                    <!-- Toggle button: shown only when HasChildren -->
-                                    <Button x:Name="ToggleBtn" Grid.Column="1"
-                                            Style="{StaticResource IconBtn}"
-                                            Width="20" Height="20"
-                                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                                            Visibility="Collapsed"
-                                            Click="ToggleButton_Click">
-                                        <Grid Width="14" Height="14">
-                                            <Path x:Name="AddIcon"
-                                                  Data="{StaticResource AddBoxGeo}"
-                                                  Style="{StaticResource IconPath}"
-                                                  Fill="#1F1F1F" Width="13" Height="13"/>
-                                            <Path x:Name="RemoveIcon"
-                                                  Data="{StaticResource IndetermCheckBoxGeo}"
-                                                  Style="{StaticResource IconPath}"
-                                                  Fill="#1F1F1F" Width="13" Height="13"
-                                                  Visibility="Collapsed"/>
-                                        </Grid>
-                                    </Button>
-
-                                    <!-- Content border -->
-                                    <Border x:Name="NodeBorder" Grid.Column="2"
+                                <StackPanel x:Name="RootStack">
+                                    <!-- Job/Line header: visible only for root assembly nodes (HasJobInfo=True) -->
+                                    <StackPanel x:Name="JobInfoStack" Visibility="Collapsed" Margin="2,4,0,4">
+                                        <TextBlock Text="{Binding JobHeader}"
+                                                   FontWeight="Bold" FontSize="13" Margin="0,0,0,2"/>
+                                        <TextBlock Text="{Binding LineHeader}"
+                                                   FontSize="12" Foreground="#555555"/>
+                                    </StackPanel>
+                                    <Border x:Name="NodeBorder"
                                             BorderThickness="1" BorderBrush="#E0E0E0"
                                             Background="White" CornerRadius="2"
                                             Padding="6,4" Margin="0,2"
@@ -206,16 +177,15 @@
                                             <TextBlock Text="{Binding Drawing.DrawingNumber}"
                                                        FontSize="12" VerticalAlignment="Center"
                                                        Margin="0,0,4,0"/>
-                                            <!-- Open PDF (arrow_outward, blue) -->
                                             <Button Style="{StaticResource IconBtn}"
                                                     Width="20" Height="20" ToolTip="Open PDF"
                                                     Click="TreeOpenPdfButton_Click">
-                                                <Path Data="{StaticResource ArrowOutwardGeo}"
-                                                      Style="{StaticResource IconPath}"
+                                                <Path Data="{StaticResource OpenInNewGeo}"
+                                                      Stretch="Uniform"
                                                       Fill="#1976D2" Width="13" Height="13"/>
                                             </Button>
-                                            <!-- Remove from tree (do_not_disturb_on, red) -->
-                                            <Button Style="{StaticResource IconBtn}"
+                                            <Button x:Name="RemoveBtn"
+                                                    Style="{StaticResource IconBtn}"
                                                     Width="20" Height="20" ToolTip="Remove from tree"
                                                     Margin="2,0,0,0"
                                                     Click="RemoveFromTree_Click">
@@ -225,27 +195,21 @@
                                             </Button>
                                         </StackPanel>
                                     </Border>
-
-                                </Grid>
+                                </StackPanel>
                                 <HierarchicalDataTemplate.Triggers>
-                                    <DataTrigger Binding="{Binding HasChildren}" Value="True">
-                                        <Setter TargetName="ToggleBtn" Property="Visibility" Value="Visible"/>
+                                    <!-- Root assembly nodes: show job/line header, hide remove button, add top gap -->
+                                    <DataTrigger Binding="{Binding HasJobInfo}" Value="True">
+                                        <Setter TargetName="JobInfoStack" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="RemoveBtn" Property="Visibility" Value="Collapsed"/>
+                                        <Setter TargetName="RootStack" Property="Margin" Value="0,16,0,0"/>
                                     </DataTrigger>
-                                    <!-- Swap add_box / indeterminate_check_box icon -->
-                                    <DataTrigger Binding="{Binding IsExpanded}" Value="True">
-                                        <Setter TargetName="AddIcon" Property="Visibility" Value="Collapsed"/>
-                                        <Setter TargetName="RemoveIcon" Property="Visibility" Value="Visible"/>
-                                    </DataTrigger>
-                                    <!-- Drag placeholder -->
                                     <DataTrigger Binding="{Binding IsDragging}" Value="True">
                                         <Setter TargetName="NodeBorder" Property="Opacity" Value="0.25"/>
                                     </DataTrigger>
-                                    <!-- Selection highlight (lower priority than drop target) -->
                                     <DataTrigger Binding="{Binding IsSelected}" Value="True">
                                         <Setter TargetName="NodeBorder" Property="Background" Value="#E3F2FD"/>
                                         <Setter TargetName="NodeBorder" Property="BorderBrush" Value="#1976D2"/>
                                     </DataTrigger>
-                                    <!-- Drop target: full border highlight, no thickness change -->
                                     <DataTrigger Binding="{Binding IsDropTarget}" Value="True">
                                         <Setter TargetName="NodeBorder" Property="BorderBrush" Value="#2196F3"/>
                                         <Setter TargetName="NodeBorder" Property="Background" Value="#E3F2FD"/>
@@ -254,34 +218,84 @@
                             </HierarchicalDataTemplate>
                         </TreeView.Resources>
 
-                        <!--
-                            Custom TreeViewItem template:
-                            - No default expand arrow
-                            - ChildrenArea (vertical connector line) shown when IsExpanded=True
-                            - ChildrenArea margin-left=21 aligns the vertical line under the toggle button center
-                        -->
                         <TreeView.ItemContainerStyle>
                             <Style TargetType="TreeViewItem">
-                                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="TreeViewItem">
-                                            <StackPanel>
-                                                <ContentPresenter ContentSource="Header"
+                                            <!--
+                                                2-col × 2-row Grid ensures connector column heights
+                                                automatically match content column heights:
+                                                  Row0 (Auto) = NodeBorder height  → VLineUpper/VLineLowerHead/HLine
+                                                  Row1 (Auto) = ChildrenArea height → VLineChildren fills it
+                                            -->
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="20"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <!-- Connector header: upper/lower halves + horizontal arm -->
+                                                <Grid Grid.Column="0" Grid.Row="0">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="*"/>
+                                                        <RowDefinition Height="*"/>
+                                                    </Grid.RowDefinitions>
+                                                    <Rectangle x:Name="VLineUpper" Grid.Row="0"
+                                                               Fill="Black" Width="1" HorizontalAlignment="Center"
+                                                               Visibility="Hidden"/>
+                                                    <Rectangle x:Name="VLineLowerHead" Grid.Row="1"
+                                                               Fill="Black" Width="1" HorizontalAlignment="Center"
+                                                               Visibility="Hidden"/>
+                                                    <Rectangle x:Name="HLine" Grid.RowSpan="2"
+                                                               Fill="Black" Height="1" VerticalAlignment="Center"
+                                                               HorizontalAlignment="Right" Width="10"
+                                                               Visibility="Hidden"/>
+                                                </Grid>
+
+                                                <!-- Node content (header) -->
+                                                <ContentPresenter Grid.Column="1" Grid.Row="0"
+                                                                  ContentSource="Header"
                                                                   HorizontalAlignment="Left"
                                                                   VerticalAlignment="Center"/>
+
+                                                <!-- Connector children: vertical line through subtree -->
+                                                <Rectangle x:Name="VLineChildren"
+                                                           Grid.Column="0" Grid.Row="1"
+                                                           Fill="Black" Width="1" HorizontalAlignment="Center"
+                                                           Visibility="Hidden"/>
+
+                                                <!-- Children area -->
                                                 <Border x:Name="ChildrenArea"
-                                                        BorderBrush="#CCCCCC"
-                                                        BorderThickness="1,0,0,0"
-                                                        Margin="21,0,0,0"
+                                                        Grid.Column="1" Grid.Row="1"
                                                         Visibility="Collapsed">
                                                     <ItemsPresenter x:Name="ItemsHost"/>
                                                 </Border>
-                                            </StackPanel>
+                                            </Grid>
+
                                             <ControlTemplate.Triggers>
-                                                <Trigger Property="IsExpanded" Value="True">
+                                                <!-- Non-root: show upper connector and horizontal arm -->
+                                                <DataTrigger Binding="{Binding IsRootNode}" Value="False">
+                                                    <Setter TargetName="VLineUpper" Property="Visibility" Value="Visible"/>
+                                                    <Setter TargetName="HLine" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <!-- Non-root AND non-last: extend line down through subtree -->
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsRootNode}" Value="False"/>
+                                                        <Condition Binding="{Binding IsLastChild}" Value="False"/>
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter TargetName="VLineLowerHead" Property="Visibility" Value="Visible"/>
+                                                    <Setter TargetName="VLineChildren" Property="Visibility" Value="Visible"/>
+                                                </MultiDataTrigger>
+                                                <!-- Show children area when node has children -->
+                                                <DataTrigger Binding="{Binding HasChildren}" Value="True">
                                                     <Setter TargetName="ChildrenArea" Property="Visibility" Value="Visible"/>
-                                                </Trigger>
+                                                </DataTrigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
                                     </Setter.Value>
@@ -334,11 +348,14 @@
                                      FontSize="12" Margin="0,0,0,10"
                                      TextChanged="InfoQuantity_TextChanged"/>
 
-                            <TextBlock Text="Is Assembly" FontWeight="SemiBold" FontSize="11"
-                                       Foreground="#666" Margin="0,0,0,3"/>
-                            <CheckBox x:Name="InfoIsAssembly" Margin="0,0,0,10"
-                                      Checked="InfoIsAssembly_Changed"
-                                      Unchecked="InfoIsAssembly_Changed"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBlock Text="Is Assembly" FontWeight="SemiBold" FontSize="11"
+                                           Foreground="#666" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="InfoIsAssembly"
+                                          Margin="8,0,0,0" VerticalAlignment="Center"
+                                          Checked="InfoIsAssembly_Changed"
+                                          Unchecked="InfoIsAssembly_Changed"/>
+                            </StackPanel>
 
                             <TextBlock Text="File Path" FontWeight="SemiBold" FontSize="11"
                                        Foreground="#666" Margin="0,0,0,3"/>

@@ -19,6 +19,10 @@ public class DrawingNode : INotifyPropertyChanged
     private bool _isDropTarget = false;
     private bool _isDragging = false;
     private bool _isSelected = false;
+    private bool _isLastChild = false;
+    private bool _isRootNode = false;
+    private string? _jobHeader;
+    private string? _lineHeader;
 
     /// <summary>
     /// The drawing data this node represents
@@ -95,14 +99,98 @@ public class DrawingNode : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Whether this node has any children (controls +/- button visibility)
+    /// Whether this node has any children
     /// </summary>
     public bool HasChildren => Children.Count > 0;
+
+    /// <summary>
+    /// True when this node is the last sibling in its parent's children list (controls connector line rendering)
+    /// </summary>
+    public bool IsLastChild
+    {
+        get => _isLastChild;
+        set
+        {
+            if (_isLastChild != value)
+            {
+                _isLastChild = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     public DrawingNode(DrawingInfo drawing)
     {
         Drawing = drawing;
-        Children.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasChildren));
+        Children.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(HasChildren));
+            UpdateLastChildFlags(Children);
+        };
+    }
+
+    /// <summary>
+    /// True when this node is a direct root item (no parent node)
+    /// </summary>
+    public bool IsRootNode
+    {
+        get => _isRootNode;
+        set
+        {
+            if (_isRootNode != value)
+            {
+                _isRootNode = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Header text shown above the node border for root assembly nodes: "Job Number: 72395 &amp; 72396"
+    /// </summary>
+    public string? JobHeader
+    {
+        get => _jobHeader;
+        set
+        {
+            if (_jobHeader != value)
+            {
+                _jobHeader = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasJobInfo));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Header text shown below JobHeader for root assembly nodes: "Line Number: 1 &amp; 2"
+    /// </summary>
+    public string? LineHeader
+    {
+        get => _lineHeader;
+        set
+        {
+            if (_lineHeader != value)
+            {
+                _lineHeader = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// True when this node was pre-assigned from a PO order item (has job/line context).
+    /// Root assembly nodes with HasJobInfo=True cannot be removed or dragged by the user.
+    /// </summary>
+    public bool HasJobInfo => !string.IsNullOrEmpty(_jobHeader);
+
+    /// <summary>
+    /// Sets IsLastChild on each node in the collection based on its index.
+    /// </summary>
+    public static void UpdateLastChildFlags(System.Collections.Generic.IList<DrawingNode> nodes)
+    {
+        for (int i = 0; i < nodes.Count; i++)
+            nodes[i].IsLastChild = (i == nodes.Count - 1);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

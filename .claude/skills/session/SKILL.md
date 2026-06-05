@@ -28,7 +28,6 @@ Use this skill when:
 ## General Knowledge
 
 - 工程所有相关代码可以在 src/ 中找到
-- 如需阅读 excel 文件, 可以使用 .github/skills/xlsx 这个技能
 - "一句话中文" 意思为: 该文本内容是中文，并且用一句话进行总结
 - "要点格式" 意思为: 使用中文并采用 markdown 的 bullet points 格式进行输出, 并且每个要点都应该尽量简短且为一句话
 
@@ -73,6 +72,7 @@ The agent should:
 
 [Coding Style Guide](drawing_tree/.github/references/coding_style.md)
 [Project Description](drawing_tree/.github/references/project_description.md)
+[Icon Library](drawing_tree/public/icons)
 
 ## Template
 

@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using DrawingTree.Logging;
 using DrawingTree.Models;
+using DrawingTree.Services;
 
 using UserControl = System.Windows.Controls.UserControl;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
@@ -40,6 +41,7 @@ public partial class TreeBuilderControl : UserControl
 
     private readonly ObservableCollection<DrawingNode> _rootNodes = new();
     private ObservableCollection<DrawingInfo> _leftDrawings = new();
+    private readonly PoTreeService _poTreeService = new();
     private string _poName = string.Empty;
     private bool _hasUnsavedChanges = false;
 
@@ -62,6 +64,14 @@ public partial class TreeBuilderControl : UserControl
     {
         InitializeComponent();
         DrawingTreeView.ItemsSource = _rootNodes;
+        _rootNodes.CollectionChanged += (_, e) =>
+        {
+            DrawingNode.UpdateLastChildFlags(_rootNodes);
+            if (e.NewItems != null)
+                foreach (DrawingNode n in e.NewItems) n.IsRootNode = true;
+            if (e.OldItems != null)
+                foreach (DrawingNode n in e.OldItems) n.IsRootNode = false;
+        };
     }
 
     /// <summary>
@@ -99,6 +109,8 @@ public partial class TreeBuilderControl : UserControl
 
             DrawingListPanel.ItemsSource = _leftDrawings;
             Logger.Instance.Info($"TreeBuilder loaded {_leftDrawings.Count} drawings from {filePath}");
+
+            SetupRootNodesFromPo(_poName);
         }
         catch (Exception ex)
         {
@@ -108,18 +120,56 @@ public partial class TreeBuilderControl : UserControl
         }
     }
 
+    /// <summary>
+    /// Queries root assembly groups for the PO and adds them as pre-set root nodes.
+    /// Matching drawings are removed from the left panel (they are fixed roots, not draggable items).
+    /// </summary>
+    /// <param name="poNumber">PO number used for the lookup</param>
+    private void SetupRootNodesFromPo(string poNumber)
+    {
+        var groups = _poTreeService.GetGroupsForPo(poNumber);
+        if (groups.Count == 0)
+        {
+            Logger.Instance.Info($"No root assembly groups found for PO: {poNumber}");
+            return;
+        }
+
+        foreach (var group in groups)
+        {
+            // Use existing DrawingInfo from left panel if present; otherwise create a placeholder
+            var existing = _leftDrawings.FirstOrDefault(
+                d => string.Equals(d.DrawingNumber, group.DrawingNumber, StringComparison.OrdinalIgnoreCase));
+
+            DrawingInfo drawingInfo = existing ?? new DrawingInfo { DrawingNumber = group.DrawingNumber };
+            if (existing != null)
+                _leftDrawings.Remove(existing);
+
+            var node = new DrawingNode(drawingInfo)
+            {
+                JobHeader  = "Job Number: "  + string.Join(" & ", group.JobNumbers),
+                LineHeader = "Line Number: " + string.Join(" & ", group.LineNumbers)
+            };
+            _rootNodes.Add(node);
+        }
+
+        Logger.Instance.Info($"Set up {groups.Count} root assembly node(s) for PO: {poNumber}");
+    }
+
     // ── Info panel ────────────────────────────────────────────────────────
 
     private void SelectDrawing(DrawingInfo info, DrawingNode? sourceNode = null)
     {
-        // Clear previous tree selection highlight
+        // Clear previous selection highlights
         if (_selectedNode != null)
         {
             _selectedNode.IsSelected = false;
             _selectedNode = null;
         }
+        if (_selectedDrawing != null)
+            _selectedDrawing.IsSelected = false;
 
         _selectedDrawing = info;
+        info.IsSelected = true;
 
         // Apply new tree selection highlight
         if (sourceNode != null)
@@ -146,7 +196,11 @@ public partial class TreeBuilderControl : UserControl
             _selectedNode.IsSelected = false;
             _selectedNode = null;
         }
-        _selectedDrawing = null;
+        if (_selectedDrawing != null)
+        {
+            _selectedDrawing.IsSelected = false;
+            _selectedDrawing = null;
+        }
         _infoUpdating = true;
         InfoDrawingNumber.Text = string.Empty;
         InfoRevision.Text = string.Empty;
@@ -248,6 +302,7 @@ public partial class TreeBuilderControl : UserControl
     {
         if (sender is FrameworkElement el && el.DataContext is DrawingNode node)
         {
+            if (node.HasJobInfo) { e.Handled = true; return; }  // Guard: root assembly nodes cannot be removed
             var (parentCol, _) = FindParent(node);
             parentCol?.Remove(node);
 
@@ -287,6 +342,7 @@ public partial class TreeBuilderControl : UserControl
 
         var item = GetTreeViewItemAt(_treePanelDragStart);
         if (item?.DataContext is not DrawingNode node) return;
+        if (node.HasJobInfo) return;  // Root assembly nodes are fixed; cannot be dragged
 
         node.IsDragging = true;
         _dragInProgress = true;
@@ -318,6 +374,15 @@ public partial class TreeBuilderControl : UserControl
 
         var targetNode = GetTreeViewItemAt(e.GetPosition(DrawingTreeView))?.DataContext as DrawingNode;
 
+        // Root level (no target node) is reserved for DB-defined assembly nodes — block all drops
+        if (targetNode == null)
+        {
+            ClearDropTarget();
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+            return;
+        }
+
         if (e.Data.GetDataPresent(DragFormatNode))
         {
             var sourceNode = e.Data.GetData(DragFormatNode) as DrawingNode;
@@ -334,7 +399,7 @@ public partial class TreeBuilderControl : UserControl
         {
             if (_currentDropTarget != null) _currentDropTarget.IsDropTarget = false;
             _currentDropTarget = targetNode;
-            if (_currentDropTarget != null) _currentDropTarget.IsDropTarget = true;
+            _currentDropTarget.IsDropTarget = true;
         }
 
         e.Effects = DragDropEffects.Move;
@@ -352,21 +417,23 @@ public partial class TreeBuilderControl : UserControl
 
         var targetNode = GetTreeViewItemAt(e.GetPosition(DrawingTreeView))?.DataContext as DrawingNode;
 
+        // Root level is reserved for DB-defined assembly nodes — reject all drops here
+        if (targetNode == null)
+        {
+            e.Handled = true;
+            return;
+        }
+
         if (e.Data.GetDataPresent(DragFormatInfo))
         {
             if (e.Data.GetData(DragFormatInfo) is not DrawingInfo info) return;
 
             var newNode = new DrawingNode(info);
-            if (targetNode != null)
-                targetNode.Children.Add(newNode);
-            else
-                _rootNodes.Add(newNode);
-
+            targetNode.Children.Add(newNode);
             _leftDrawings.Remove(info);
-            var col = targetNode != null ? targetNode.Children : _rootNodes;
-            SortCollection(col);
+            SortCollection(targetNode.Children);
             _hasUnsavedChanges = true;
-            Logger.Instance.Info($"Added {info.DrawingNumber} under {targetNode?.Drawing.DrawingNumber ?? "root"}");
+            Logger.Instance.Info($"Added {info.DrawingNumber} under {targetNode.Drawing.DrawingNumber}");
         }
         else if (e.Data.GetDataPresent(DragFormatNode))
         {
@@ -375,32 +442,11 @@ public partial class TreeBuilderControl : UserControl
 
             var (parentCol, _) = FindParent(sourceNode);
             parentCol?.Remove(sourceNode);
-
-            ObservableCollection<DrawingNode> destCol;
-            if (targetNode != null)
-            {
-                targetNode.Children.Add(sourceNode);
-                destCol = targetNode.Children;
-            }
-            else
-            {
-                _rootNodes.Add(sourceNode);
-                destCol = _rootNodes;
-            }
-
-            SortCollection(destCol);
+            targetNode.Children.Add(sourceNode);
+            SortCollection(targetNode.Children);
             _hasUnsavedChanges = true;
         }
 
-        e.Handled = true;
-    }
-
-    // ── Toggle expand / collapse ──────────────────────────────────────────
-
-    private void ToggleButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement el && el.DataContext is DrawingNode node)
-            node.IsExpanded = !node.IsExpanded;
         e.Handled = true;
     }
 
@@ -465,7 +511,7 @@ public partial class TreeBuilderControl : UserControl
 
     private void ReturnButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_hasUnsavedChanges || _rootNodes.Count > 0)
+        if (_hasUnsavedChanges)
         {
             var result = MessageBox.Show(
                 "You have unsaved changes. Are you sure you want to return?",
