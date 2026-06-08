@@ -37,9 +37,6 @@ public class PoTreeService
         var rawItems = new (string Job, string Line, string Drawing)[]
         {
             ("72395", "1", "RT-87630-71254-1000-1-GA-D"),
-            ("72396", "2", "RT-87630-71254-1000-1-GA-D"),
-            ("72397", "3", "RT-87630-71254-1010-1-DD-D"),
-            ("72397", "4", "RT-87630-71254-1020-1-DD-D"),
         };
 
         // Group by drawing_number: merge job numbers (distinct) and line numbers

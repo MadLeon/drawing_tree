@@ -25,11 +25,16 @@
                         Width="120" 
                         Margin="0,0,10,0"
                         Click="ImportDrawingButton_Click"/>
-                <Button x:Name="BuildDrawingTreeButton" 
-                        Content="Build Drawing Tree" 
-                        Width="140" 
+                <Button x:Name="BuildDrawingTreeButton"
+                        Content="Build Drawing Tree"
+                        Width="140"
                         Margin="0,0,10,0"
                         Click="BuildDrawingTreeButton_Click"/>
+                <Button x:Name="ViewDrawingsButton"
+                        Content="View Drawings"
+                        Width="120"
+                        Margin="0,0,10,0"
+                        Click="ViewDrawingsButton_Click"/>
             </StackPanel>
         </Border>
 

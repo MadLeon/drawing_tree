@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "qC0YZr95wZo=",
+  "dgSpecHash": "0NlF6GUX3Gk=",
   "success": true,
   "projectFilePath": "C:\\Users\\ee\\drawing_tree\\src\\DrawingTree\\DrawingTree.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\ee\\.nuget\\packages\\microsoft.windows.sdk.net.ref\\10.0.19041.57\\microsoft.windows.sdk.net.ref.10.0.19041.57.nupkg.sha512"
+  ],
   "logs": []
 }

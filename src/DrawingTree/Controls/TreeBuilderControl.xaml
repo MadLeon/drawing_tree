@@ -11,6 +11,7 @@
 
         <!-- ── Material Icons path geometries (viewBox 0 -960 960 960, Y-flipped via RenderTransform) ── -->
         <Geometry x:Key="OpenInNewGeo">M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z</Geometry>
+        <Geometry x:Key="AddCircleGeo">M440-280h80v-160h160v-80H520v-160h-80v160H280v80h160v160Zm40 200q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z</Geometry>
 <Geometry x:Key="DoNotDisturbOnGeo">M280-440h400v-80H280v80ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z</Geometry>
 
         <!-- Path style: apply Y-flip transform so Material Icons render correctly in WPF -->
@@ -91,7 +92,18 @@
                     </Grid.RowDefinitions>
                     <Border Grid.Row="0" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1"
                             Padding="10,6" Background="#F0F0F0">
-                        <TextBlock Text="Drawings" FontWeight="Bold" FontSize="13"/>
+                        <Grid>
+                            <TextBlock Text="Drawings" FontWeight="Bold" FontSize="13"
+                                       VerticalAlignment="Center"/>
+                            <Button Style="{StaticResource IconBtn}"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Width="22" Height="22" ToolTip="Add drawing"
+                                    Click="AddDrawingButton_Click">
+                                <Path Data="{StaticResource AddCircleGeo}"
+                                      Style="{StaticResource IconPath}"
+                                      Fill="#388E3C" Width="15" Height="15"/>
+                            </Button>
+                        </Grid>
                     </Border>
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                         <ItemsControl x:Name="DrawingListPanel" Padding="4"
@@ -145,16 +157,19 @@
                         Padding="10,6" Background="#F0F0F0">
                     <TextBlock Text="Drawing Tree" FontWeight="Bold" FontSize="13"/>
                 </Border>
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                <ScrollViewer x:Name="TreeScrollViewer" Grid.Row="1" VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Auto" Background="White">
                     <TreeView x:Name="DrawingTreeView"
                               Background="Transparent" BorderThickness="0" Padding="8"
                               AllowDrop="True"
+                              ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                               DragOver="TreeView_DragOver"
                               DragLeave="TreeView_DragLeave"
                               Drop="TreeView_Drop"
                               PreviewMouseLeftButtonDown="TreeView_PreviewMouseLeftButtonDown"
-                              PreviewMouseMove="TreeView_PreviewMouseMove">
+                              PreviewMouseMove="TreeView_PreviewMouseMove"
+                              PreviewMouseWheel="TreeView_PreviewMouseWheel">
 
                         <TreeView.Resources>
                             <HierarchicalDataTemplate DataType="{x:Type models:DrawingNode}"

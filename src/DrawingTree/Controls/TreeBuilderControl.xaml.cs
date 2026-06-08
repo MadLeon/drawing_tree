@@ -36,8 +36,9 @@ namespace DrawingTree.Controls;
 /// </summary>
 public partial class TreeBuilderControl : UserControl
 {
-    private const string DragFormatInfo = "DrawingTree.DrawingInfo";
-    private const string DragFormatNode = "DrawingTree.DrawingNode";
+    private const string DragFormatInfo     = "DrawingTree.DrawingInfo";
+    private const string DragFormatInfoList = "DrawingTree.DrawingInfoList";
+    private const string DragFormatNode     = "DrawingTree.DrawingNode";
 
     private readonly ObservableCollection<DrawingNode> _rootNodes = new();
     private ObservableCollection<DrawingInfo> _leftDrawings = new();
@@ -50,10 +51,14 @@ public partial class TreeBuilderControl : UserControl
     private bool _dragInProgress = false;
     private DrawingNode? _currentDropTarget = null;
 
-    // Selected drawing for info panel
+    // Selected drawing for info panel (single)
     private DrawingInfo? _selectedDrawing = null;
     private DrawingNode? _selectedNode = null;
     private bool _infoUpdating = false;
+
+    // Left panel multi-select
+    private readonly List<DrawingInfo> _selectedDrawings = new();
+    private DrawingInfo? _anchorDrawing = null;
 
     // Drag preview popup
     private Popup? _dragPopup = null;
@@ -159,14 +164,13 @@ public partial class TreeBuilderControl : UserControl
 
     private void SelectDrawing(DrawingInfo info, DrawingNode? sourceNode = null)
     {
-        // Clear previous selection highlights
-        if (_selectedNode != null)
-        {
-            _selectedNode.IsSelected = false;
-            _selectedNode = null;
-        }
-        if (_selectedDrawing != null)
-            _selectedDrawing.IsSelected = false;
+        // Clear left panel multi-selections
+        foreach (var d in _selectedDrawings) d.IsSelected = false;
+        _selectedDrawings.Clear();
+
+        // Clear previous single selections
+        if (_selectedNode != null) { _selectedNode.IsSelected = false; _selectedNode = null; }
+        if (_selectedDrawing != null) _selectedDrawing.IsSelected = false;
 
         _selectedDrawing = info;
         info.IsSelected = true;
@@ -245,14 +249,126 @@ public partial class TreeBuilderControl : UserControl
     private void LeftItemBorder_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
         if (_dragInProgress) return;
-        if (sender is FrameworkElement el && el.DataContext is DrawingInfo info)
+        if (sender is not FrameworkElement el || el.DataContext is not DrawingInfo info) return;
+
+        bool ctrl  = (Keyboard.Modifiers & ModifierKeys.Control) != 0;
+        bool shift = (Keyboard.Modifiers & ModifierKeys.Shift)   != 0;
+
+        if (ctrl)
+        {
+            ApplyCtrlClick(info);
+        }
+        else if (shift && _anchorDrawing != null)
+        {
+            ApplyShiftClick(info);
+        }
+        else
+        {
+            // Plain click: single select, reset anchor
+            _anchorDrawing = info;
             SelectDrawing(info, null);
+            _selectedDrawings.Add(info);
+        }
+    }
+
+    /// <summary>Ctrl+Click: toggle the item in the multi-select set.</summary>
+    private void ApplyCtrlClick(DrawingInfo info)
+    {
+        // Clear tree node selection; clear single drawing from tree context if any
+        if (_selectedNode != null) { _selectedNode.IsSelected = false; _selectedNode = null; }
+        if (_selectedDrawings.Count == 0 && _selectedDrawing != null)
+        {
+            _selectedDrawing.IsSelected = false;
+            _selectedDrawing = null;
+        }
+
+        if (_selectedDrawings.Contains(info))
+        {
+            info.IsSelected = false;
+            _selectedDrawings.Remove(info);
+        }
+        else
+        {
+            info.IsSelected = true;
+            _selectedDrawings.Add(info);
+        }
+
+        UpdateInfoPanelForSelection();
+    }
+
+    /// <summary>Shift+Click: select the contiguous range from the anchor to this item.</summary>
+    private void ApplyShiftClick(DrawingInfo info)
+    {
+        if (_selectedNode != null) { _selectedNode.IsSelected = false; _selectedNode = null; }
+
+        foreach (var d in _selectedDrawings) d.IsSelected = false;
+        _selectedDrawings.Clear();
+        if (_selectedDrawing != null) { _selectedDrawing.IsSelected = false; _selectedDrawing = null; }
+
+        var items = _leftDrawings.ToList();
+        int anchorIdx  = items.IndexOf(_anchorDrawing!);
+        int currentIdx = items.IndexOf(info);
+        if (anchorIdx >= 0 && currentIdx >= 0)
+        {
+            int from = Math.Min(anchorIdx, currentIdx);
+            int to   = Math.Max(anchorIdx, currentIdx);
+            for (int i = from; i <= to; i++)
+            {
+                items[i].IsSelected = true;
+                _selectedDrawings.Add(items[i]);
+            }
+        }
+
+        UpdateInfoPanelForSelection();
+    }
+
+    /// <summary>
+    /// Updates the info panel based on the current multi-select state.
+    /// Shows info when exactly one item is selected; clears the panel for multi-selection.
+    /// Does NOT touch IsSelected flags — callers manage those.
+    /// </summary>
+    private void UpdateInfoPanelForSelection()
+    {
+        if (_selectedDrawings.Count == 1)
+        {
+            var single = _selectedDrawings[0];
+            _selectedDrawing = single;
+            _infoUpdating = true;
+            InfoDrawingNumber.Text = single.DrawingNumber;
+            InfoRevision.Text      = single.Revision;
+            InfoDescription.Text   = single.Description;
+            InfoQuantity.Text      = single.QuantityInAssembly;
+            InfoIsAssembly.IsChecked = single.IsAssembly;
+            InfoFilePath.Text      = single.PdfPath;
+            InfoPanel.IsEnabled    = true;
+            _infoUpdating = false;
+        }
+        else
+        {
+            // Multi-select or empty: clear info panel fields without touching IsSelected
+            _selectedDrawing = null;
+            _infoUpdating = true;
+            InfoDrawingNumber.Text   = string.Empty;
+            InfoRevision.Text        = string.Empty;
+            InfoDescription.Text     = string.Empty;
+            InfoQuantity.Text        = string.Empty;
+            InfoIsAssembly.IsChecked = false;
+            InfoFilePath.Text        = string.Empty;
+            InfoPanel.IsEnabled      = false;
+            _infoUpdating = false;
+        }
     }
 
     private void LeftOpenPdfButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement el && el.DataContext is DrawingInfo info)
-            OpenPdf(info.PdfPath);
+        {
+            // Multi-select: open all selected PDFs; otherwise open only this one
+            if (_selectedDrawings.Count > 1 && _selectedDrawings.Contains(info))
+                foreach (var d in _selectedDrawings) OpenPdf(d.PdfPath);
+            else
+                OpenPdf(info.PdfPath);
+        }
         e.Handled = true;
     }
 
@@ -273,16 +389,24 @@ public partial class TreeBuilderControl : UserControl
         if ((e.OriginalSource as FrameworkElement)?.DataContext is not DrawingInfo info) return;
         if (!_leftDrawings.Contains(info)) return;
 
-        info.IsDragging = true;
+        bool isMultiDrag = _selectedDrawings.Count > 1 && _selectedDrawings.Contains(info);
+        List<DrawingInfo> dragList = isMultiDrag ? new List<DrawingInfo>(_selectedDrawings) : new List<DrawingInfo> { info };
+
+        foreach (var d in dragList) d.IsDragging = true;
         _dragInProgress = true;
-        ShowDragPopup(info.DrawingNumber);
+        ShowDragPopup(isMultiDrag ? $"{dragList.Count} drawings" : info.DrawingNumber);
         try
         {
-            DragDrop.DoDragDrop(DrawingListPanel, new DataObject(DragFormatInfo, info), DragDropEffects.Move);
+            var dataObj = new DataObject();
+            if (isMultiDrag)
+                dataObj.SetData(DragFormatInfoList, dragList);
+            else
+                dataObj.SetData(DragFormatInfo, info);
+            DragDrop.DoDragDrop(DrawingListPanel, dataObj, DragDropEffects.Move);
         }
         finally
         {
-            info.IsDragging = false;
+            foreach (var d in dragList) d.IsDragging = false;
             CloseDragPopup();
             _dragInProgress = false;
         }
@@ -360,13 +484,19 @@ public partial class TreeBuilderControl : UserControl
         }
     }
 
+    private void TreeView_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        TreeScrollViewer.ScrollToVerticalOffset(TreeScrollViewer.VerticalOffset - e.Delta);
+        e.Handled = true;
+    }
+
     // ── Tree view: drop target ────────────────────────────────────────────
 
     private void TreeView_DragOver(object sender, DragEventArgs e)
     {
         e.Effects = DragDropEffects.None;
 
-        if (!e.Data.GetDataPresent(DragFormatInfo) && !e.Data.GetDataPresent(DragFormatNode))
+        if (!e.Data.GetDataPresent(DragFormatInfo) && !e.Data.GetDataPresent(DragFormatInfoList) && !e.Data.GetDataPresent(DragFormatNode))
         {
             e.Handled = true;
             return;
@@ -424,7 +554,19 @@ public partial class TreeBuilderControl : UserControl
             return;
         }
 
-        if (e.Data.GetDataPresent(DragFormatInfo))
+        if (e.Data.GetDataPresent(DragFormatInfoList))
+        {
+            if (e.Data.GetData(DragFormatInfoList) is not List<DrawingInfo> list) return;
+            foreach (var drawing in list)
+            {
+                targetNode.Children.Add(new DrawingNode(drawing));
+                _leftDrawings.Remove(drawing);
+            }
+            SortCollection(targetNode.Children);
+            _hasUnsavedChanges = true;
+            Logger.Instance.Info($"Added {list.Count} drawings under {targetNode.Drawing.DrawingNumber}");
+        }
+        else if (e.Data.GetDataPresent(DragFormatInfo))
         {
             if (e.Data.GetData(DragFormatInfo) is not DrawingInfo info) return;
 
@@ -508,6 +650,15 @@ public partial class TreeBuilderControl : UserControl
     };
 
     // ── Return ───────────────────────────────────────────────────────────
+
+    private void AddDrawingButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Dialogs.AddDrawingDialog(_leftDrawings) { Owner = Window.GetWindow(this) };
+        if (dialog.ShowDialog() != true || dialog.Result == null) return;
+
+        _leftDrawings.Add(dialog.Result);
+        Logger.Instance.Info($"Manually added drawing: {dialog.Result.DrawingNumber}");
+    }
 
     private void ReturnButton_Click(object sender, RoutedEventArgs e)
     {

@@ -24,6 +24,7 @@ public partial class MainWindow : Window
     private readonly DrawingExtractor _drawingExtractor = new DrawingExtractor();
     private DrawingEditorControl? _drawingEditorControl;
     private TreeBuilderControl? _treeBuilderControl;
+    private DrawingViewerControl? _drawingViewerControl;
 
     public MainWindow()
     {
@@ -170,5 +171,63 @@ public partial class MainWindow : Window
         MainDisplayArea.Children.Clear();
         _treeBuilderControl = null;
         Logger.Instance.Info("Returned to main view from tree builder");
+    }
+
+    /// <summary>
+    /// Handle View Drawings button click.
+    /// Scans for *_tree.json files and shows the viewer for the selected tree.
+    /// </summary>
+    private void ViewDrawingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        Logger.Instance.Info("View Drawings button clicked");
+
+        string appDir = AppDomain.CurrentDomain.BaseDirectory;
+        var treeFiles = Directory.GetFiles(appDir, "*_tree.json")
+                                 .Select(f => Path.GetFileName(f))
+                                 .OrderBy(f => f)
+                                 .ToList();
+
+        if (treeFiles.Count == 0)
+        {
+            System.Windows.MessageBox.Show(
+                "No tree files found.\nPlease use \"Build Drawing Tree\" first to create a tree.",
+                "No Tree Files",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            Logger.Instance.Warning("View Drawings: no *_tree.json files found");
+            return;
+        }
+
+        var dialog = new PoSelectionDialog(treeFiles) { Owner = this };
+        if (dialog.ShowDialog() != true || dialog.SelectedFile == null) return;
+
+        string selectedPath = Path.Combine(appDir, dialog.SelectedFile);
+        ShowDrawingViewer(selectedPath);
+    }
+
+    /// <summary>
+    /// Show drawing viewer control for the given tree JSON file
+    /// </summary>
+    /// <param name="treeFilePath">Full path to the *_tree.json file</param>
+    private void ShowDrawingViewer(string treeFilePath)
+    {
+        MainDisplayArea.Children.Clear();
+
+        _drawingViewerControl = new DrawingViewerControl();
+        _drawingViewerControl.LoadFromJsonFile(treeFilePath);
+        _drawingViewerControl.ReturnRequested += OnDrawingViewerReturn;
+
+        MainDisplayArea.Children.Add(_drawingViewerControl);
+        Logger.Instance.Info($"Drawing viewer displayed for {treeFilePath}");
+    }
+
+    /// <summary>
+    /// Handle drawing viewer Return event
+    /// </summary>
+    private void OnDrawingViewerReturn(object? sender, EventArgs e)
+    {
+        MainDisplayArea.Children.Clear();
+        _drawingViewerControl = null;
+        Logger.Instance.Info("Returned to main view from drawing viewer");
     }
 }

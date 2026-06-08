@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DrawingTree")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+215511c012618dea336cd13f3200ed27d0bc2d5a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5b854f441fffba0a623ad8d825176b906bbf9ccc")]
 [assembly: System.Reflection.AssemblyProductAttribute("DrawingTree")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DrawingTree")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
