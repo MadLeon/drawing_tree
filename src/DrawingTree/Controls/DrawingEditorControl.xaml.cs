@@ -309,8 +309,8 @@ public partial class DrawingEditorControl : System.Windows.Controls.UserControl
         };
         string jsonString = JsonSerializer.Serialize(exportData, options);
 
-        // Create filename with uppercase Purchase Order
-        string fileName = $"{purchaseOrder.ToUpper()}.json";
+        // Create filename with uppercase Purchase Order and _import suffix
+        string fileName = $"{purchaseOrder.ToUpper()}_import.json";
 
         // Get application directory and create full path
         string appDirectory = AppDomain.CurrentDomain.BaseDirectory;

@@ -14,6 +14,12 @@ public class DrawingInfo : INotifyPropertyChanged
     private string _drawingNumber = string.Empty;
     private string _pdfPath = string.Empty;
     private bool _hasDuplicate = false;
+    private string _revision = string.Empty;
+    private string _description = string.Empty;
+    private string _quantityInAssembly = string.Empty;
+    private bool _isAssembly = false;
+    private bool _isDragging = false;
+    private bool _isSelected = false;
 
     /// <summary>
     /// Drawing number extracted from PDF filename
@@ -54,6 +60,60 @@ public class DrawingInfo : INotifyPropertyChanged
     public string FileName
     {
         get => string.IsNullOrEmpty(_pdfPath) ? string.Empty : Path.GetFileName(_pdfPath);
+    }
+
+    /// <summary>
+    /// Revision identifier (e.g. "A", "B", "1")
+    /// </summary>
+    public string Revision
+    {
+        get => _revision;
+        set { if (_revision != value) { _revision = value; OnPropertyChanged(); } }
+    }
+
+    /// <summary>
+    /// Drawing description or title
+    /// </summary>
+    public string Description
+    {
+        get => _description;
+        set { if (_description != value) { _description = value; OnPropertyChanged(); } }
+    }
+
+    /// <summary>
+    /// Number of this item required in the parent assembly
+    /// </summary>
+    public string QuantityInAssembly
+    {
+        get => _quantityInAssembly;
+        set { if (_quantityInAssembly != value) { _quantityInAssembly = value; OnPropertyChanged(); } }
+    }
+
+    /// <summary>
+    /// Whether this drawing represents an assembly (composite part)
+    /// </summary>
+    public bool IsAssembly
+    {
+        get => _isAssembly;
+        set { if (_isAssembly != value) { _isAssembly = value; OnPropertyChanged(); } }
+    }
+
+    /// <summary>
+    /// True while this item is being dragged (UI state for placeholder display)
+    /// </summary>
+    public bool IsDragging
+    {
+        get => _isDragging;
+        set { if (_isDragging != value) { _isDragging = value; OnPropertyChanged(); } }
+    }
+
+    /// <summary>
+    /// True when this item is selected in the left panel or tree view
+    /// </summary>
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set { if (_isSelected != value) { _isSelected = value; OnPropertyChanged(); } }
     }
 
     /// <summary>

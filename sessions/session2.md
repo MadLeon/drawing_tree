@@ -42,6 +42,8 @@
 
 使序号列右对齐, 规定文件名列的宽度为400, 而不是占据剩余所有空间; 让每行内容相对于主显示区域总体居中
 
+生成的 .json 文件的命名方式应该为 "{PO}_import.json", 其中 {PO} 是用户在导入界面输入的 PO 号
+
 ---
 
 ## 一句话总结
@@ -197,7 +199,7 @@
 **JSON导出功能**:
 - 使用System.Text.Json进行序列化
 - 导出格式包含：PurchaseOrder、ExportDate、TotalDrawings、Drawings数组
-- 文件名使用Purchase Order值，自动转换为大写
+- 文件名格式为 `{PO}_import.json`，其中PO为大写的Purchase Order号
 - 保存到程序实际目录（AppDomain.CurrentDomain.BaseDirectory）
 - JSON格式化输出，易于阅读和解析
 - 每个Drawing包含：DrawingNumber、PdfPath、FileName
