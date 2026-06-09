@@ -374,15 +374,44 @@
 
                             <TextBlock Text="File Path" FontWeight="SemiBold" FontSize="11"
                                        Foreground="#666" Margin="0,0,0,3"/>
-                            <TextBox x:Name="InfoFilePath" IsReadOnly="True"
-                                     Background="#F5F5F5" Height="28" Padding="5,4"
-                                     FontSize="11" Margin="0,0,0,10"
-                                     ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="InfoFilePath" Grid.Column="0"
+                                         Height="28" Padding="5,4" FontSize="11"
+                                         ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                         TextChanged="InfoFilePath_TextChanged"/>
+                                <Button Grid.Column="1" Content="Browse" Height="28"
+                                        Padding="8,0" Margin="4,0,0,0" FontSize="11"
+                                        Click="InfoBrowseButton_Click"/>
+                            </Grid>
+
+                            <Button x:Name="InfoSaveButton" Content="Save"
+                                    Height="28" Width="80" HorizontalAlignment="Right"
+                                    FontSize="12" Margin="0,4,0,0"
+                                    Click="InfoSaveButton_Click"/>
+
+                            <TextBlock x:Name="InfoSaveError" Foreground="#E53935"
+                                       FontSize="11" TextWrapping="Wrap"
+                                       Margin="0,4,0,0" Visibility="Collapsed"/>
 
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>
             </Border>
+        </Grid>
+
+        <!-- Loading overlay: shown during database operations -->
+        <Grid x:Name="LoadingOverlay" Grid.Row="1" Visibility="Collapsed"
+              Background="#AA000000" Panel.ZIndex="10">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressBar IsIndeterminate="True" Width="200" Height="6"
+                             Foreground="White" Background="#44FFFFFF"/>
+                <TextBlock Text="Loading from database..." Foreground="White"
+                           FontSize="13" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+            </StackPanel>
         </Grid>
     </Grid>
 </UserControl>

@@ -21,6 +21,9 @@ public class DrawingInfo : INotifyPropertyChanged
     private bool _isDragging = false;
     private bool _isSelected = false;
 
+    /// <summary>Database part.id; null for drawings not yet persisted</summary>
+    public int? PartId { get; set; }
+
     /// <summary>
     /// Drawing number extracted from PDF filename
     /// </summary>

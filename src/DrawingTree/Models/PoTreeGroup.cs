@@ -17,4 +17,7 @@ public class PoTreeGroup
 
     /// <summary>The part drawing number that serves as the root assembly</summary>
     public string DrawingNumber { get; init; } = string.Empty;
+
+    /// <summary>Database part.id for this root assembly</summary>
+    public int PartId { get; init; }
 }

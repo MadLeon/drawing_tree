@@ -24,6 +24,9 @@ public class DrawingNode : INotifyPropertyChanged
     private string? _jobHeader;
     private string? _lineHeader;
 
+    /// <summary>Database part_tree.id for this node's parent→child edge; null for new/unsaved nodes</summary>
+    public int? PartTreeId { get; set; }
+
     /// <summary>
     /// The drawing data this node represents
     /// </summary>

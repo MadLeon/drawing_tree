@@ -1,0 +1,473 @@
+{
+  "PurchaseOrder": "RT79-87630-PN-R005",
+  "SaveDate": "2026-06-05 17:00:17",
+  "Tree": [
+    {
+      "DrawingNumber": "RT-87630-71254-1000-1-GA-D",
+      "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1000-1-ga-d.pdf",
+      "Revision": "2",
+      "Description": "GENERAL ASSEMBLY",
+      "QuantityInAssembly": "1",
+      "IsAssembly": true,
+      "Children": [
+        {
+          "DrawingNumber": "RT-87630-71254-1000-2-GA-D",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1000-2-ga-d.pdf",
+          "Revision": "2",
+          "Description": "",
+          "QuantityInAssembly": "1",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1000-3-GA-D",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1000-3-ga-d.pdf",
+          "Revision": "2",
+          "Description": "",
+          "QuantityInAssembly": "1",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1000-4-GA-D",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1000-4-ga-d.pdf",
+          "Revision": "2",
+          "Description": "",
+          "QuantityInAssembly": "1",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1000-5-GA-D",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1000-5-ga-d.pdf",
+          "Revision": "2",
+          "Description": "",
+          "QuantityInAssembly": "1",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1000-6-GA-D",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1000-6-ga-d.pdf",
+          "Revision": "2",
+          "Description": "",
+          "QuantityInAssembly": "1",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1001-1-DD-D",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1001-1-dd-d.pdf",
+          "Revision": "1",
+          "Description": "IPEX .5 BUSHING",
+          "QuantityInAssembly": "15",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1002-1-DD-D",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1002-1-dd-d.pdf",
+          "Revision": "1",
+          "Description": "IPEX .75 BUSHING",
+          "QuantityInAssembly": "15",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1003-1-DD-D",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1003-1-dd-d.pdf",
+          "Revision": "1",
+          "Description": "IPEX 1.0 BUSHING",
+          "QuantityInAssembly": "15",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1004-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1004-1-dd-b.pdf",
+          "Revision": "1",
+          "Description": ".5 SCREEN",
+          "QuantityInAssembly": "15",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1005-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1005-1-dd-b.pdf",
+          "Revision": "1",
+          "Description": ".75 SCREEN",
+          "QuantityInAssembly": "15",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1006-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1006-1-dd-b.pdf",
+          "Revision": "1",
+          "Description": "1.0 SCREEN",
+          "QuantityInAssembly": "",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1007-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1007-1-dd-b.pdf",
+          "Revision": "1",
+          "Description": "MICRO FIBER CLOTH",
+          "QuantityInAssembly": "50",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1008-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1008-1-dd-b.pdf",
+          "Revision": "1",
+          "Description": "FOAM DISC",
+          "QuantityInAssembly": "50",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1009-1-DD-D",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1009-1-dd-d.pdf",
+          "Revision": "1",
+          "Description": "POKER STICK",
+          "QuantityInAssembly": "4",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1012-1-DD-D",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1012-1-dd-d.pdf",
+          "Revision": "0",
+          "Description": "FILTER DELIVERY TOOL",
+          "QuantityInAssembly": "1",
+          "IsAssembly": true,
+          "Children": [
+            {
+              "DrawingNumber": "RT-87630-71254-1020-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1020-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "FLANGE",
+              "QuantityInAssembly": "2",
+              "IsAssembly": false,
+              "Children": []
+            },
+            {
+              "DrawingNumber": "RT-87630-71254-1021-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1021-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "MID FLANGE",
+              "QuantityInAssembly": "1",
+              "IsAssembly": false,
+              "Children": []
+            },
+            {
+              "DrawingNumber": "RT-87630-71254-1022-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1022-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "GUSSET",
+              "QuantityInAssembly": "2",
+              "IsAssembly": false,
+              "Children": []
+            },
+            {
+              "DrawingNumber": "RT-87630-71254-1023-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1023-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "TROUGH",
+              "QuantityInAssembly": "1",
+              "IsAssembly": false,
+              "Children": []
+            },
+            {
+              "DrawingNumber": "RT-87630-71254-1024-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1024-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "END PLATE",
+              "QuantityInAssembly": "1",
+              "IsAssembly": false,
+              "Children": []
+            }
+          ]
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1013-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1013-1-dd-b.pdf",
+          "Revision": "1",
+          "Description": "TOOL BOX A TAG",
+          "QuantityInAssembly": "1",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1014-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1014-1-dd-b.pdf",
+          "Revision": "1",
+          "Description": "TOOL BOX B TAG",
+          "QuantityInAssembly": "1",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1015-1-DD-D",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1015-1-dd-d.pdf",
+          "Revision": "0",
+          "Description": "REDUCER-VACUUM TUBE CONNECTION",
+          "QuantityInAssembly": "1",
+          "IsAssembly": true,
+          "Children": [
+            {
+              "DrawingNumber": "RT-87630-71254-1026-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1026-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "1 IN NIPPLE-REDUCER",
+              "QuantityInAssembly": "1",
+              "IsAssembly": false,
+              "Children": []
+            },
+            {
+              "DrawingNumber": "RT-87630-71254-1044-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1044-1-dd-b.pdf",
+              "Revision": "1",
+              "Description": "1.5 IN NIPPLE-REDUCER",
+              "QuantityInAssembly": "1",
+              "IsAssembly": false,
+              "Children": []
+            },
+            {
+              "DrawingNumber": "RT-87630-71254-1045-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1045-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "FOOT-REDUCER",
+              "QuantityInAssembly": "1",
+              "IsAssembly": false,
+              "Children": []
+            }
+          ]
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1016-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1016-1-dd-b.pdf",
+          "Revision": "0",
+          "Description": "NOZZLE DELIVERY TOOL",
+          "QuantityInAssembly": "1",
+          "IsAssembly": true,
+          "Children": [
+            {
+              "DrawingNumber": "RT-87630-71254-1028-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1028-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "NOZZLE DELIVERY TOOL SCREW",
+              "QuantityInAssembly": "1",
+              "IsAssembly": false,
+              "Children": []
+            }
+          ]
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1017-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1017-1-dd-b.pdf",
+          "Revision": "0",
+          "Description": "NOZZLE WAND",
+          "QuantityInAssembly": "1",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1018-1-DD-D",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1018-1-dd-d.pdf",
+          "Revision": "0",
+          "Description": "GARTER SPRING COLLECTION TRAY",
+          "QuantityInAssembly": "1",
+          "IsAssembly": true,
+          "Children": [
+            {
+              "DrawingNumber": "RT-87630-71254-1020-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1020-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "FLANGE",
+              "QuantityInAssembly": "2",
+              "IsAssembly": false,
+              "Children": []
+            },
+            {
+              "DrawingNumber": "RT-87630-71254-1031-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1031-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "GARTER SPRING TRAY BOTTOM PLATE",
+              "QuantityInAssembly": "1",
+              "IsAssembly": false,
+              "Children": []
+            },
+            {
+              "DrawingNumber": "RT-87630-71254-1032-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1032-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "GARTER SPRING TRAY SIDE WALL",
+              "QuantityInAssembly": "1",
+              "IsAssembly": false,
+              "Children": []
+            },
+            {
+              "DrawingNumber": "RT-87630-71254-1033-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1033-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "GARTER SPRING TRAY GUSSET",
+              "QuantityInAssembly": "4",
+              "IsAssembly": false,
+              "Children": []
+            }
+          ]
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1019-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1019-1-dd-b.pdf",
+          "Revision": "0",
+          "Description": "CAMERA CLAMP ADAPTER",
+          "QuantityInAssembly": "12",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1025-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1025-1-dd-b.pdf",
+          "Revision": "0",
+          "Description": "FLEX TUBE-FILTER TO REDUCER",
+          "QuantityInAssembly": "1",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1034-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1034-1-dd-b.pdf",
+          "Revision": "0",
+          "Description": "VACUUM FILTER INLET NOZZLE ASSEMBLY",
+          "QuantityInAssembly": "4",
+          "IsAssembly": true,
+          "Children": [
+            {
+              "DrawingNumber": "RT-87630-71254-1036-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1036-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "VACUUM FILTER INLET NOZZLE",
+              "QuantityInAssembly": "4",
+              "IsAssembly": false,
+              "Children": []
+            },
+            {
+              "DrawingNumber": "RT-87630-71254-1037-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1037-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "VACUUM FILTER INLET FLANGE",
+              "QuantityInAssembly": "4",
+              "IsAssembly": false,
+              "Children": []
+            }
+          ]
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1035-1-DD-E",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1035-1-dd-e.pdf",
+          "Revision": "0",
+          "Description": "FILTER HOUSING",
+          "QuantityInAssembly": "4",
+          "IsAssembly": true,
+          "Children": [
+            {
+              "DrawingNumber": "RT-87630-71254-1038-1-DD-D",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1038-1-dd-d.pdf",
+              "Revision": "0",
+              "Description": "FILTER HOUSING CANISTER",
+              "QuantityInAssembly": "4",
+              "IsAssembly": false,
+              "Children": []
+            },
+            {
+              "DrawingNumber": "RT-87630-71254-1039-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1039-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "FILTER HOUSING TUBE",
+              "QuantityInAssembly": "4",
+              "IsAssembly": false,
+              "Children": []
+            },
+            {
+              "DrawingNumber": "RT-87630-71254-1040-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1040-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "FILTER HOUSING PIPE CAP",
+              "QuantityInAssembly": "4",
+              "IsAssembly": false,
+              "Children": []
+            }
+          ]
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1041-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1041-1-dd-b.pdf",
+          "Revision": "0",
+          "Description": "FLEX TUBE-NOZZLE TO FILTER",
+          "QuantityInAssembly": "1",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1042-1-DD-D",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1042-1-dd-d.pdf",
+          "Revision": "0",
+          "Description": "VACUUM NOZZLE 2",
+          "QuantityInAssembly": "1",
+          "IsAssembly": true,
+          "Children": [
+            {
+              "DrawingNumber": "RT-87630-71254-1027-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1027-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "VACUUM NOZZLE BLOCK",
+              "QuantityInAssembly": "1",
+              "IsAssembly": false,
+              "Children": []
+            },
+            {
+              "DrawingNumber": "RT-87630-71254-1043-1-DD-B",
+              "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1043-1-dd-b.pdf",
+              "Revision": "0",
+              "Description": "NOZZLE TUBE",
+              "QuantityInAssembly": "1",
+              "IsAssembly": false,
+              "Children": []
+            }
+          ]
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1046-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1046-1-dd-b.pdf",
+          "Revision": "0",
+          "Description": "HANDLE-STICKY STICK",
+          "QuantityInAssembly": "1",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1047-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1047-1-dd-b.pdf",
+          "Revision": "0",
+          "Description": "GUIDE HANDLE-NOZZLE WAND",
+          "QuantityInAssembly": "1",
+          "IsAssembly": false,
+          "Children": []
+        },
+        {
+          "DrawingNumber": "RT-87630-71254-1048-1-DD-B",
+          "PdfPath": "C:\\Users\\ee\\drawing_tree\\data\\RT79-87630-RFP-R005 - VRS MANUAL RETRIEVAL TOOL FOR C1R\\RT-CEPC-24-0257T\\rt-87630-71254-1048-1-dd-b.pdf",
+          "Revision": "0",
+          "Description": "ID TAG - INSP & RETRIEVAL TOOLS",
+          "QuantityInAssembly": "20",
+          "IsAssembly": false,
+          "Children": []
+        }
+      ]
+    }
+  ]
+}

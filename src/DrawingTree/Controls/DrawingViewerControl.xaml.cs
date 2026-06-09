@@ -17,6 +17,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using DrawingTree.Data;
 using DrawingTree.Logging;
 using DrawingTree.Models;
 
@@ -37,6 +38,8 @@ public partial class DrawingViewerControl : UserControl
     private const double BaseRenderScale = 1.5;
 
     private readonly ObservableCollection<DrawingNode> _rootNodes = new();
+    private readonly PoRepository _poRepository = new();
+    private readonly DrawingRepository _drawingRepository = new();
     private DrawingNode? _selectedNode = null;
 
     // Zoom state (visual scale via LayoutTransform — no re-render on change)
@@ -116,6 +119,55 @@ public partial class DrawingViewerControl : UserControl
         {
             ExpandAllNodes(node);
             _rootNodes.Add(node);
+        }
+    }
+
+    /// <summary>
+    /// Loads the drawing tree from the database for the given PO number.
+    /// Fires async internally; caller does not need to await.
+    /// </summary>
+    public void LoadFromDatabase(string poName)
+    {
+        ViewerTitleLabel.Text = poName;
+        _ = LoadFromDatabaseAsync(poName);
+    }
+
+    private async Task LoadFromDatabaseAsync(string poName)
+    {
+        try
+        {
+            var groups = await Task.Run(() => _poRepository.GetGroupsForPo(poName));
+
+            var allRoots = new List<DrawingNode>();
+            foreach (var group in groups)
+            {
+                var dbInfo   = await Task.Run(() => _drawingRepository.GetDrawingInfo(group.DrawingNumber));
+                var children = await Task.Run(() => _poRepository.GetPartTree(group.PartId));
+
+                var rootInfo = new DrawingInfo
+                {
+                    PartId        = group.PartId,
+                    DrawingNumber = group.DrawingNumber,
+                    Revision      = dbInfo?.Revision      ?? string.Empty,
+                    Description   = dbInfo?.Description   ?? string.Empty,
+                    IsAssembly    = dbInfo?.IsAssembly     ?? false,
+                    PdfPath       = dbInfo?.PdfPath        ?? string.Empty
+                };
+                var rootNode = new DrawingNode(rootInfo);
+                foreach (var child in children)
+                    rootNode.Children.Add(child);
+
+                allRoots.Add(rootNode);
+            }
+
+            LoadFromTreeNodes(allRoots);
+            Logger.Instance.Info($"DrawingViewer loaded {allRoots.Count} root node(s) from DB for PO: {poName}");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Failed to load tree from database:\n{ex.Message}", "Database Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            Logger.Instance.Error($"DrawingViewer DB load failed for '{poName}': {ex.Message}");
         }
     }
 

@@ -175,50 +175,56 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Handle View Drawings button click.
-    /// Scans for *_tree.json files and shows the viewer for the selected tree.
+    /// Scans for *_import.json files (same source as Build Drawing Tree) and loads the
+    /// saved tree from the database for the selected PO.
     /// </summary>
     private void ViewDrawingsButton_Click(object sender, RoutedEventArgs e)
     {
         Logger.Instance.Info("View Drawings button clicked");
 
         string appDir = AppDomain.CurrentDomain.BaseDirectory;
-        var treeFiles = Directory.GetFiles(appDir, "*_tree.json")
-                                 .Select(f => Path.GetFileName(f))
-                                 .OrderBy(f => f)
-                                 .ToList();
+        var importFiles = Directory.GetFiles(appDir, "*_import.json")
+                                   .Select(f => Path.GetFileName(f))
+                                   .OrderBy(f => f)
+                                   .ToList();
 
-        if (treeFiles.Count == 0)
+        if (importFiles.Count == 0)
         {
             System.Windows.MessageBox.Show(
-                "No tree files found.\nPlease use \"Build Drawing Tree\" first to create a tree.",
-                "No Tree Files",
+                "No import files found.\nPlease use \"Import Drawing\" first.",
+                "No Import Files",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
-            Logger.Instance.Warning("View Drawings: no *_tree.json files found");
+            Logger.Instance.Warning("View Drawings: no *_import.json files found");
             return;
         }
 
-        var dialog = new PoSelectionDialog(treeFiles) { Owner = this };
+        var dialog = new PoSelectionDialog(importFiles) { Owner = this };
         if (dialog.ShowDialog() != true || dialog.SelectedFile == null) return;
 
-        string selectedPath = Path.Combine(appDir, dialog.SelectedFile);
-        ShowDrawingViewer(selectedPath);
+        // Extract PO name from filename (strip "_import.json")
+        string fileName = dialog.SelectedFile;
+        string poName = fileName.EndsWith("_import.json", StringComparison.OrdinalIgnoreCase)
+            ? fileName[..^"_import.json".Length]
+            : Path.GetFileNameWithoutExtension(fileName);
+
+        ShowDrawingViewer(poName);
     }
 
     /// <summary>
-    /// Show drawing viewer control for the given tree JSON file
+    /// Show drawing viewer control and load tree from database for the given PO name.
     /// </summary>
-    /// <param name="treeFilePath">Full path to the *_tree.json file</param>
-    private void ShowDrawingViewer(string treeFilePath)
+    /// <param name="poName">PO number used to query the database</param>
+    private void ShowDrawingViewer(string poName)
     {
         MainDisplayArea.Children.Clear();
 
         _drawingViewerControl = new DrawingViewerControl();
-        _drawingViewerControl.LoadFromJsonFile(treeFilePath);
+        _drawingViewerControl.LoadFromDatabase(poName);
         _drawingViewerControl.ReturnRequested += OnDrawingViewerReturn;
 
         MainDisplayArea.Children.Add(_drawingViewerControl);
-        Logger.Instance.Info($"Drawing viewer displayed for {treeFilePath}");
+        Logger.Instance.Info($"Drawing viewer displayed for PO: {poName}");
     }
 
     /// <summary>
