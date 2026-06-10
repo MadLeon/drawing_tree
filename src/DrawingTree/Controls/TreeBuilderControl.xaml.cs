@@ -9,9 +9,9 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using DrawingTree.Data;
 using DrawingTree.Logging;
 using DrawingTree.Models;
-using DrawingTree.Services;
 
 using UserControl = System.Windows.Controls.UserControl;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
@@ -42,7 +42,8 @@ public partial class TreeBuilderControl : UserControl
 
     private readonly ObservableCollection<DrawingNode> _rootNodes = new();
     private ObservableCollection<DrawingInfo> _leftDrawings = new();
-    private readonly PoTreeService _poTreeService = new();
+    private readonly PoRepository _poRepository = new();
+    private readonly DrawingRepository _drawingRepository = new();
     private string _poName = string.Empty;
     private bool _hasUnsavedChanges = false;
 
@@ -115,7 +116,7 @@ public partial class TreeBuilderControl : UserControl
             DrawingListPanel.ItemsSource = _leftDrawings;
             Logger.Instance.Info($"TreeBuilder loaded {_leftDrawings.Count} drawings from {filePath}");
 
-            SetupRootNodesFromPo(_poName);
+            _ = LoadFromDatabaseAsync(_poName);
         }
         catch (Exception ex)
         {
@@ -126,38 +127,125 @@ public partial class TreeBuilderControl : UserControl
     }
 
     /// <summary>
-    /// Queries root assembly groups for the PO and adds them as pre-set root nodes.
-    /// Matching drawings are removed from the left panel (they are fixed roots, not draggable items).
+    /// Loads PO groups and pre-existing tree structure from the database asynchronously.
+    /// Enriches left panel drawings with DB metadata, pre-populates saved tree relationships,
+    /// and warns about drawings present in DB tree but absent from the import list.
     /// </summary>
-    /// <param name="poNumber">PO number used for the lookup</param>
-    private void SetupRootNodesFromPo(string poNumber)
+    private async Task LoadFromDatabaseAsync(string poName)
     {
-        var groups = _poTreeService.GetGroupsForPo(poNumber);
-        if (groups.Count == 0)
+        SetLoading(true);
+        try
         {
-            Logger.Instance.Info($"No root assembly groups found for PO: {poNumber}");
-            return;
-        }
-
-        foreach (var group in groups)
-        {
-            // Use existing DrawingInfo from left panel if present; otherwise create a placeholder
-            var existing = _leftDrawings.FirstOrDefault(
-                d => string.Equals(d.DrawingNumber, group.DrawingNumber, StringComparison.OrdinalIgnoreCase));
-
-            DrawingInfo drawingInfo = existing ?? new DrawingInfo { DrawingNumber = group.DrawingNumber };
-            if (existing != null)
-                _leftDrawings.Remove(existing);
-
-            var node = new DrawingNode(drawingInfo)
+            var groups = await Task.Run(() => _poRepository.GetGroupsForPo(poName));
+            if (groups.Count == 0)
             {
-                JobHeader  = "Job Number: "  + string.Join(" & ", group.JobNumbers),
-                LineHeader = "Line Number: " + string.Join(" & ", group.LineNumbers)
-            };
-            _rootNodes.Add(node);
-        }
+                Logger.Instance.Info($"No root assembly groups found for PO: {poName}");
+                return;
+            }
 
-        Logger.Instance.Info($"Set up {groups.Count} root assembly node(s) for PO: {poNumber}");
+            // Enrich left panel drawings with DB metadata
+            var snapshot = _leftDrawings.ToList();
+            var enriched = await Task.Run(() =>
+                snapshot.Select(d => (d, _drawingRepository.GetDrawingInfo(d.DrawingNumber))).ToList());
+
+            foreach (var (drawing, dbInfo) in enriched)
+            {
+                if (dbInfo == null) continue;
+                drawing.PartId      = dbInfo.PartId;
+                drawing.Revision    = dbInfo.Revision;
+                drawing.Description = dbInfo.Description;
+                drawing.IsAssembly  = dbInfo.IsAssembly;
+                if (string.IsNullOrEmpty(drawing.PdfPath))
+                    drawing.PdfPath = dbInfo.PdfPath;
+            }
+
+            // Set up each root node and pre-load its saved tree
+            foreach (var group in groups)
+            {
+                var treeChildren = await Task.Run(() => _poRepository.GetPartTree(group.PartId));
+                SetupRootNodeFromGroup(group, treeChildren);
+            }
+
+            Logger.Instance.Info($"Loaded {groups.Count} root node(s) from DB for PO: {poName}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"LoadFromDatabaseAsync failed for '{poName}': {ex.Message}");
+            MessageBox.Show($"Failed to load data from database:\n{ex.Message}", "Database Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            SetLoading(false);
+        }
+    }
+
+    /// <summary>
+    /// Creates a root node for the given PO group and attaches any pre-existing DB children.
+    /// </summary>
+    private void SetupRootNodeFromGroup(PoTreeGroup group, List<DrawingNode> dbChildren)
+    {
+        var existing = _leftDrawings.FirstOrDefault(
+            d => string.Equals(d.DrawingNumber, group.DrawingNumber, StringComparison.OrdinalIgnoreCase));
+
+        DrawingInfo rootInfo = existing ?? new DrawingInfo { DrawingNumber = group.DrawingNumber };
+        rootInfo.PartId = group.PartId;
+        if (existing != null)
+            _leftDrawings.Remove(existing);
+
+        var rootNode = new DrawingNode(rootInfo)
+        {
+            JobHeader  = "Job Number: "  + string.Join(" & ", group.JobNumbers),
+            LineHeader = "Line Number: " + string.Join(" & ", group.LineNumbers)
+        };
+
+        if (dbChildren.Count > 0)
+            AttachDbChildren(rootNode, dbChildren);
+
+        _rootNodes.Add(rootNode);
+    }
+
+    /// <summary>
+    /// Recursively attaches DB tree nodes to the parent, using left panel DrawingInfo where available.
+    /// Skips and warns for any DB node whose drawing number is absent from the import list.
+    /// </summary>
+    private void AttachDbChildren(DrawingNode parent, IEnumerable<DrawingNode> dbChildren)
+    {
+        foreach (var dbChild in dbChildren)
+        {
+            var leftMatch = _leftDrawings.FirstOrDefault(
+                d => string.Equals(d.DrawingNumber, dbChild.Drawing.DrawingNumber,
+                    StringComparison.OrdinalIgnoreCase));
+
+            if (leftMatch == null)
+            {
+                Logger.Instance.Warning(
+                    $"Drawing '{dbChild.Drawing.DrawingNumber}' exists in DB tree under " +
+                    $"'{parent.Drawing.DrawingNumber}' but is absent from the import list — " +
+                    $"skipped to maintain data consistency.");
+                continue;
+            }
+
+            leftMatch.PartId      = dbChild.Drawing.PartId;
+            leftMatch.Revision    = dbChild.Drawing.Revision;
+            leftMatch.Description = dbChild.Drawing.Description;
+            leftMatch.IsAssembly  = dbChild.Drawing.IsAssembly;
+            if (string.IsNullOrEmpty(leftMatch.PdfPath))
+                leftMatch.PdfPath = dbChild.Drawing.PdfPath;
+
+            _leftDrawings.Remove(leftMatch);
+
+            var childNode = new DrawingNode(leftMatch) { PartTreeId = dbChild.PartTreeId };
+            if (dbChild.Children.Count > 0)
+                AttachDbChildren(childNode, dbChild.Children);
+
+            parent.Children.Add(childNode);
+        }
+    }
+
+    private void SetLoading(bool isLoading)
+    {
+        LoadingOverlay.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
     }
 
     // ── Info panel ────────────────────────────────────────────────────────
@@ -242,6 +330,77 @@ public partial class TreeBuilderControl : UserControl
         if (_infoUpdating || _selectedDrawing == null) return;
         _selectedDrawing.IsAssembly = InfoIsAssembly.IsChecked == true;
         _hasUnsavedChanges = true;
+    }
+
+    private void InfoFilePath_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_infoUpdating || _selectedDrawing == null) return;
+        _selectedDrawing.PdfPath = InfoFilePath.Text;
+        _hasUnsavedChanges = true;
+    }
+
+    private void InfoBrowseButton_Click(object sender, RoutedEventArgs e)
+    {
+        using var dialog = new System.Windows.Forms.OpenFileDialog
+        {
+            Title  = "Select PDF File",
+            Filter = "PDF Files (*.pdf)|*.pdf|All Files (*.*)|*.*"
+        };
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            InfoFilePath.Text = dialog.FileName;
+    }
+
+    private void InfoSaveButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedDrawing == null) return;
+        InfoSaveError.Visibility = Visibility.Collapsed;
+
+        if (_selectedDrawing.PartId == null)
+        {
+            InfoSaveError.Text = "This drawing has not been linked to the database yet.";
+            InfoSaveError.Visibility = Visibility.Visible;
+            return;
+        }
+
+        int partId = _selectedDrawing.PartId.Value;
+
+        // Save part metadata
+        bool partOk = _drawingRepository.UpdatePart(
+            partId,
+            InfoRevision.Text.Trim(),
+            InfoDescription.Text.Trim(),
+            InfoIsAssembly.IsChecked == true);
+
+        if (!partOk)
+        {
+            InfoSaveError.Text = "Failed to save drawing info. Check logs for details.";
+            InfoSaveError.Visibility = Visibility.Visible;
+            return;
+        }
+
+        // Save file path if provided
+        string filePath = InfoFilePath.Text.Trim();
+        if (!string.IsNullOrEmpty(filePath))
+        {
+            string fileName = Path.GetFileName(filePath);
+            bool fileOk = _drawingRepository.UpsertDrawingFile(
+                partId, fileName, filePath, InfoRevision.Text.Trim());
+
+            if (!fileOk)
+            {
+                InfoSaveError.Text = "Part info saved, but failed to update file path. Check logs.";
+                InfoSaveError.Visibility = Visibility.Visible;
+                return;
+            }
+        }
+
+        // Update in-memory model
+        _selectedDrawing.Revision    = InfoRevision.Text.Trim();
+        _selectedDrawing.Description = InfoDescription.Text.Trim();
+        _selectedDrawing.IsAssembly  = InfoIsAssembly.IsChecked == true;
+        _selectedDrawing.PdfPath     = filePath;
+
+        Logger.Instance.Info($"Info panel saved: {_selectedDrawing.DrawingNumber} (partId={partId})");
     }
 
     // ── Left panel: selection and drag source ─────────────────────────────
@@ -608,46 +767,17 @@ public partial class TreeBuilderControl : UserControl
     {
         try
         {
-            string fileName = $"{_poName.ToUpper()}_tree.json";
-            string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
-
-            var treeData = new
-            {
-                PurchaseOrder = _poName.ToUpper(),
-                SaveDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                Tree = _rootNodes.Select(SerializeNode).ToList()
-            };
-
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            };
-            File.WriteAllText(fullPath, JsonSerializer.Serialize(treeData, options));
+            _drawingRepository.SaveTree(_rootNodes);
             _hasUnsavedChanges = false;
-
-            MessageBox.Show($"Drawing tree saved to:\n{fullPath}", "Saved",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            Logger.Instance.Info($"Drawing tree saved to {fullPath}");
+            Logger.Instance.Info($"Drawing tree saved to DB for PO: {_poName}");
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Failed to save: {ex.Message}", "Save Error",
+            MessageBox.Show($"Failed to save tree: {ex.Message}", "Save Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             Logger.Instance.Error($"TreeBuilder save failed: {ex.Message}");
         }
     }
-
-    private object SerializeNode(DrawingNode node) => new
-    {
-        DrawingNumber = node.Drawing.DrawingNumber,
-        PdfPath = node.Drawing.PdfPath,
-        Revision = node.Drawing.Revision,
-        Description = node.Drawing.Description,
-        QuantityInAssembly = node.Drawing.QuantityInAssembly,
-        IsAssembly = node.Drawing.IsAssembly,
-        Children = node.Children.Select(SerializeNode).ToList()
-    };
 
     // ── Return ───────────────────────────────────────────────────────────
 

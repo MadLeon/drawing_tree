@@ -35,7 +35,7 @@ Use this skill when:
 
 你必须在开始前阅读以下内容：
 
-- 阅读 sessions/\*.md 作为历史记忆
+- 阅读 sessions 文件夹下的所有文件作为历史记忆
 - 阅读 Coding Style Guide 以了解代码规范
 - 阅读 Project Description 以了解项目背景和目标
 
