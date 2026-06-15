@@ -26,6 +26,9 @@ public partial class MainWindow : Window
     private TreeBuilderControl? _treeBuilderControl;
     private DrawingViewerControl? _drawingViewerControl;
 
+    private string ImportsDir =>
+        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "imports");
+
     public MainWindow()
     {
         InitializeComponent();
@@ -90,8 +93,9 @@ public partial class MainWindow : Window
     {
         Logger.Instance.Info("Build Drawing Tree button clicked");
 
-        string appDir = AppDomain.CurrentDomain.BaseDirectory;
-        var importFiles = Directory.GetFiles(appDir, "*_import.json")
+        string importsDir = ImportsDir;
+        if (!Directory.Exists(importsDir)) Directory.CreateDirectory(importsDir);
+        var importFiles = Directory.GetFiles(importsDir, "*_import.json")
                                    .Select(f => Path.GetFileName(f))
                                    .OrderBy(f => f)
                                    .ToList();
@@ -110,7 +114,7 @@ public partial class MainWindow : Window
         var dialog = new PoSelectionDialog(importFiles) { Owner = this };
         if (dialog.ShowDialog() != true || dialog.SelectedFile == null) return;
 
-        string selectedPath = Path.Combine(appDir, dialog.SelectedFile);
+        string selectedPath = Path.Combine(importsDir, dialog.SelectedFile);
         ShowTreeBuilder(selectedPath);
     }
 
@@ -182,8 +186,9 @@ public partial class MainWindow : Window
     {
         Logger.Instance.Info("View Drawings button clicked");
 
-        string appDir = AppDomain.CurrentDomain.BaseDirectory;
-        var importFiles = Directory.GetFiles(appDir, "*_import.json")
+        string importsDir = ImportsDir;
+        if (!Directory.Exists(importsDir)) Directory.CreateDirectory(importsDir);
+        var importFiles = Directory.GetFiles(importsDir, "*_import.json")
                                    .Select(f => Path.GetFileName(f))
                                    .OrderBy(f => f)
                                    .ToList();

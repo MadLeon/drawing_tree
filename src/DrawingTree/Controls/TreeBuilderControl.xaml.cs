@@ -27,6 +27,8 @@ using Color = System.Windows.Media.Color;
 using Thickness = System.Windows.Thickness;
 using CornerRadius = System.Windows.CornerRadius;
 using Button = System.Windows.Controls.Button;
+using MenuItem = System.Windows.Controls.MenuItem;
+using ContextMenu = System.Windows.Controls.ContextMenu;
 
 namespace DrawingTree.Controls;
 
@@ -401,6 +403,7 @@ public partial class TreeBuilderControl : UserControl
         _selectedDrawing.PdfPath     = filePath;
 
         Logger.Instance.Info($"Info panel saved: {_selectedDrawing.DrawingNumber} (partId={partId})");
+        Snackbar.Show($"Saved: {_selectedDrawing.DrawingNumber}");
     }
 
     // ── Left panel: selection and drag source ─────────────────────────────
@@ -586,20 +589,101 @@ public partial class TreeBuilderControl : UserControl
         if (sender is FrameworkElement el && el.DataContext is DrawingNode node)
         {
             if (node.HasJobInfo) { e.Handled = true; return; }  // Guard: root assembly nodes cannot be removed
-            var (parentCol, _) = FindParent(node);
-            parentCol?.Remove(node);
-
-            _leftDrawings.Add(node.Drawing);
-            var sorted = _leftDrawings.OrderBy(d => d.DrawingNumber, StringComparer.OrdinalIgnoreCase).ToList();
-            _leftDrawings.Clear();
-            foreach (var d in sorted) _leftDrawings.Add(d);
-
-            if (_selectedNode == node) ClearInfoPanel();
-
-            _hasUnsavedChanges = true;
-            Logger.Instance.Info($"Removed {node.Drawing.DrawingNumber} from tree");
+            RemoveNodeFromTree(node);
         }
         e.Handled = true;
+    }
+
+    private void RemoveNodeFromTree(DrawingNode node)
+    {
+        if (node.HasJobInfo) return;
+        var (parentCol, _) = FindParent(node);
+        parentCol?.Remove(node);
+
+        _leftDrawings.Add(node.Drawing);
+        var sorted = _leftDrawings.OrderBy(d => d.DrawingNumber, StringComparer.OrdinalIgnoreCase).ToList();
+        _leftDrawings.Clear();
+        foreach (var d in sorted) _leftDrawings.Add(d);
+
+        if (_selectedNode == node) ClearInfoPanel();
+
+        _hasUnsavedChanges = true;
+        Logger.Instance.Info($"Removed {node.Drawing.DrawingNumber} from tree");
+    }
+
+    // ── Left panel context menu ───────────────────────────────────────────
+
+    private void LeftItemCopy_Click(object sender, RoutedEventArgs e)
+    {
+        if (GetContextMenuDataContext<DrawingInfo>(sender) is not DrawingInfo info) return;
+        var copy = new DrawingInfo
+        {
+            DrawingNumber = info.DrawingNumber,
+            PdfPath       = info.PdfPath,
+            Revision      = info.Revision,
+            Description   = info.Description,
+            IsAssembly    = info.IsAssembly,
+            PartId        = info.PartId
+        };
+        _leftDrawings.Add(copy);
+        Logger.Instance.Info($"Copied '{info.DrawingNumber}' in left list");
+        Snackbar.Show($"Copied: {info.DrawingNumber}");
+    }
+
+    private void LeftItemRemove_Click(object sender, RoutedEventArgs e)
+    {
+        if (GetContextMenuDataContext<DrawingInfo>(sender) is not DrawingInfo info) return;
+        _leftDrawings.Remove(info);
+        if (_selectedDrawing == info) ClearInfoPanel();
+        _selectedDrawings.Remove(info);
+        Logger.Instance.Info($"Removed '{info.DrawingNumber}' from left list");
+        Snackbar.Show($"Removed: {info.DrawingNumber}");
+    }
+
+    // ── Tree panel context menu ───────────────────────────────────────────
+
+    private void TreeNodeCopy_Click(object sender, RoutedEventArgs e)
+    {
+        if (GetContextMenuDataContext<DrawingNode>(sender) is not DrawingNode node) return;
+        var copy = new DrawingInfo
+        {
+            DrawingNumber = node.Drawing.DrawingNumber,
+            PdfPath       = node.Drawing.PdfPath,
+            Revision      = node.Drawing.Revision,
+            Description   = node.Drawing.Description,
+            IsAssembly    = node.Drawing.IsAssembly,
+            PartId        = node.Drawing.PartId
+        };
+        _leftDrawings.Add(copy);
+        var sorted = _leftDrawings.OrderBy(d => d.DrawingNumber, StringComparer.OrdinalIgnoreCase).ToList();
+        _leftDrawings.Clear();
+        foreach (var d in sorted) _leftDrawings.Add(d);
+        Logger.Instance.Info($"Copied '{node.Drawing.DrawingNumber}' to left list");
+        Snackbar.Show($"Copied to drawing list: {node.Drawing.DrawingNumber}");
+        e.Handled = true;
+    }
+
+    private void TreeNodeRemove_Click(object sender, RoutedEventArgs e)
+    {
+        if (GetContextMenuDataContext<DrawingNode>(sender) is not DrawingNode node) return;
+        if (node.HasJobInfo)
+        {
+            Snackbar.Show("Root assembly nodes cannot be removed");
+            e.Handled = true;
+            return;
+        }
+        RemoveNodeFromTree(node);
+        Snackbar.Show($"Removed: {node.Drawing.DrawingNumber}");
+        e.Handled = true;
+    }
+
+    private static T? GetContextMenuDataContext<T>(object sender) where T : class
+    {
+        if (sender is MenuItem menuItem &&
+            menuItem.Parent is ContextMenu contextMenu &&
+            contextMenu.PlacementTarget is FrameworkElement el)
+            return el.DataContext as T;
+        return null;
     }
 
     private void TreeOpenPdfButton_Click(object sender, RoutedEventArgs e)
@@ -770,6 +854,7 @@ public partial class TreeBuilderControl : UserControl
             _drawingRepository.SaveTree(_rootNodes);
             _hasUnsavedChanges = false;
             Logger.Instance.Info($"Drawing tree saved to DB for PO: {_poName}");
+            Snackbar.Show("Drawing tree saved");
         }
         catch (Exception ex)
         {

@@ -312,9 +312,11 @@ public partial class DrawingEditorControl : System.Windows.Controls.UserControl
         // Create filename with uppercase Purchase Order and _import suffix
         string fileName = $"{purchaseOrder.ToUpper()}_import.json";
 
-        // Get application directory and create full path
+        // Save to imports/ subfolder inside the application directory
         string appDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        string fullPath = Path.Combine(appDirectory, fileName);
+        string importsDir = Path.Combine(appDirectory, "imports");
+        Directory.CreateDirectory(importsDir);
+        string fullPath = Path.Combine(importsDir, fileName);
 
         // Write to file
         File.WriteAllText(fullPath, jsonString);
