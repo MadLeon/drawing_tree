@@ -25,6 +25,11 @@
                         Width="120" 
                         Margin="0,0,10,0"
                         Click="ImportDrawingButton_Click"/>
+                <Button x:Name="EditPartButton"
+                        Content="Edit Part"
+                        Width="100"
+                        Margin="0,0,10,0"
+                        Click="EditPartButton_Click"/>
                 <Button x:Name="BuildDrawingTreeButton"
                         Content="Build Drawing Tree"
                         Width="140"

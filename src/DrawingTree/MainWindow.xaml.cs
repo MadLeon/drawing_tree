@@ -25,6 +25,7 @@ public partial class MainWindow : Window
     private DrawingEditorControl? _drawingEditorControl;
     private TreeBuilderControl? _treeBuilderControl;
     private DrawingViewerControl? _drawingViewerControl;
+    private PartEditorControl? _partEditorControl;
 
     private string ImportsDir =>
         Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "imports");
@@ -175,6 +176,64 @@ public partial class MainWindow : Window
         MainDisplayArea.Children.Clear();
         _treeBuilderControl = null;
         Logger.Instance.Info("Returned to main view from tree builder");
+    }
+
+    /// <summary>
+    /// Handle Edit Part button click.
+    /// Scans imports folder for *_import.json files, prompts PO selection,
+    /// then shows the part editor populated with DB metadata for each drawing.
+    /// </summary>
+    private void EditPartButton_Click(object sender, RoutedEventArgs e)
+    {
+        Logger.Instance.Info("Edit Part button clicked");
+
+        string importsDir = ImportsDir;
+        if (!Directory.Exists(importsDir)) Directory.CreateDirectory(importsDir);
+        var importFiles = Directory.GetFiles(importsDir, "*_import.json")
+                                   .Select(f => Path.GetFileName(f))
+                                   .OrderBy(f => f)
+                                   .ToList();
+
+        if (importFiles.Count == 0)
+        {
+            System.Windows.MessageBox.Show(
+                "No import files found.\nPlease use \"Import Drawing\" first.",
+                "No Import Files",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            Logger.Instance.Warning("Edit Part: no *_import.json files found");
+            return;
+        }
+
+        var dialog = new PoSelectionDialog(importFiles) { Owner = this };
+        if (dialog.ShowDialog() != true || dialog.SelectedFile == null) return;
+
+        ShowPartEditor(Path.Combine(importsDir, dialog.SelectedFile));
+    }
+
+    /// <summary>
+    /// Show the part editor control for the given import file path.
+    /// </summary>
+    private void ShowPartEditor(string importFilePath)
+    {
+        MainDisplayArea.Children.Clear();
+
+        _partEditorControl = new PartEditorControl();
+        _partEditorControl.LoadFromJsonFile(importFilePath);
+        _partEditorControl.ReturnRequested += OnPartEditorReturn;
+
+        MainDisplayArea.Children.Add(_partEditorControl);
+        Logger.Instance.Info($"Part editor displayed for {importFilePath}");
+    }
+
+    /// <summary>
+    /// Handle part editor Return event.
+    /// </summary>
+    private void OnPartEditorReturn(object? sender, EventArgs e)
+    {
+        MainDisplayArea.Children.Clear();
+        _partEditorControl = null;
+        Logger.Instance.Info("Returned to main view from part editor");
     }
 
     /// <summary>

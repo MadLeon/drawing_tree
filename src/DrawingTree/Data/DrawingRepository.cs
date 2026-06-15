@@ -279,6 +279,64 @@ public class DrawingRepository
         }
     }
 
+    /// <summary>
+    /// Returns the quantity from part_tree for the given child part.
+    /// If the part appears in multiple assemblies, returns the first found value.
+    /// Returns empty string if the part has no part_tree entry.
+    /// </summary>
+    /// <param name="partId">part.id of the child part</param>
+    public string GetPartQuantity(int partId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT quantity FROM part_tree WHERE child_id = @pid LIMIT 1";
+            cmd.Parameters.AddWithValue("@pid", partId);
+            var result = cmd.ExecuteScalar();
+            return result == null || result == DBNull.Value
+                ? string.Empty
+                : result.ToString() ?? string.Empty;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"DrawingRepository.GetPartQuantity failed for partId={partId}: {ex.Message}");
+            return string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Updates quantity for all part_tree entries where this part is a child.
+    /// No-op when quantity is empty. Parses value as integer; defaults to 1 on parse failure.
+    /// </summary>
+    /// <param name="partId">child part.id</param>
+    /// <param name="quantity">New quantity string</param>
+    public bool UpdatePartTreeQuantity(int partId, string quantity)
+    {
+        if (string.IsNullOrWhiteSpace(quantity)) return true;
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                UPDATE part_tree
+                SET    quantity   = @qty,
+                       updated_at = datetime('now', 'localtime')
+                WHERE  child_id = @pid
+                """;
+            int qty = int.TryParse(quantity, out var q) ? q : 1;
+            cmd.Parameters.AddWithValue("@qty", qty);
+            cmd.Parameters.AddWithValue("@pid", partId);
+            cmd.ExecuteNonQuery();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"DrawingRepository.UpdatePartTreeQuantity failed for partId={partId}: {ex.Message}");
+            return false;
+        }
+    }
+
     private static void CheckOrphanedEdges(SqliteConnection conn, SqliteTransaction tx,
         int parentPartId, HashSet<int> currentChildIds)
     {
