@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:models="clr-namespace:DrawingTree.Models"
+             xmlns:local="clr-namespace:DrawingTree.Controls"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="1200">
 
@@ -316,43 +317,66 @@
 
                             <TextBlock Text="Revision" FontWeight="SemiBold" FontSize="11"
                                        Foreground="#666" Margin="0,0,0,3"/>
-                            <TextBox x:Name="InfoRevision" IsReadOnly="True"
-                                     Background="#F5F5F5" Height="28" Padding="5,4"
-                                     FontSize="12" Margin="0,0,0,10"/>
+                            <TextBox x:Name="InfoRevision" Height="28" Padding="5,4"
+                                     FontSize="12" Margin="0,0,0,10"
+                                     TextChanged="InfoRevision_TextChanged"/>
 
                             <TextBlock Text="Description" FontWeight="SemiBold" FontSize="11"
                                        Foreground="#666" Margin="0,0,0,3"/>
-                            <TextBox x:Name="InfoDescription" IsReadOnly="True"
-                                     Background="#F5F5F5" Height="60" Padding="5,4"
+                            <TextBox x:Name="InfoDescription" Height="60" Padding="5,4"
                                      FontSize="12" TextWrapping="Wrap" AcceptsReturn="True"
                                      VerticalScrollBarVisibility="Auto"
-                                     Margin="0,0,0,10"/>
+                                     Margin="0,0,0,10"
+                                     TextChanged="InfoDescription_TextChanged"/>
 
                             <TextBlock Text="Quantity In Assembly" FontWeight="SemiBold" FontSize="11"
                                        Foreground="#666" Margin="0,0,0,3"/>
-                            <TextBox x:Name="InfoQuantity" IsReadOnly="True"
-                                     Background="#F5F5F5" Height="28" Padding="5,4"
-                                     FontSize="12" Margin="0,0,0,10"/>
+                            <TextBox x:Name="InfoQuantity" Height="28" Padding="5,4"
+                                     FontSize="12" Margin="0,0,0,10"
+                                     TextChanged="InfoQuantity_TextChanged"/>
 
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                 <TextBlock Text="Is Assembly" FontWeight="SemiBold" FontSize="11"
                                            Foreground="#666" VerticalAlignment="Center"/>
                                 <CheckBox x:Name="InfoIsAssembly"
                                           Margin="8,0,0,0" VerticalAlignment="Center"
-                                          IsEnabled="False"/>
+                                          Checked="InfoIsAssembly_Changed"
+                                          Unchecked="InfoIsAssembly_Changed"/>
                             </StackPanel>
 
                             <TextBlock Text="File Path" FontWeight="SemiBold" FontSize="11"
                                        Foreground="#666" Margin="0,0,0,3"/>
-                            <TextBox x:Name="InfoFilePath" IsReadOnly="True"
-                                     Background="#F5F5F5" Height="28" Padding="5,4"
-                                     FontSize="11" Margin="0,0,0,10"
-                                     ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="InfoFilePath" Grid.Column="0"
+                                         Height="28" Padding="5,4" FontSize="11"
+                                         ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                         TextChanged="InfoFilePath_TextChanged"/>
+                                <Button Grid.Column="1" Content="Browse" Height="28"
+                                        Padding="8,0" Margin="4,0,0,0" FontSize="11"
+                                        Click="BrowseFileButton_Click"/>
+                            </Grid>
+
+                            <Button x:Name="InfoSaveButton" Content="Save"
+                                    Height="28" Width="80" HorizontalAlignment="Right"
+                                    FontSize="12" Margin="0,4,0,0"
+                                    Click="InfoSaveButton_Click"/>
+
+                            <TextBlock x:Name="InfoSaveError" Foreground="#E53935"
+                                       FontSize="11" TextWrapping="Wrap"
+                                       Margin="0,4,0,0" Visibility="Collapsed"/>
 
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>
             </Border>
         </Grid>
+        <!-- Snackbar notification overlay -->
+        <local:SnackbarControl x:Name="Snackbar"
+                               Grid.Row="0" Grid.RowSpan="2"
+                               Panel.ZIndex="20"/>
     </Grid>
 </UserControl>

@@ -41,6 +41,7 @@ public partial class DrawingViewerControl : UserControl
     private readonly PoRepository _poRepository = new();
     private readonly DrawingRepository _drawingRepository = new();
     private DrawingNode? _selectedNode = null;
+    private bool _infoUpdating = false;
 
     // Zoom state (visual scale via LayoutTransform — no re-render on change)
     private double _pdfZoom = 1.0;
@@ -120,6 +121,65 @@ public partial class DrawingViewerControl : UserControl
             ExpandAllNodes(node);
             _rootNodes.Add(node);
         }
+    }
+
+    /// <summary>
+    /// Loads the drawing tree by walking up from the given part ID to the root,
+    /// then loading the full subtree. Initially selects and highlights the given part.
+    /// Fires async internally; caller does not need to await.
+    /// </summary>
+    /// <param name="partId">The part.id of the drawing to highlight on load</param>
+    public void LoadFromPartId(int partId)
+    {
+        _ = LoadFromPartIdAsync(partId);
+    }
+
+    private async Task LoadFromPartIdAsync(int partId)
+    {
+        try
+        {
+            int rootPartId = await Task.Run(() => _poRepository.GetRootPartId(partId));
+            var rootInfo   = await Task.Run(() => _drawingRepository.GetDrawingInfo(rootPartId));
+            var children   = await Task.Run(() => _poRepository.GetPartTree(rootPartId));
+
+            var drawingInfo = new DrawingInfo
+            {
+                PartId        = rootPartId,
+                DrawingNumber = rootInfo?.DrawingNumber ?? rootPartId.ToString(),
+                Revision      = rootInfo?.Revision      ?? string.Empty,
+                Description   = rootInfo?.Description   ?? string.Empty,
+                IsAssembly    = rootInfo?.IsAssembly     ?? false,
+                PdfPath       = rootInfo?.PdfPath        ?? string.Empty
+            };
+            var rootNode = new DrawingNode(drawingInfo);
+            foreach (var child in children)
+                rootNode.Children.Add(child);
+
+            ViewerTitleLabel.Text = drawingInfo.DrawingNumber;
+            LoadFromTreeNodes(new List<DrawingNode> { rootNode });
+
+            var target = FindNodeByPartId(_rootNodes, partId);
+            if (target != null) SelectNode(target);
+
+            Logger.Instance.Info($"DrawingViewer loaded tree for partId={partId}, root partId={rootPartId}");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Failed to load drawing from database:\n{ex.Message}", "Database Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            Logger.Instance.Error($"DrawingViewer LoadFromPartId failed for partId={partId}: {ex.Message}");
+        }
+    }
+
+    private static DrawingNode? FindNodeByPartId(IEnumerable<DrawingNode> nodes, int partId)
+    {
+        foreach (var node in nodes)
+        {
+            if (node.Drawing.PartId == partId) return node;
+            var found = FindNodeByPartId(node.Children, partId);
+            if (found != null) return found;
+        }
+        return null;
     }
 
     /// <summary>
@@ -243,25 +303,127 @@ public partial class DrawingViewerControl : UserControl
 
     private void ShowInfo(DrawingInfo info)
     {
+        _infoUpdating            = true;
         InfoDrawingNumber.Text   = info.DrawingNumber;
         InfoRevision.Text        = info.Revision;
         InfoDescription.Text     = info.Description;
         InfoQuantity.Text        = info.QuantityInAssembly;
         InfoIsAssembly.IsChecked = info.IsAssembly;
         InfoFilePath.Text        = info.PdfPath;
+        InfoSaveError.Visibility = Visibility.Collapsed;
         InfoPanel.IsEnabled      = true;
+        _infoUpdating            = false;
     }
 
     private void ClearInfoPanel()
     {
         if (_selectedNode != null) { _selectedNode.IsSelected = false; _selectedNode = null; }
+        _infoUpdating            = true;
         InfoDrawingNumber.Text   = string.Empty;
         InfoRevision.Text        = string.Empty;
         InfoDescription.Text     = string.Empty;
         InfoQuantity.Text        = string.Empty;
         InfoIsAssembly.IsChecked = false;
         InfoFilePath.Text        = string.Empty;
+        InfoSaveError.Visibility = Visibility.Collapsed;
         InfoPanel.IsEnabled      = false;
+        _infoUpdating            = false;
+    }
+
+    // ── Info panel: edit handlers ─────────────────────────────────────────
+
+    private void InfoRevision_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_infoUpdating || _selectedNode == null) return;
+        _selectedNode.Drawing.Revision = InfoRevision.Text;
+    }
+
+    private void InfoDescription_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_infoUpdating || _selectedNode == null) return;
+        _selectedNode.Drawing.Description = InfoDescription.Text;
+    }
+
+    private void InfoQuantity_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_infoUpdating || _selectedNode == null) return;
+        _selectedNode.Drawing.QuantityInAssembly = InfoQuantity.Text;
+    }
+
+    private void InfoIsAssembly_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_infoUpdating || _selectedNode == null) return;
+        _selectedNode.Drawing.IsAssembly = InfoIsAssembly.IsChecked == true;
+    }
+
+    private void InfoFilePath_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_infoUpdating || _selectedNode == null) return;
+        _selectedNode.Drawing.PdfPath = InfoFilePath.Text;
+    }
+
+    private void BrowseFileButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "PDF files|*.pdf" };
+        if (dialog.ShowDialog() == true)
+            InfoFilePath.Text = dialog.FileName;
+    }
+
+    private void InfoSaveButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedNode == null) return;
+        InfoSaveError.Visibility = Visibility.Collapsed;
+
+        var info = _selectedNode.Drawing;
+        if (info.PartId == null)
+        {
+            InfoSaveError.Text = "This drawing has not been linked to the database yet.";
+            InfoSaveError.Visibility = Visibility.Visible;
+            return;
+        }
+
+        int partId = info.PartId.Value;
+
+        bool partOk = _drawingRepository.UpdatePart(
+            partId,
+            InfoRevision.Text.Trim(),
+            InfoDescription.Text.Trim(),
+            InfoIsAssembly.IsChecked == true);
+
+        if (!partOk)
+        {
+            InfoSaveError.Text = "Failed to save drawing info. Check logs for details.";
+            InfoSaveError.Visibility = Visibility.Visible;
+            return;
+        }
+
+        string filePath = InfoFilePath.Text.Trim();
+        if (!string.IsNullOrEmpty(filePath))
+        {
+            string fileName = Path.GetFileName(filePath);
+            bool fileOk = _drawingRepository.UpsertDrawingFile(
+                partId, fileName, filePath, InfoRevision.Text.Trim());
+
+            if (!fileOk)
+            {
+                InfoSaveError.Text = "Part info saved, but failed to update file path. Check logs.";
+                InfoSaveError.Visibility = Visibility.Visible;
+                return;
+            }
+        }
+
+        string quantity = InfoQuantity.Text.Trim();
+        if (!string.IsNullOrEmpty(quantity))
+            _drawingRepository.UpdatePartTreeQuantity(partId, quantity);
+
+        // Sync in-memory model
+        info.Revision    = InfoRevision.Text.Trim();
+        info.Description = InfoDescription.Text.Trim();
+        info.IsAssembly  = InfoIsAssembly.IsChecked == true;
+        info.PdfPath     = filePath;
+
+        Logger.Instance.Info($"Info panel saved: {info.DrawingNumber} (partId={partId})");
+        Snackbar.Show($"Saved: {info.DrawingNumber}");
     }
 
     // ── PDF rendering ─────────────────────────────────────────────────────
@@ -338,6 +500,7 @@ public partial class DrawingViewerControl : UserControl
 
     private void PdfScrollViewer_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        if (IsScrollBarInPath(e.OriginalSource as DependencyObject)) return;
         _isPanning  = true;
         _panStart   = e.GetPosition(PdfScrollViewer);
         _panScrollH = PdfScrollViewer.HorizontalOffset;
@@ -403,6 +566,16 @@ public partial class DrawingViewerControl : UserControl
         while (element != null)
         {
             if (element is Button) return true;
+            element = VisualTreeHelper.GetParent(element);
+        }
+        return false;
+    }
+
+    private static bool IsScrollBarInPath(DependencyObject? element)
+    {
+        while (element != null)
+        {
+            if (element is System.Windows.Controls.Primitives.ScrollBar) return true;
             element = VisualTreeHelper.GetParent(element);
         }
         return false;

@@ -74,6 +74,43 @@ public class PoRepository
     }
 
     /// <summary>
+    /// Walks up the part_tree from the given part ID to find the top-most root.
+    /// Returns the root part.id, or partId itself if it has no parent.
+    /// </summary>
+    /// <param name="partId">Starting part.id</param>
+    public int GetRootPartId(int partId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                WITH RECURSIVE ancestors AS (
+                    SELECT @partId AS part_id
+
+                    UNION ALL
+
+                    SELECT pt.parent_id
+                    FROM ancestors a
+                    JOIN part_tree pt ON pt.child_id = a.part_id
+                )
+                SELECT part_id FROM ancestors
+                WHERE part_id NOT IN (SELECT child_id FROM part_tree)
+                LIMIT 1
+                """;
+            cmd.Parameters.AddWithValue("@partId", partId);
+
+            var result = cmd.ExecuteScalar();
+            return result is long id ? (int)id : partId;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.GetRootPartId failed for partId={partId}: {ex.Message}");
+            return partId;
+        }
+    }
+
+    /// <summary>
     /// Recursively loads the saved part_tree rooted at the given part ID.
     /// Returns all descendant DrawingNodes with their part/file info populated.
     /// Returns an empty list if no children exist in the database.

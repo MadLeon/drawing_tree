@@ -66,6 +66,52 @@ public class DrawingRepository
     }
 
     /// <summary>
+    /// Queries part + active drawing_file for a given part ID.
+    /// Returns null if no matching part exists.
+    /// </summary>
+    /// <param name="partId">part.id to look up</param>
+    public DrawingInfo? GetDrawingInfo(int partId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT p.id,
+                       p.drawing_number,
+                       p.revision,
+                       p.description,
+                       p.is_assembly,
+                       p.has_parent,
+                       df.file_path
+                FROM part p
+                LEFT JOIN drawing_file df ON df.part_id = p.id AND df.is_active = 1
+                WHERE p.id = @pid
+                LIMIT 1
+                """;
+            cmd.Parameters.AddWithValue("@pid", partId);
+
+            using var reader = cmd.ExecuteReader();
+            if (!reader.Read()) return null;
+
+            return new DrawingInfo
+            {
+                PartId        = reader.GetInt32(0),
+                DrawingNumber = reader.GetString(1),
+                Revision      = reader.GetString(2),
+                Description   = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                IsAssembly    = !reader.IsDBNull(4) && reader.GetInt32(4) != 0,
+                PdfPath       = reader.IsDBNull(6) ? string.Empty : reader.GetString(6)
+            };
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"DrawingRepository.GetDrawingInfo failed for partId={partId}: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Inserts a new part record. Returns the new part.id, or -1 on failure.
     /// </summary>
     /// <param name="drawingNumber">Drawing number</param>

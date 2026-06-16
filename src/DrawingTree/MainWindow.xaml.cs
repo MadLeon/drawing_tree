@@ -238,57 +238,27 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Handle View Drawings button click.
-    /// Scans for *_import.json files (same source as Build Drawing Tree) and loads the
-    /// saved tree from the database for the selected PO.
+    /// Dev: hardcoded to part.id=3490.
     /// </summary>
     private void ViewDrawingsButton_Click(object sender, RoutedEventArgs e)
     {
         Logger.Instance.Info("View Drawings button clicked");
-
-        string importsDir = ImportsDir;
-        if (!Directory.Exists(importsDir)) Directory.CreateDirectory(importsDir);
-        var importFiles = Directory.GetFiles(importsDir, "*_import.json")
-                                   .Select(f => Path.GetFileName(f))
-                                   .OrderBy(f => f)
-                                   .ToList();
-
-        if (importFiles.Count == 0)
-        {
-            System.Windows.MessageBox.Show(
-                "No import files found.\nPlease use \"Import Drawing\" first.",
-                "No Import Files",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            Logger.Instance.Warning("View Drawings: no *_import.json files found");
-            return;
-        }
-
-        var dialog = new PoSelectionDialog(importFiles) { Owner = this };
-        if (dialog.ShowDialog() != true || dialog.SelectedFile == null) return;
-
-        // Extract PO name from filename (strip "_import.json")
-        string fileName = dialog.SelectedFile;
-        string poName = fileName.EndsWith("_import.json", StringComparison.OrdinalIgnoreCase)
-            ? fileName[..^"_import.json".Length]
-            : Path.GetFileNameWithoutExtension(fileName);
-
-        ShowDrawingViewer(poName);
+        ShowDrawingViewerByPartId(3490);
     }
 
     /// <summary>
-    /// Show drawing viewer control and load tree from database for the given PO name.
+    /// Show drawing viewer and load the full tree rooted above the given part ID.
     /// </summary>
-    /// <param name="poName">PO number used to query the database</param>
-    private void ShowDrawingViewer(string poName)
+    private void ShowDrawingViewerByPartId(int partId)
     {
         MainDisplayArea.Children.Clear();
 
         _drawingViewerControl = new DrawingViewerControl();
-        _drawingViewerControl.LoadFromDatabase(poName);
+        _drawingViewerControl.LoadFromPartId(partId);
         _drawingViewerControl.ReturnRequested += OnDrawingViewerReturn;
 
         MainDisplayArea.Children.Add(_drawingViewerControl);
-        Logger.Instance.Info($"Drawing viewer displayed for PO: {poName}");
+        Logger.Instance.Info($"Drawing viewer displayed for partId={partId}");
     }
 
     /// <summary>
