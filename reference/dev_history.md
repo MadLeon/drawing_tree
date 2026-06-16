@@ -43,3 +43,34 @@
 - 重构搜索工具栏：移除 Home 按钮，搜索框固定占 1/3 宽度，并添加 "Drawing Number / PO Number / Job Number" 占位文字
 - 在 `DrawingViewerControl` 工具栏最左侧添加 Back 按钮（初始隐藏），点击后返回保留了原有搜索内容和结果的搜索界面
 - 修改 `MainWindow.xaml.cs` 导航逻辑：从搜索跳转到查看界面时保留 `_searchControl` 引用，点 Home 时才完全清理
+
+### 9. 修改搜索界面样式
+
+调整搜索结果表格的列宽、对齐方式和选中效果，提升可读性。
+- PO 列宽度从 120 逐步增加到 188（共两次加宽请求）
+- 新增 `BodyCell` 样式统一单元格与表头的左侧 padding，解决文字错位问题
+- 自定义 `DataGridCell` 模板去除单元格边框/焦点框，选中时整行通过 `IsSelected` 触发器变蓝，不再出现单独的黑框
+
+### 10. 新增 All POs 列表页
+
+新增一个展示数据库中全部采购订单明细的列表页面，作为浏览入口。
+- 新建 `AllPosControl.xaml/.cs`，复用搜索页的表头/单元格样式
+- 在 `PoRepository` 新增 `GetAllPoLines()`，级联查询 purchase_order→job→order_item→part/customer/customer_contact
+- 在 `MainWindow` 工具栏新增 "All POs" 按钮及导航逻辑，View 按钮先做占位日志
+- 调整 Contact/Drawing Number 列宽并在 Rev. 后新增 Description 列
+
+### 11. 新增单个 PO 详情页
+
+实现点击 All POs 列表的 View 按钮后跳转的 PO 详情页，按 Job 分组展示所有订单行及其 BOM 树。
+- 在 `PoRepository` 新增 `GetPoHeader()`/`GetPoOrderItems()`，在 `DrawingNode` 模型新增 `ReleaseDate`/`DueDate` 属性
+- 新建 `PoDetailControl.xaml/.cs`，复用 `DrawingViewerControl` 的树形连接线样式，根节点显示日期+查看树按钮，子节点留空
+- 在 `MainWindow` 中接入 AllPos→PoDetail→DrawingViewer 的多级 Back 导航链路，Home 按钮清空整条导航栈
+- 根据反馈调整布局：取消行内树形展开改为扁平零件列表，Release/Due Date 脱离表格独立显示在 Line 信息上方，Notes 区域移到 Job 区域上方
+
+### 12. 新增 Part 详情页
+
+实现从 PO 详情页 BOM 行的"打开零件"按钮进入的零件详情页，包含通用信息与按订单区分的工艺执行记录。
+- 在 `PoOrderItemRow` 新增 `OrderItemId` 字段，BOM 子节点统一继承根节点（order_item）的订单上下文
+- 新建 `PartRepository.cs`：`GetPartHeader`（is_assembly 保留三态 Yes/No/Unknown）、`GetDrawingFiles`（Active 置顶按时间降序）、`GetProcessSteps`（process_template 左连接 step_tracker 按 order_item 过滤）、`GetPartNotes`/`AddPartNote`（真实接入 part_note 表）
+- 新建 `PartDetailControl.xaml/.cs`：Notes（真实增删改查）→ 基本信息+Tree View 按钮 → Drawing PDF 列表 → DIR 占位 → Process Template 表
+- 在 `MainWindow` 接入 PartDetail↔PoDetail 及 PartDetail→DrawingViewer 的 Back 导航链路
