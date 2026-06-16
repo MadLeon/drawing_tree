@@ -851,6 +851,17 @@ public partial class TreeBuilderControl : UserControl
     {
         try
         {
+            var summary = _drawingRepository.ComputeTreeChanges(_rootNodes);
+
+            if (summary.Added == 0 && summary.Deleted == 0 && summary.Modified == 0)
+            {
+                Snackbar.Show("No changes to save");
+                return;
+            }
+
+            var dialog = new Dialogs.ConfirmSaveDialog(summary) { Owner = Window.GetWindow(this) };
+            if (dialog.ShowDialog() != true) return;
+
             _drawingRepository.SaveTree(_rootNodes);
             _hasUnsavedChanges = false;
             Logger.Instance.Info($"Drawing tree saved to DB for PO: {_poName}");

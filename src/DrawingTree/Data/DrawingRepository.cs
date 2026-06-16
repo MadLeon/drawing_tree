@@ -4,10 +4,11 @@
 /// </summary>
 /// <remarks>
 /// Usage:
-/// - GetDrawingInfo():    query part + active drawing_file by drawing number
-/// - UpsertDrawingFile(): set active file for a part (INSERT or UPDATE on file_path conflict)
-/// - UpdatePart():        save description/revision/is_assembly changes back to part table
-/// - SaveTree():          persist current part_tree structure (INSERT new / UPDATE quantity / warn orphans)
+/// - GetDrawingInfo():      query part + active drawing_file by drawing number
+/// - UpsertDrawingFile():   set active file for a part (INSERT or UPDATE on file_path conflict)
+/// - UpdatePart():          save description/revision/is_assembly changes back to part table
+/// - ComputeTreeChanges():  dry-run diff of current tree vs DB (no writes)
+/// - SaveTree():            persist current part_tree structure (INSERT new / UPDATE quantity / DELETE removed)
 /// </remarks>
 
 using DrawingTree.Logging;
@@ -190,10 +191,94 @@ public class DrawingRepository
     }
 
     /// <summary>
+    /// Computes what SaveTree() would do without writing anything.
+    /// Returns counts of added/deleted/modified relationships and the list of deleted items.
+    /// </summary>
+    /// <param name="rootNodes">Current root nodes of the tree</param>
+    public TreeChangeSummary ComputeTreeChanges(IEnumerable<DrawingNode> rootNodes)
+    {
+        int added = 0, deleted = 0, modified = 0;
+        var deletedItems = new List<DeletedRelationship>();
+
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            foreach (var root in rootNodes)
+                CollectNodeChanges(conn, root, ref added, ref deleted, ref modified, deletedItems);
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"DrawingRepository.ComputeTreeChanges failed: {ex.Message}");
+            throw;
+        }
+
+        return new TreeChangeSummary(added, deleted, modified, deletedItems);
+    }
+
+    private static void CollectNodeChanges(SqliteConnection conn, DrawingNode parent,
+        ref int added, ref int deleted, ref int modified, List<DeletedRelationship> deletedItems)
+    {
+        if (parent.Drawing.PartId == null) return;
+        int parentPartId = parent.Drawing.PartId.Value;
+
+        var currentChildIds = parent.Children
+            .Where(c => c.Drawing.PartId != null)
+            .Select(c => c.Drawing.PartId!.Value)
+            .ToHashSet();
+
+        // Find relationships in DB that are absent from current tree → deleted
+        using var sel = conn.CreateCommand();
+        sel.CommandText = """
+            SELECT pt.child_id, p.drawing_number, p.revision
+            FROM part_tree pt
+            JOIN part p ON p.id = pt.child_id
+            WHERE pt.parent_id = @pid
+            """;
+        sel.Parameters.AddWithValue("@pid", parentPartId);
+        using (var reader = sel.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                int dbChildId = reader.GetInt32(0);
+                if (!currentChildIds.Contains(dbChildId))
+                {
+                    deleted++;
+                    deletedItems.Add(new DeletedRelationship(
+                        parent.Drawing.DrawingNumber,
+                        reader.GetString(1),
+                        reader.GetString(2)));
+                }
+            }
+        }
+
+        // Check current children for new vs modified
+        foreach (var child in parent.Children)
+        {
+            if (child.Drawing.PartId == null) continue;
+            int quantity = int.TryParse(child.Drawing.QuantityInAssembly, out var q) ? q : 1;
+
+            if (child.PartTreeId != null)
+            {
+                using var qCmd = conn.CreateCommand();
+                qCmd.CommandText = "SELECT quantity FROM part_tree WHERE id = @id";
+                qCmd.Parameters.AddWithValue("@id", child.PartTreeId.Value);
+                var dbQty = Convert.ToInt32(qCmd.ExecuteScalar());
+                if (dbQty != quantity) modified++;
+            }
+            else
+            {
+                added++;
+            }
+
+            CollectNodeChanges(conn, child, ref added, ref deleted, ref modified, deletedItems);
+        }
+    }
+
+    /// <summary>
     /// Persists the current in-memory tree to part_tree:
-    ///   - New edges: INSERT
+    ///   - New relationships: INSERT
     ///   - Changed quantity: UPDATE
-    ///   - DB edges absent from current tree: log WARNING (no delete)
+    ///   - Relationships absent from current tree: DELETE
     /// </summary>
     /// <param name="rootNodes">Current root nodes of the tree</param>
     public void SaveTree(IEnumerable<DrawingNode> rootNodes)
@@ -226,8 +311,8 @@ public class DrawingRepository
             .Select(c => c.Drawing.PartId!.Value)
             .ToHashSet();
 
-        // Warn about DB edges absent from current tree
-        CheckOrphanedEdges(conn, tx, parentPartId, currentChildIds);
+        // Delete DB relationships absent from current tree
+        DeleteRemovedChildren(conn, tx, parentPartId, currentChildIds);
 
         foreach (var child in parent.Children)
         {
@@ -337,7 +422,7 @@ public class DrawingRepository
         }
     }
 
-    private static void CheckOrphanedEdges(SqliteConnection conn, SqliteTransaction tx,
+    private static void DeleteRemovedChildren(SqliteConnection conn, SqliteTransaction tx,
         int parentPartId, HashSet<int> currentChildIds)
     {
         using var sel = conn.CreateCommand();
@@ -350,17 +435,52 @@ public class DrawingRepository
             """;
         sel.Parameters.AddWithValue("@pid", parentPartId);
 
-        using var reader = sel.ExecuteReader();
-        while (reader.Read())
+        var toDelete = new List<(int treeId, int childPartId, string drawingNumber, string revision)>();
+        using (var reader = sel.ExecuteReader())
         {
-            int dbChildId = reader.GetInt32(1);
-            if (!currentChildIds.Contains(dbChildId))
+            while (reader.Read())
             {
-                Logger.Instance.Warning(
-                    $"SaveTree: DB edge (part_tree.id={reader.GetInt32(0)}) " +
-                    $"child {reader.GetString(2)} rev {reader.GetString(3)} " +
-                    $"exists in DB but is absent from current tree — not deleted");
+                int dbChildId = reader.GetInt32(1);
+                if (!currentChildIds.Contains(dbChildId))
+                    toDelete.Add((reader.GetInt32(0), dbChildId, reader.GetString(2), reader.GetString(3)));
+            }
+        }
+
+        foreach (var (treeId, childPartId, drawingNumber, revision) in toDelete)
+        {
+            using var del = conn.CreateCommand();
+            del.Transaction = tx;
+            del.CommandText = "DELETE FROM part_tree WHERE id = @id";
+            del.Parameters.AddWithValue("@id", treeId);
+            del.ExecuteNonQuery();
+            Logger.Instance.Info(
+                $"SaveTree: removed {drawingNumber} rev {revision} from under parent part_id={parentPartId}");
+
+            // Clear has_parent if this child no longer appears under any parent
+            using var check = conn.CreateCommand();
+            check.Transaction = tx;
+            check.CommandText = "SELECT COUNT(*) FROM part_tree WHERE child_id = @cid";
+            check.Parameters.AddWithValue("@cid", childPartId);
+            var remaining = Convert.ToInt32(check.ExecuteScalar());
+            if (remaining == 0)
+            {
+                using var reset = conn.CreateCommand();
+                reset.Transaction = tx;
+                reset.CommandText = "UPDATE part SET has_parent = 0 WHERE id = @id";
+                reset.Parameters.AddWithValue("@id", childPartId);
+                reset.ExecuteNonQuery();
             }
         }
     }
 }
+
+/// <param name="ParentDrawingNumber">Drawing number of the parent part</param>
+/// <param name="ChildDrawingNumber">Drawing number of the removed child part</param>
+/// <param name="ChildRevision">Revision of the removed child part</param>
+public record DeletedRelationship(string ParentDrawingNumber, string ChildDrawingNumber, string ChildRevision);
+
+/// <param name="Added">Number of new parent-child relationships to be added</param>
+/// <param name="Deleted">Number of existing relationships to be removed</param>
+/// <param name="Modified">Number of relationships whose quantity has changed</param>
+/// <param name="DeletedItems">Detail of each relationship to be removed</param>
+public record TreeChangeSummary(int Added, int Deleted, int Modified, IReadOnlyList<DeletedRelationship> DeletedItems);
