@@ -40,6 +40,11 @@
                         Width="120"
                         Margin="0,0,10,0"
                         Click="ViewDrawingsButton_Click"/>
+                <Button x:Name="AllPosButton"
+                        Content="All POs"
+                        Width="100"
+                        Margin="0,0,10,0"
+                        Click="AllPosButton_Click"/>
             </StackPanel>
         </Border>
 

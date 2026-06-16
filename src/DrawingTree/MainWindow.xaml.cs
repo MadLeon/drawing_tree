@@ -27,6 +27,9 @@ public partial class MainWindow : Window
     private DrawingViewerControl? _drawingViewerControl;
     private PartEditorControl? _partEditorControl;
     private SearchControl? _searchControl;
+    private AllPosControl? _allPosControl;
+    private PoDetailControl? _poDetailControl;
+    private PartDetailControl? _partDetailControl;
 
     private string ImportsDir =>
         Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "imports");
@@ -88,6 +91,148 @@ public partial class MainWindow : Window
         if (_searchControl != null)
             MainDisplayArea.Children.Add(_searchControl);
         Logger.Instance.Info("Returned to search from drawing viewer");
+    }
+
+    /// <summary>
+    /// Handle All POs button click event
+    /// </summary>
+    private void AllPosButton_Click(object sender, RoutedEventArgs e)
+    {
+        Logger.Instance.Info("All POs button clicked");
+        ShowAllPos();
+    }
+
+    /// <summary>
+    /// Show the All POs control in the main display area.
+    /// </summary>
+    private void ShowAllPos()
+    {
+        MainDisplayArea.Children.Clear();
+
+        _allPosControl = new AllPosControl();
+        _allPosControl.NavigateToPoRequested += OnAllPosNavigateToPo;
+
+        MainDisplayArea.Children.Add(_allPosControl);
+        Logger.Instance.Info("All POs control displayed");
+    }
+
+    /// <summary>
+    /// Handle navigation request from the All POs list. Shows the single-PO detail page.
+    /// Keeps the All POs control alive for back navigation.
+    /// </summary>
+    private void OnAllPosNavigateToPo(object? sender, int poId)
+    {
+        MainDisplayArea.Children.Clear();
+
+        _poDetailControl = new PoDetailControl();
+        _poDetailControl.LoadPo(poId);
+        _poDetailControl.BackRequested += OnPoDetailBackToAllPos;
+        _poDetailControl.ViewTreeRequested += OnPoDetailViewTree;
+        _poDetailControl.OpenPartRequested += OnPoDetailOpenPart;
+
+        MainDisplayArea.Children.Add(_poDetailControl);
+        Logger.Instance.Info($"PO detail control displayed for poId={poId}");
+    }
+
+    /// <summary>
+    /// Handle Back event from the PO detail page. Restores the All POs list.
+    /// </summary>
+    private void OnPoDetailBackToAllPos(object? sender, EventArgs e)
+    {
+        MainDisplayArea.Children.Clear();
+        _poDetailControl = null;
+        if (_allPosControl != null)
+            MainDisplayArea.Children.Add(_allPosControl);
+        Logger.Instance.Info("Returned to All POs from PO detail");
+    }
+
+    /// <summary>
+    /// Handle "View Tree" request from a PO detail order item row.
+    /// Shows the full drawing viewer rooted at the given part, with Back returning to PO detail.
+    /// </summary>
+    private void OnPoDetailViewTree(object? sender, int partId)
+    {
+        MainDisplayArea.Children.Clear();
+
+        _drawingViewerControl = new DrawingViewerControl();
+        _drawingViewerControl.ShowBackButton = true;
+        _drawingViewerControl.LoadFromPartId(partId);
+        _drawingViewerControl.ReturnRequested += OnDrawingViewerReturn;
+        _drawingViewerControl.BackRequested += OnViewerBackToPoDetail;
+
+        MainDisplayArea.Children.Add(_drawingViewerControl);
+        Logger.Instance.Info($"Drawing viewer displayed for partId={partId} (from PO detail)");
+    }
+
+    /// <summary>
+    /// Handle drawing viewer Back event when entered from the PO detail page.
+    /// </summary>
+    private void OnViewerBackToPoDetail(object? sender, EventArgs e)
+    {
+        MainDisplayArea.Children.Clear();
+        _drawingViewerControl = null;
+        if (_poDetailControl != null)
+            MainDisplayArea.Children.Add(_poDetailControl);
+        Logger.Instance.Info("Returned to PO detail from drawing viewer");
+    }
+
+    /// <summary>
+    /// Handle "open part" request from the PO detail tree. Shows the Part detail page.
+    /// Keeps the PO detail control alive for back navigation.
+    /// </summary>
+    private void OnPoDetailOpenPart(object? sender, (int PartId, int OrderItemId) args)
+    {
+        MainDisplayArea.Children.Clear();
+
+        _partDetailControl = new PartDetailControl();
+        _partDetailControl.LoadPart(args.PartId, args.OrderItemId);
+        _partDetailControl.BackRequested += OnPartDetailBackToPoDetail;
+        _partDetailControl.ViewTreeRequested += OnPartDetailViewTree;
+
+        MainDisplayArea.Children.Add(_partDetailControl);
+        Logger.Instance.Info($"Part detail control displayed for partId={args.PartId}, orderItemId={args.OrderItemId}");
+    }
+
+    /// <summary>
+    /// Handle Back event from the Part detail page. Restores the PO detail page.
+    /// </summary>
+    private void OnPartDetailBackToPoDetail(object? sender, EventArgs e)
+    {
+        MainDisplayArea.Children.Clear();
+        _partDetailControl = null;
+        if (_poDetailControl != null)
+            MainDisplayArea.Children.Add(_poDetailControl);
+        Logger.Instance.Info("Returned to PO detail from part detail");
+    }
+
+    /// <summary>
+    /// Handle "Tree View" request from the Part detail page.
+    /// Shows the full drawing viewer rooted at the given part, with Back returning to Part detail.
+    /// </summary>
+    private void OnPartDetailViewTree(object? sender, int partId)
+    {
+        MainDisplayArea.Children.Clear();
+
+        _drawingViewerControl = new DrawingViewerControl();
+        _drawingViewerControl.ShowBackButton = true;
+        _drawingViewerControl.LoadFromPartId(partId);
+        _drawingViewerControl.ReturnRequested += OnDrawingViewerReturn;
+        _drawingViewerControl.BackRequested += OnViewerBackToPartDetail;
+
+        MainDisplayArea.Children.Add(_drawingViewerControl);
+        Logger.Instance.Info($"Drawing viewer displayed for partId={partId} (from part detail)");
+    }
+
+    /// <summary>
+    /// Handle drawing viewer Back event when entered from the Part detail page.
+    /// </summary>
+    private void OnViewerBackToPartDetail(object? sender, EventArgs e)
+    {
+        MainDisplayArea.Children.Clear();
+        _drawingViewerControl = null;
+        if (_partDetailControl != null)
+            MainDisplayArea.Children.Add(_partDetailControl);
+        Logger.Instance.Info("Returned to part detail from drawing viewer");
     }
 
     /// <summary>
@@ -314,6 +459,9 @@ public partial class MainWindow : Window
         MainDisplayArea.Children.Clear();
         _drawingViewerControl = null;
         _searchControl = null;
+        _allPosControl = null;
+        _poDetailControl = null;
+        _partDetailControl = null;
         Logger.Instance.Info("Returned to main view from drawing viewer");
     }
 }

@@ -16,6 +16,30 @@
             <Setter Property="BorderBrush" Value="#CCCCCC"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
         </Style>
+        <Style x:Key="BodyCell" TargetType="DataGridCell">
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{x:Static SystemColors.HighlightBrush}"/>
+                    <Setter Property="Foreground" Value="{x:Static SystemColors.HighlightTextBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
 
     <Grid Background="White">
@@ -61,11 +85,12 @@
                   BorderThickness="0"
                   RowBackground="White"
                   AlternatingRowBackground="White"
-                  ColumnHeaderStyle="{StaticResource HeaderCell}">
+                  ColumnHeaderStyle="{StaticResource HeaderCell}"
+                  CellStyle="{StaticResource BodyCell}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="PO"
                                     Binding="{Binding PoNumber}"
-                                    Width="120"/>
+                                    Width="188"/>
                 <DataGridTextColumn Header="Job No"
                                     Binding="{Binding JobNumber}"
                                     Width="100"/>
