@@ -15,6 +15,7 @@
         <Geometry x:Key="AddBoxGeo">M440-280h80v-160h160v-80H520v-160h-80v160H280v80h160v160ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z</Geometry>
         <Geometry x:Key="IndeterminateCheckBoxGeo">M280-440h400v-80H280v80Zm-80 320q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z</Geometry>
         <Geometry x:Key="OpenInNewGeo">M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z</Geometry>
+        <Geometry x:Key="ChevronLeftGeo">M560-240 320-480l240-240 57 57-184 183 184 184-57 57Z</Geometry>
 
         <!-- Y-flipped style for icons that need it (expand/collapse icons) -->
         <Style x:Key="IconPath" TargetType="Path">
@@ -66,9 +67,20 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="ViewerTitleLabel" Grid.Column="0"
-                           FontWeight="Bold" FontSize="14"
-                           VerticalAlignment="Center" Foreground="#333"/>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BackButton"
+                            Style="{StaticResource IconBtn}"
+                            Width="32" Height="32" Margin="0,0,8,0"
+                            Visibility="Collapsed"
+                            ToolTip="Back to search"
+                            Click="BackButton_Click">
+                        <Path Data="{StaticResource ChevronLeftGeo}"
+                              Stretch="Uniform" Fill="#333333" Width="20" Height="20"/>
+                    </Button>
+                    <TextBlock x:Name="ViewerTitleLabel"
+                               FontWeight="Bold" FontSize="14"
+                               VerticalAlignment="Center" Foreground="#333"/>
+                </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                     <!-- House icon: Stretch=Uniform only, no ScaleY flip -->
                     <Button Style="{StaticResource IconBtn}" Width="32" Height="32"

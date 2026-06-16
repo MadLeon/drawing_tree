@@ -26,6 +26,7 @@ public partial class MainWindow : Window
     private TreeBuilderControl? _treeBuilderControl;
     private DrawingViewerControl? _drawingViewerControl;
     private PartEditorControl? _partEditorControl;
+    private SearchControl? _searchControl;
 
     private string ImportsDir =>
         Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "imports");
@@ -42,7 +43,51 @@ public partial class MainWindow : Window
     private void SearchButton_Click(object sender, RoutedEventArgs e)
     {
         Logger.Instance.Info("Search button clicked");
-        // TODO: Implement search functionality
+        ShowSearch();
+    }
+
+    /// <summary>
+    /// Show the search control in the main display area.
+    /// </summary>
+    private void ShowSearch()
+    {
+        MainDisplayArea.Children.Clear();
+
+        _searchControl = new SearchControl();
+        _searchControl.NavigateToPartRequested += OnSearchNavigateToPart;
+
+        MainDisplayArea.Children.Add(_searchControl);
+        Logger.Instance.Info("Search control displayed");
+    }
+
+    /// <summary>
+    /// Handle navigation request from search results.
+    /// Keeps the search control alive for back navigation.
+    /// </summary>
+    private void OnSearchNavigateToPart(object? sender, int partId)
+    {
+        MainDisplayArea.Children.Clear();
+
+        _drawingViewerControl = new DrawingViewerControl();
+        _drawingViewerControl.ShowBackButton = true;
+        _drawingViewerControl.LoadFromPartId(partId);
+        _drawingViewerControl.ReturnRequested += OnDrawingViewerReturn;
+        _drawingViewerControl.BackRequested += OnViewerBackToSearch;
+
+        MainDisplayArea.Children.Add(_drawingViewerControl);
+        Logger.Instance.Info($"Drawing viewer displayed for partId={partId} (from search)");
+    }
+
+    /// <summary>
+    /// Handle drawing viewer Back event. Restores the search control with its previous state.
+    /// </summary>
+    private void OnViewerBackToSearch(object? sender, EventArgs e)
+    {
+        MainDisplayArea.Children.Clear();
+        _drawingViewerControl = null;
+        if (_searchControl != null)
+            MainDisplayArea.Children.Add(_searchControl);
+        Logger.Instance.Info("Returned to search from drawing viewer");
     }
 
     /// <summary>
@@ -262,12 +307,13 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Handle drawing viewer Return event
+    /// Handle drawing viewer Return event (Home button). Returns to blank main view.
     /// </summary>
     private void OnDrawingViewerReturn(object? sender, EventArgs e)
     {
         MainDisplayArea.Children.Clear();
         _drawingViewerControl = null;
+        _searchControl = null;
         Logger.Instance.Info("Returned to main view from drawing viewer");
     }
 }

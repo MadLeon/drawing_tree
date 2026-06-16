@@ -468,6 +468,115 @@ public class DrawingRepository
         }
     }
 
+    /// <summary>
+    /// Searches parts by drawing number using a LIKE fuzzy match.
+    /// Returns up to 100 results ordered by drawing_number.
+    /// </summary>
+    /// <param name="query">Search term (wrapped in % wildcards internally)</param>
+    /// <returns>List of matching DrawingInfo records</returns>
+    public List<DrawingInfo> SearchParts(string query)
+    {
+        var results = new List<DrawingInfo>();
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT p.id,
+                       p.drawing_number,
+                       p.revision,
+                       p.description,
+                       p.is_assembly
+                FROM part p
+                WHERE p.drawing_number LIKE @query
+                ORDER BY p.drawing_number
+                LIMIT 100
+                """;
+            cmd.Parameters.AddWithValue("@query", "%" + query + "%");
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                results.Add(new DrawingInfo
+                {
+                    PartId        = reader.GetInt32(0),
+                    DrawingNumber = reader.GetString(1),
+                    Revision      = reader.GetString(2),
+                    Description   = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    IsAssembly    = !reader.IsDBNull(4) && reader.GetInt32(4) != 0,
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"DrawingRepository.SearchParts failed for '{query}': {ex.Message}");
+        }
+        return results;
+    }
+
+    /// <summary>
+    /// Searches parts by drawing number and resolves each match upward through part_tree
+    /// to find all PO/Job contexts that contain the matched part (directly or as a sub-assembly).
+    /// Returns up to 200 results ordered by po_number, job_number, drawing_number.
+    /// </summary>
+    /// <param name="query">Search term (wrapped in % wildcards internally)</param>
+    public List<SearchResultRow> SearchPartsWithJobContext(string query)
+    {
+        var results = new List<SearchResultRow>();
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                WITH RECURSIVE ancestors(original_part_id, ancestor_part_id, depth) AS (
+                    SELECT p.id, p.id, 0
+                    FROM part p
+                    WHERE p.drawing_number LIKE @query
+
+                    UNION ALL
+
+                    SELECT a.original_part_id, pt.parent_id, a.depth + 1
+                    FROM part_tree pt
+                    JOIN ancestors a ON pt.child_id = a.ancestor_part_id
+                    WHERE a.depth < 30
+                )
+                SELECT DISTINCT
+                    po.po_number,
+                    j.job_number,
+                    p_orig.drawing_number,
+                    p_orig.revision,
+                    p_orig.description,
+                    p_orig.id
+                FROM ancestors a
+                JOIN order_item oi ON oi.part_id = a.ancestor_part_id
+                JOIN job j ON j.id = oi.job_id
+                JOIN purchase_order po ON po.id = j.po_id
+                JOIN part p_orig ON p_orig.id = a.original_part_id
+                ORDER BY po.po_number, j.job_number, p_orig.drawing_number
+                LIMIT 200
+                """;
+            cmd.Parameters.AddWithValue("@query", "%" + query + "%");
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                results.Add(new SearchResultRow(
+                    PartId:        reader.GetInt32(5),
+                    PoNumber:      reader.GetString(0),
+                    JobNumber:     reader.GetString(1),
+                    DrawingNumber: reader.GetString(2),
+                    Revision:      reader.GetString(3),
+                    Description:   reader.IsDBNull(4) ? string.Empty : reader.GetString(4)
+                ));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"DrawingRepository.SearchPartsWithJobContext failed for '{query}': {ex.Message}");
+        }
+        return results;
+    }
+
     private static void DeleteRemovedChildren(SqliteConnection conn, SqliteTransaction tx,
         int parentPartId, HashSet<int> currentChildIds)
     {
@@ -524,6 +633,16 @@ public class DrawingRepository
 /// <param name="ChildDrawingNumber">Drawing number of the removed child part</param>
 /// <param name="ChildRevision">Revision of the removed child part</param>
 public record DeletedRelationship(string ParentDrawingNumber, string ChildDrawingNumber, string ChildRevision);
+
+/// <param name="PartId">part.id for navigation to drawing viewer</param>
+/// <param name="PoNumber">Purchase order number</param>
+/// <param name="JobNumber">Job number</param>
+/// <param name="DrawingNumber">Matched part drawing number</param>
+/// <param name="Revision">Matched part revision</param>
+/// <param name="Description">Matched part description</param>
+public record SearchResultRow(
+    int PartId, string PoNumber, string JobNumber,
+    string DrawingNumber, string Revision, string Description);
 
 /// <param name="Added">Number of new parent-child relationships to be added</param>
 /// <param name="Deleted">Number of existing relationships to be removed</param>

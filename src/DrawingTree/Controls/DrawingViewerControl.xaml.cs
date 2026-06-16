@@ -56,6 +56,16 @@ public partial class DrawingViewerControl : UserControl
     private double _panScrollV;
 
     public event EventHandler? ReturnRequested;
+    public event EventHandler? BackRequested;
+
+    /// <summary>
+    /// Shows or hides the Back button. Set to true when navigated from the search screen.
+    /// </summary>
+    public bool ShowBackButton
+    {
+        get => BackButton.Visibility == Visibility.Visible;
+        set => BackButton.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     public DrawingViewerControl()
     {
@@ -522,6 +532,12 @@ public partial class DrawingViewerControl : UserControl
     }
 
     // ── Toolbar ───────────────────────────────────────────────────────────
+
+    private void BackButton_Click(object sender, RoutedEventArgs e)
+    {
+        Logger.Instance.Info("DrawingViewer: back to search");
+        BackRequested?.Invoke(this, EventArgs.Empty);
+    }
 
     private void HomeButton_Click(object sender, RoutedEventArgs e)
     {
