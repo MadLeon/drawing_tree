@@ -46,7 +46,7 @@
                         Margin="0,0,10,0"
                         Click="AllPosButton_Click"/>
                 <Button x:Name="ManufacturingScheduleButton"
-                        Content="Mfg Schedule"
+                        Content="MP Schedule"
                         Width="120"
                         Margin="0,0,10,0"
                         Click="ManufacturingScheduleButton_Click"/>

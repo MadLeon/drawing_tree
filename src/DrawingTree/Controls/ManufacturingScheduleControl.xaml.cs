@@ -4,6 +4,8 @@
 /// active POs; right Canvas displays coloured step-tracker bars per row.
 /// </summary>
 
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -25,28 +27,51 @@ using UserControl = System.Windows.Controls.UserControl;
 
 namespace DrawingTree.Controls;
 
+// ── Column visibility config ───────────────────────────────────────────────
+
+public class ColumnConfig : INotifyPropertyChanged
+{
+    private bool _showPo          = true;
+    private bool _showCustomer    = true;
+    private bool _showDescription = true;
+    private bool _showQuantity    = true;
+    private bool _showDueDate     = true;
+    private bool _showMemo        = true;
+    private bool _showStatus      = true;
+
+    public bool ShowPo          { get => _showPo;          set { _showPo = value;          OnChanged(); } }
+    public bool ShowCustomer    { get => _showCustomer;    set { _showCustomer = value;    OnChanged(); } }
+    public bool ShowDescription { get => _showDescription; set { _showDescription = value; OnChanged(); } }
+    public bool ShowQuantity    { get => _showQuantity;    set { _showQuantity = value;    OnChanged(); } }
+    public bool ShowDueDate     { get => _showDueDate;     set { _showDueDate = value;     OnChanged(); } }
+    public bool ShowMemo        { get => _showMemo;        set { _showMemo = value;        OnChanged(); } }
+    public bool ShowStatus      { get => _showStatus;      set { _showStatus = value;      OnChanged(); } }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnChanged([CallerMemberName] string? p = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(p));
+}
+
+// ── Control ────────────────────────────────────────────────────────────────
+
 public partial class ManufacturingScheduleControl : UserControl
 {
     // ── Configuration ──────────────────────────────────────────────────────
 
     private const int RowHeight = 32;
 
-    // Day view: 30px/day, ±30 days around today
     private const double DayViewPixelsPerDay   = 30.0;
     private const int    DayViewDaysBefore     = 30;
     private const int    DayViewDaysAfter      = 90;
 
-    // Week view: ~20px/day (140px/week)
     private const double WeekViewPixelsPerDay  = 20.0;
-    private const int    WeekViewDaysBefore    = 56;  // 8 weeks
-    private const int    WeekViewDaysAfter     = 112; // 16 weeks
+    private const int    WeekViewDaysBefore    = 56;
+    private const int    WeekViewDaysAfter     = 112;
 
-    // Month view: ~4px/day (≈120px/month)
     private const double MonthViewPixelsPerDay = 4.0;
-    private const int    MonthViewDaysBefore   = 90;  // 3 months
-    private const int    MonthViewDaysAfter    = 275; // ~9 months
+    private const int    MonthViewDaysBefore   = 90;
+    private const int    MonthViewDaysAfter    = 275;
 
-    // Shop code → bar colour palette
     private static readonly Dictionary<string, Color> ShopColors = new(StringComparer.OrdinalIgnoreCase)
     {
         ["MILL"]  = Color.FromRgb(70,  130, 180),
@@ -68,19 +93,39 @@ public partial class ManufacturingScheduleControl : UserControl
         Color.FromRgb(175, 238, 238),
     ];
 
+    // ── Column widths (must match XAML DataTemplate Border widths) ─────────
+
+    private const int ColWidthPo          = 125;
+    private const int ColWidthJob         = 80;
+    private const int ColWidthCustomer    = 100;
+    private const int ColWidthDrawing     = 200;
+    private const int ColWidthDescription = 150;
+    private const int ColWidthQuantity    = 50;
+    private const int ColWidthDueDate     = 90;
+    private const int ColWidthMemo        = 80;
+    private const int ColWidthStatus      = 120;
+
     // ── State ──────────────────────────────────────────────────────────────
 
     private readonly ScheduleRepository _repository = new();
-    private List<ScheduleViewModel>     _viewModels = [];
+    private List<ScheduleViewModel>     _allViewModels = [];
+    private List<ScheduleViewModel>     _viewModels    = [];
+    private ColumnConfig                _colCfg        = null!;
 
     private enum GanttViewMode { Day, Week, Month }
-    private GanttViewMode _viewMode      = GanttViewMode.Day;
-    private DateTime      _viewportStart;
-    private double        _pixelsPerDay;
-    private int           _totalDays;
+    private enum SortColumn    { None, Job, Customer, DueDate }
 
-    // Bars drawn on the canvas: (rect bounds, vm index, step)
+    private GanttViewMode _viewMode     = GanttViewMode.Day;
+    private SortColumn    _sortColumn   = SortColumn.Job;
+    private bool          _sortAscending = true;
+
+    private DateTime _viewportStart;
+    private double   _pixelsPerDay;
+    private int      _totalDays;
+
     private readonly List<(Rect Bounds, int RowIndex, ScheduleStepTracker Step)> _barHitList = [];
+
+    private bool _loaded = false;
 
     public event EventHandler? BackRequested;
     public event EventHandler<(int PartId, int OrderItemId)>? OpenPartRequested;
@@ -90,40 +135,132 @@ public partial class ManufacturingScheduleControl : UserControl
     public ManufacturingScheduleControl()
     {
         InitializeComponent();
+        _colCfg = (ColumnConfig)Resources["ColCfg"];
+        _colCfg.PropertyChanged += (_, _) => UpdateColumnVisibility();
+
         Loaded += OnLoaded;
         TimeHeaderCanvas.SizeChanged += (_, _) => DrawTimeHeader();
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        ApplyViewMode();
-        LoadData();
+        if (_loaded) return;
+        _loaded = true;
 
-        // OuterScroll (and GanttHScroll) can mark PreviewMouseLeftButtonDown as Handled,
-        // which suppresses the normal bubbling MouseLeftButtonDown on the canvas.
-        // Registering with handledEventsToo:true ensures the click fires regardless.
+        ApplyViewMode();
         GanttHScroll.AddHandler(
             UIElement.PreviewMouseLeftButtonDownEvent,
             new MouseButtonEventHandler(GanttCanvas_MouseLeftButtonDown),
             handledEventsToo: true);
+
+        UpdateSortIndicators();
+        UpdateColumnVisibility();
+        _ = LoadDataAsync();
     }
 
     // ── Data loading ──────────────────────────────────────────────────────
 
-    private void LoadData()
+    private async Task LoadDataAsync()
     {
-        _viewModels = _repository.GetScheduleViewModels();
-        LeftRows.ItemsSource = _viewModels;
-        Logger.Instance.Info($"ManufacturingScheduleControl: loaded {_viewModels.Count} rows");
-        Render();
-
-        // Scroll right panel so today is centered after layout
-        Dispatcher.InvokeAsync(() =>
+        LoadingOverlay.Visibility = Visibility.Visible;
+        try
         {
-            double todayX      = DateToX(DateTime.Today);
-            double viewWidth   = GanttHScroll.ViewportWidth;
-            GanttHScroll.ScrollToHorizontalOffset(Math.Max(0, todayX - viewWidth / 2));
-        }, System.Windows.Threading.DispatcherPriority.Loaded);
+            var models = await Task.Run(() => _repository.GetScheduleViewModels());
+            _allViewModels = models;
+            ApplySortAndFilter();
+
+            Dispatcher.InvokeAsync(() =>
+            {
+                double todayX    = DateToX(DateTime.Today);
+                double viewWidth = GanttHScroll.ViewportWidth;
+                GanttHScroll.ScrollToHorizontalOffset(Math.Max(0, todayX - viewWidth / 2));
+            }, System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"ManufacturingScheduleControl.LoadDataAsync failed: {ex.Message}");
+        }
+        finally
+        {
+            LoadingOverlay.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    // ── Search + Sort + Filter ────────────────────────────────────────────
+
+    private void ApplySortAndFilter()
+    {
+        string query = SearchBox.Text.Trim();
+        IEnumerable<ScheduleViewModel> source = _allViewModels;
+
+        if (!string.IsNullOrEmpty(query))
+        {
+            source = source.Where(vm =>
+                ContainsIgnoreCase(vm.Row.JobNumber,     query) ||
+                ContainsIgnoreCase(vm.Row.DrawingNumber, query) ||
+                ContainsIgnoreCase(vm.Row.Description,   query));
+        }
+
+        source = _sortColumn switch
+        {
+            SortColumn.Job      when _sortAscending  => source.OrderBy(vm => vm.Row.JobNumber),
+            SortColumn.Job                            => source.OrderByDescending(vm => vm.Row.JobNumber),
+            SortColumn.Customer when _sortAscending   => source.OrderBy(vm => vm.Row.CustomerName),
+            SortColumn.Customer                       => source.OrderByDescending(vm => vm.Row.CustomerName),
+            SortColumn.DueDate  when _sortAscending   => source.OrderBy(vm => vm.Row.DueDate),
+            SortColumn.DueDate                        => source.OrderByDescending(vm => vm.Row.DueDate),
+            _                                         => source,
+        };
+
+        _viewModels          = source.ToList();
+        LeftRows.ItemsSource = _viewModels;
+        OuterScroll.ScrollToTop();
+        Logger.Instance.Info($"ManufacturingScheduleControl: showing {_viewModels.Count}/{_allViewModels.Count} rows");
+        Render();
+    }
+
+    private static bool ContainsIgnoreCase(string? text, string query) =>
+        text != null && text.Contains(query, StringComparison.OrdinalIgnoreCase);
+
+    // ── Column visibility ─────────────────────────────────────────────────
+
+    private void UpdateColumnVisibility()
+    {
+        // Header column widths
+        HeaderStrip.ColumnDefinitions[0].Width = _colCfg.ShowPo          ? new GridLength(ColWidthPo)          : new GridLength(0);
+        HeaderStrip.ColumnDefinitions[2].Width = _colCfg.ShowCustomer    ? new GridLength(ColWidthCustomer)    : new GridLength(0);
+        HeaderStrip.ColumnDefinitions[4].Width = _colCfg.ShowDescription ? new GridLength(ColWidthDescription) : new GridLength(0);
+        HeaderStrip.ColumnDefinitions[5].Width = _colCfg.ShowQuantity    ? new GridLength(ColWidthQuantity)    : new GridLength(0);
+        HeaderStrip.ColumnDefinitions[6].Width = _colCfg.ShowDueDate     ? new GridLength(ColWidthDueDate)     : new GridLength(0);
+        HeaderStrip.ColumnDefinitions[7].Width = _colCfg.ShowMemo        ? new GridLength(ColWidthMemo)        : new GridLength(0);
+        HeaderStrip.ColumnDefinitions[8].Width = _colCfg.ShowStatus      ? new GridLength(ColWidthStatus)      : new GridLength(0);
+
+        // Left panel total width
+        var leftWidth = new GridLength(ComputeLeftWidth());
+        ContentGrid.ColumnDefinitions[0].Width       = leftWidth;
+        BottomScrollStrip.ColumnDefinitions[0].Width = leftWidth;
+    }
+
+    private int ComputeLeftWidth()
+    {
+        int w = ColWidthJob + ColWidthDrawing; // always visible
+        if (_colCfg.ShowPo)          w += ColWidthPo;
+        if (_colCfg.ShowCustomer)    w += ColWidthCustomer;
+        if (_colCfg.ShowDescription) w += ColWidthDescription;
+        if (_colCfg.ShowQuantity)    w += ColWidthQuantity;
+        if (_colCfg.ShowDueDate)     w += ColWidthDueDate;
+        if (_colCfg.ShowMemo)        w += ColWidthMemo;
+        if (_colCfg.ShowStatus)      w += ColWidthStatus;
+        return w;
+    }
+
+    // ── Sort indicators ───────────────────────────────────────────────────
+
+    private void UpdateSortIndicators()
+    {
+        SortJobArrow.Text      = _sortColumn == SortColumn.Job      ? (_sortAscending ? "▲" : "▼") : "";
+        SortCustomerArrow.Text = _sortColumn == SortColumn.Customer ? (_sortAscending ? "▲" : "▼") : "";
+        SortDueDateArrow.Text  = _sortColumn == SortColumn.DueDate  ? (_sortAscending ? "▲" : "▼") : "";
     }
 
     // ── Rendering ─────────────────────────────────────────────────────────
@@ -156,17 +293,15 @@ public partial class ManufacturingScheduleControl : UserControl
         DrawTodayLine(canvasHeight);
         DrawDueDateLines();
 
-        // Time header is redrawn via Dispatcher to ensure ActualWidth is available
         Dispatcher.InvokeAsync(DrawTimeHeader, System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
-    /// <summary>Draws alternating row bands on the Gantt canvas.</summary>
     private void DrawRowBands(double canvasWidth)
     {
         for (int i = 0; i < _viewModels.Count; i++)
         {
-            double y = i * RowHeight;
-            var band = new Rectangle
+            double y    = i * RowHeight;
+            var    band = new Rectangle
             {
                 Width  = canvasWidth,
                 Height = RowHeight,
@@ -179,24 +314,22 @@ public partial class ManufacturingScheduleControl : UserControl
             Canvas.SetTop(band, y);
             GanttCanvas.Children.Add(band);
 
-            // Row separator
             var line = new Line
             {
                 X1 = 0, X2 = canvasWidth,
                 Y1 = y + RowHeight, Y2 = y + RowHeight,
-                Stroke = new SolidColorBrush(Color.FromRgb(238, 238, 238)),
+                Stroke          = new SolidColorBrush(Color.FromRgb(238, 238, 238)),
                 StrokeThickness = 1,
             };
             GanttCanvas.Children.Add(line);
         }
     }
 
-    /// <summary>Draws step-tracker bars for every row.</summary>
     private void DrawBars()
     {
         for (int i = 0; i < _viewModels.Count; i++)
         {
-            var vm = _viewModels[i];
+            var    vm     = _viewModels[i];
             double rowTop = i * RowHeight;
 
             foreach (var step in vm.Steps)
@@ -205,48 +338,46 @@ public partial class ManufacturingScheduleControl : UserControl
                 var endDate = step.EndTime != null && DateTime.TryParse(step.EndTime, out var ed)
                     ? ed : DateTime.Today;
 
-                double x1 = DateToX(startDate);
-                double x2 = DateToX(endDate.AddDays(1)); // inclusive
+                double x1       = DateToX(startDate);
+                double x2       = DateToX(endDate.AddDays(1));
                 if (x2 <= x1) x2 = x1 + 2;
 
-                double barWidth = x2 - x1;
-                double barTop   = rowTop + 3;
-                double barHeight= RowHeight - 6;
+                double barWidth  = x2 - x1;
+                double barTop    = rowTop + 3;
+                double barHeight = RowHeight - 6;
 
-                var color  = GetShopColor(step.ShopCode);
-                var brush  = new SolidColorBrush(color);
-                string tooltipText = step.Description != null
+                var color       = GetShopColor(step.ShopCode);
+                string tooltip  = step.Description != null
                     ? $"{step.ShopCode}: {step.Description}"
                     : step.ShopCode;
-                var border = new Rectangle
+
+                var bar = new Rectangle
                 {
-                    Width  = barWidth,
-                    Height = barHeight,
-                    Fill   = brush,
+                    Width   = barWidth,
+                    Height  = barHeight,
+                    Fill    = new SolidColorBrush(color),
                     RadiusX = 2, RadiusY = 2,
-                    ToolTip = tooltipText,
+                    ToolTip = tooltip,
                 };
-                Canvas.SetLeft(border, x1);
-                Canvas.SetTop(border, barTop);
-                GanttCanvas.Children.Add(border);
+                Canvas.SetLeft(bar, x1);
+                Canvas.SetTop(bar, barTop);
+                GanttCanvas.Children.Add(bar);
 
                 _barHitList.Add((new Rect(x1, barTop, barWidth, barHeight), i, step));
 
                 if (barWidth > 28)
                 {
-                    string labelText = step.Description != null
-                        ? $"{step.ShopCode}: {step.Description}"
-                        : step.ShopCode;
                     var label = new TextBlock
                     {
-                        Text       = labelText,
-                        FontSize   = 9,
-                        Foreground = Brushes.White,
-                        Padding    = new Thickness(3, 0, 0, 0),
-                        Width      = barWidth,
-                        Height     = barHeight,
-                        TextTrimming = TextTrimming.CharacterEllipsis,
+                        Text             = tooltip,
+                        FontSize         = 9,
+                        Foreground       = Brushes.White,
+                        Padding          = new Thickness(3, 0, 0, 0),
+                        Width            = barWidth,
+                        Height           = barHeight,
+                        TextTrimming     = TextTrimming.CharacterEllipsis,
                         VerticalAlignment = VerticalAlignment.Center,
+                        ToolTip          = tooltip,
                     };
                     Canvas.SetLeft(label, x1);
                     Canvas.SetTop(label, barTop);
@@ -256,7 +387,6 @@ public partial class ManufacturingScheduleControl : UserControl
         }
     }
 
-    /// <summary>Draws the red vertical line representing today.</summary>
     private void DrawTodayLine(double canvasHeight)
     {
         double x = DateToX(DateTime.Today);
@@ -266,14 +396,13 @@ public partial class ManufacturingScheduleControl : UserControl
         {
             X1 = x, X2 = x,
             Y1 = 0,  Y2 = canvasHeight,
-            Stroke = Brushes.Red,
+            Stroke          = Brushes.Red,
             StrokeThickness = 1.5,
             StrokeDashArray = [4, 3],
         };
         GanttCanvas.Children.Add(line);
     }
 
-    /// <summary>Draws a dashed vertical line at each row's due date (when visible).</summary>
     private void DrawDueDateLines()
     {
         for (int i = 0; i < _viewModels.Count; i++)
@@ -290,7 +419,7 @@ public partial class ManufacturingScheduleControl : UserControl
             {
                 X1 = x, X2 = x,
                 Y1 = rowTop, Y2 = rowTop + RowHeight,
-                Stroke = new SolidColorBrush(Color.FromArgb(180, 200, 30, 30)),
+                Stroke          = new SolidColorBrush(Color.FromArgb(180, 200, 30, 30)),
                 StrokeThickness = 1,
                 StrokeDashArray = [3, 2],
             };
@@ -298,10 +427,6 @@ public partial class ManufacturingScheduleControl : UserControl
         }
     }
 
-    /// <summary>
-    /// Redraws the time scale header canvas using the current horizontal scroll offset
-    /// so that visible tick marks align with the Gantt canvas below.
-    /// </summary>
     private void DrawTimeHeader()
     {
         double scrollOffset = GanttHScroll.HorizontalOffset;
@@ -317,14 +442,13 @@ public partial class ManufacturingScheduleControl : UserControl
                 break;
         }
 
-        // Today marker on header
         double todayX = DateToX(DateTime.Today) - scrollOffset;
         if (todayX >= 0 && todayX <= TimeHeaderCanvas.ActualWidth)
         {
             var todayTick = new Line
             {
                 X1 = todayX, X2 = todayX, Y1 = 0, Y2 = 30,
-                Stroke = Brushes.Red,
+                Stroke          = Brushes.Red,
                 StrokeThickness = 1.5,
             };
             TimeHeaderCanvas.Children.Add(todayTick);
@@ -333,9 +457,8 @@ public partial class ManufacturingScheduleControl : UserControl
 
     private void DrawHeaderIntervalTicks(int intervalDays, string format, double scrollOffset)
     {
-        DateTime cursor = _viewportStart.Date;
-        // Advance to the first Monday (or first day of interval)
-        int daysToFirst = (intervalDays - (cursor.DayOfWeek == DayOfWeek.Sunday
+        DateTime cursor      = _viewportStart.Date;
+        int      daysToFirst = (intervalDays - (cursor.DayOfWeek == DayOfWeek.Sunday
             ? 7 : (int)cursor.DayOfWeek)) % intervalDays;
         cursor = cursor.AddDays(daysToFirst == 0 ? 0 : daysToFirst);
 
@@ -346,14 +469,12 @@ public partial class ManufacturingScheduleControl : UserControl
             double x = DateToX(cursor) - scrollOffset;
             if (x >= -60 && x <= viewWidth + 60)
             {
-                var tick = new Line
+                TimeHeaderCanvas.Children.Add(new Line
                 {
                     X1 = x, X2 = x, Y1 = 18, Y2 = 30,
-                    Stroke = new SolidColorBrush(Color.FromRgb(180, 180, 180)),
+                    Stroke          = new SolidColorBrush(Color.FromRgb(180, 180, 180)),
                     StrokeThickness = 1,
-                };
-                TimeHeaderCanvas.Children.Add(tick);
-
+                });
                 var label = new TextBlock
                 {
                     Text       = cursor.ToString(format),
@@ -370,7 +491,7 @@ public partial class ManufacturingScheduleControl : UserControl
 
     private void DrawHeaderMonthTicks(double scrollOffset)
     {
-        var cursor    = new DateTime(_viewportStart.Year, _viewportStart.Month, 1);
+        var    cursor    = new DateTime(_viewportStart.Year, _viewportStart.Month, 1);
         double viewWidth = TimeHeaderCanvas.ActualWidth;
 
         while (cursor <= _viewportStart.AddDays(_totalDays))
@@ -378,14 +499,12 @@ public partial class ManufacturingScheduleControl : UserControl
             double x = DateToX(cursor) - scrollOffset;
             if (x >= -100 && x <= viewWidth + 100)
             {
-                var tick = new Line
+                TimeHeaderCanvas.Children.Add(new Line
                 {
                     X1 = x, X2 = x, Y1 = 14, Y2 = 30,
-                    Stroke = new SolidColorBrush(Color.FromRgb(160, 160, 160)),
+                    Stroke          = new SolidColorBrush(Color.FromRgb(160, 160, 160)),
                     StrokeThickness = 1,
-                };
-                TimeHeaderCanvas.Children.Add(tick);
-
+                });
                 var label = new TextBlock
                 {
                     Text       = cursor.ToString("MMM yyyy"),
@@ -417,37 +536,62 @@ public partial class ManufacturingScheduleControl : UserControl
     private void BackButton_Click(object sender, RoutedEventArgs e) =>
         BackRequested?.Invoke(this, EventArgs.Empty);
 
+    private void FilterButton_Click(object sender, RoutedEventArgs e) =>
+        FilterPopup.IsOpen = !FilterPopup.IsOpen;
+
+    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text)
+            ? Visibility.Visible : Visibility.Collapsed;
+        ApplySortAndFilter();
+    }
+
+    private void HeaderJob_Click(object sender, MouseButtonEventArgs e)
+    {
+        _sortAscending = _sortColumn == SortColumn.Job ? !_sortAscending : true;
+        _sortColumn    = SortColumn.Job;
+        UpdateSortIndicators();
+        ApplySortAndFilter();
+    }
+
+    private void HeaderCustomer_Click(object sender, MouseButtonEventArgs e)
+    {
+        _sortAscending = _sortColumn == SortColumn.Customer ? !_sortAscending : true;
+        _sortColumn    = SortColumn.Customer;
+        UpdateSortIndicators();
+        ApplySortAndFilter();
+    }
+
+    private void HeaderDueDate_Click(object sender, MouseButtonEventArgs e)
+    {
+        _sortAscending = _sortColumn == SortColumn.DueDate ? !_sortAscending : true;
+        _sortColumn    = SortColumn.DueDate;
+        UpdateSortIndicators();
+        ApplySortAndFilter();
+    }
+
     private void ViewMode_Checked(object sender, RoutedEventArgs e)
     {
         if (!IsLoaded) return;
 
-        _viewMode = DayRadio.IsChecked == true   ? GanttViewMode.Day
-                  : WeekRadio.IsChecked == true  ? GanttViewMode.Week
+        _viewMode = DayRadio.IsChecked  == true ? GanttViewMode.Day
+                  : WeekRadio.IsChecked == true ? GanttViewMode.Week
                   : GanttViewMode.Month;
 
         ApplyViewMode();
         Render();
 
-        // Scroll to today
-        double todayX = DateToX(DateTime.Today);
+        double todayX        = DateToX(DateTime.Today);
         double viewportWidth = GanttHScroll.ViewportWidth;
         GanttHScroll.ScrollToHorizontalOffset(Math.Max(0, todayX - viewportWidth / 2));
     }
 
-    /// <summary>
-    /// Intercepts mouse wheel over the Gantt panel and converts it to horizontal scroll.
-    /// Marks the event handled so the outer vertical ScrollViewer is not also triggered.
-    /// </summary>
     private void GanttHScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
         GanttHScroll.ScrollToHorizontalOffset(GanttHScroll.HorizontalOffset - e.Delta / 3.0);
         e.Handled = true;
     }
 
-    /// <summary>
-    /// Redraws the time header whenever the Gantt canvas scrolls horizontally,
-    /// and keeps the external horizontal ScrollBar in sync.
-    /// </summary>
     private void GanttHScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
     {
         if (e.HorizontalChange != 0)
@@ -455,7 +599,6 @@ public partial class ManufacturingScheduleControl : UserControl
         UpdateGanttScrollBar();
     }
 
-    /// <summary>Syncs the external horizontal ScrollBar with GanttHScroll state.</summary>
     private void UpdateGanttScrollBar()
     {
         GanttScrollBar.Maximum      = GanttHScroll.ScrollableWidth;
@@ -465,18 +608,12 @@ public partial class ManufacturingScheduleControl : UserControl
         GanttScrollBar.Value        = GanttHScroll.HorizontalOffset;
     }
 
-    /// <summary>Scrolls the Gantt panel when the external ScrollBar is dragged.</summary>
-    private void GanttScrollBar_Scroll(object sender, System.Windows.Controls.Primitives.ScrollEventArgs e)
-    {
+    private void GanttScrollBar_Scroll(object sender, System.Windows.Controls.Primitives.ScrollEventArgs e) =>
         GanttHScroll.ScrollToHorizontalOffset(GanttScrollBar.Value);
-    }
 
-    /// <summary>
-    /// Click on the Gantt canvas: determine row, hit-test bars, open assignment dialog.
-    /// </summary>
     private void GanttCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        var pos = e.GetPosition(GanttCanvas);
+        var pos      = e.GetPosition(GanttCanvas);
         int rowIndex = (int)(pos.Y / RowHeight);
         Logger.Instance.Debug($"GanttCanvas click: pos=({pos.X:F0},{pos.Y:F0}) rowIndex={rowIndex} total={_viewModels.Count}");
         if (rowIndex < 0 || rowIndex >= _viewModels.Count) return;
@@ -499,7 +636,6 @@ public partial class ManufacturingScheduleControl : UserControl
             return;
         }
 
-        // Hit-test existing bars to pre-populate dates for editing
         ScheduleStepTracker? hitStep = null;
         foreach (var (bounds, ri, step) in _barHitList)
         {
@@ -536,15 +672,15 @@ public partial class ManufacturingScheduleControl : UserControl
                 result.StartDate,
                 result.EndDate);
 
-            // Refresh only this row's steps
             var refreshed = _repository.GetStepTrackers(vm.Row.OrderItemId);
-            var updated = vm with { Steps = refreshed };
+            var updated   = vm with { Steps = refreshed };
             _viewModels[rowIndex] = updated;
 
-            // Refresh binding for this row
+            int allIdx = _allViewModels.FindIndex(v => v.Row.OrderItemId == vm.Row.OrderItemId);
+            if (allIdx >= 0) _allViewModels[allIdx] = updated;
+
             LeftRows.ItemsSource = null;
             LeftRows.ItemsSource = _viewModels;
-
             Render();
             Logger.Instance.Info($"ManufacturingScheduleControl: saved step for oi={vm.Row.OrderItemId}");
         }
@@ -555,7 +691,6 @@ public partial class ManufacturingScheduleControl : UserControl
         }
     }
 
-    /// <summary>Opens the notes dialog for the clicked row's part.</summary>
     private void MemoCell_Click(object sender, MouseButtonEventArgs e)
     {
         if (sender is not FrameworkElement fe || fe.Tag is not ScheduleViewModel vm) return;
@@ -574,7 +709,12 @@ public partial class ManufacturingScheduleControl : UserControl
             int idx        = _viewModels.IndexOf(vm);
             if (idx >= 0)
             {
-                _viewModels[idx] = vm with { MemoText = latestMemo };
+                var updated      = vm with { MemoText = latestMemo };
+                _viewModels[idx] = updated;
+
+                int allIdx = _allViewModels.FindIndex(v => v.Row.OrderItemId == vm.Row.OrderItemId);
+                if (allIdx >= 0) _allViewModels[allIdx] = updated;
+
                 LeftRows.ItemsSource = null;
                 LeftRows.ItemsSource = _viewModels;
             }
@@ -582,10 +722,6 @@ public partial class ManufacturingScheduleControl : UserControl
         e.Handled = true;
     }
 
-    /// <summary>
-    /// Navigates to the Part detail page for the clicked drawing number row.
-    /// Fires OpenPartRequested only when the row has a linked part.
-    /// </summary>
     private void DrawingNumber_Click(object sender, MouseButtonEventArgs e)
     {
         if (sender is FrameworkElement fe && fe.Tag is ScheduleViewModel vm)
