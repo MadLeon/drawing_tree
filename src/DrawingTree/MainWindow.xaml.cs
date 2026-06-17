@@ -59,6 +59,7 @@ public partial class MainWindow : Window
 
         _searchControl = new SearchControl();
         _searchControl.NavigateToPartRequested += OnSearchNavigateToPart;
+        _searchControl.NavigateToPoRequested   += OnSearchNavigateToPo;
 
         MainDisplayArea.Children.Add(_searchControl);
         Logger.Instance.Info("Search control displayed");
@@ -80,6 +81,36 @@ public partial class MainWindow : Window
 
         MainDisplayArea.Children.Add(_drawingViewerControl);
         Logger.Instance.Info($"Drawing viewer displayed for partId={partId} (from search)");
+    }
+
+    /// <summary>
+    /// Handle navigation to PO detail from search results (PO or job match).
+    /// Keeps the search control alive for back navigation.
+    /// </summary>
+    private void OnSearchNavigateToPo(object? sender, int poId)
+    {
+        MainDisplayArea.Children.Clear();
+
+        _poDetailControl = new PoDetailControl();
+        _poDetailControl.LoadPo(poId);
+        _poDetailControl.BackRequested      += OnPoDetailBackToSearch;
+        _poDetailControl.ViewTreeRequested  += OnPoDetailViewTree;
+        _poDetailControl.OpenPartRequested  += OnPoDetailOpenPart;
+
+        MainDisplayArea.Children.Add(_poDetailControl);
+        Logger.Instance.Info($"PO detail displayed for poId={poId} (from search)");
+    }
+
+    /// <summary>
+    /// Handle Back event from PO detail when entered from search. Restores search control.
+    /// </summary>
+    private void OnPoDetailBackToSearch(object? sender, EventArgs e)
+    {
+        MainDisplayArea.Children.Clear();
+        _poDetailControl = null;
+        if (_searchControl != null)
+            MainDisplayArea.Children.Add(_searchControl);
+        Logger.Instance.Info("Returned to search from PO detail");
     }
 
     /// <summary>

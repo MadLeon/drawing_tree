@@ -515,14 +515,16 @@ public class DrawingRepository
     }
 
     /// <summary>
-    /// Searches parts by drawing number and resolves each match upward through part_tree
-    /// to find all PO/Job contexts that contain the matched part (directly or as a sub-assembly).
-    /// Returns up to 200 results ordered by po_number, job_number, drawing_number.
+    /// Searches parts by drawing number, PO number, or job number.
+    /// Resolves drawing-number matches upward through part_tree to surface PO/Job context.
+    /// Returns up to 200 deduplicated results; drawing matches take priority over PO/job matches.
     /// </summary>
     /// <param name="query">Search term (wrapped in % wildcards internally)</param>
     public List<SearchResultRow> SearchPartsWithJobContext(string query)
     {
-        var results = new List<SearchResultRow>();
+        var raw = new List<(int PoId, int PartId, string PoNumber, string JobNumber,
+                             string DrawingNumber, string Revision, string Description,
+                             SearchMatchSource MatchSource)>();
         try
         {
             using var conn = DatabaseConnectionFactory.OpenDevConnection();
@@ -541,40 +543,87 @@ public class DrawingRepository
                     WHERE a.depth < 30
                 )
                 SELECT DISTINCT
-                    po.po_number,
-                    j.job_number,
-                    p_orig.drawing_number,
-                    p_orig.revision,
-                    p_orig.description,
-                    p_orig.id
+                    po.id, p_orig.id,
+                    po.po_number, j.job_number,
+                    p_orig.drawing_number, p_orig.revision, p_orig.description,
+                    1 AS match_source
                 FROM ancestors a
                 JOIN order_item oi ON oi.part_id = a.ancestor_part_id
                 JOIN job j ON j.id = oi.job_id
                 JOIN purchase_order po ON po.id = j.po_id
                 JOIN part p_orig ON p_orig.id = a.original_part_id
-                ORDER BY po.po_number, j.job_number, p_orig.drawing_number
-                LIMIT 200
+
+                UNION ALL
+
+                SELECT DISTINCT
+                    po.id, p.id,
+                    po.po_number, j.job_number,
+                    p.drawing_number, p.revision, p.description,
+                    2 AS match_source
+                FROM purchase_order po
+                JOIN job j ON j.po_id = po.id
+                JOIN order_item oi ON oi.job_id = j.id
+                JOIN part p ON p.id = oi.part_id
+                WHERE po.po_number LIKE @query
+
+                UNION ALL
+
+                SELECT DISTINCT
+                    po.id, p.id,
+                    po.po_number, j.job_number,
+                    p.drawing_number, p.revision, p.description,
+                    3 AS match_source
+                FROM purchase_order po
+                JOIN job j ON j.po_id = po.id
+                JOIN order_item oi ON oi.job_id = j.id
+                JOIN part p ON p.id = oi.part_id
+                WHERE j.job_number LIKE @query
                 """;
             cmd.Parameters.AddWithValue("@query", "%" + query + "%");
 
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                results.Add(new SearchResultRow(
-                    PartId:        reader.GetInt32(5),
-                    PoNumber:      reader.GetString(0),
-                    JobNumber:     reader.GetString(1),
-                    DrawingNumber: reader.GetString(2),
-                    Revision:      reader.GetString(3),
-                    Description:   reader.IsDBNull(4) ? string.Empty : reader.GetString(4)
+                int src = reader.GetInt32(7);
+                raw.Add((
+                    PoId:          reader.GetInt32(0),
+                    PartId:        reader.GetInt32(1),
+                    PoNumber:      reader.GetString(2),
+                    JobNumber:     reader.GetString(3),
+                    DrawingNumber: reader.GetString(4),
+                    Revision:      reader.GetString(5),
+                    Description:   reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                    MatchSource:   src == 1 ? SearchMatchSource.Drawing
+                                 : src == 2 ? SearchMatchSource.Po
+                                 :             SearchMatchSource.Job
                 ));
             }
         }
         catch (Exception ex)
         {
             Logger.Instance.Error($"DrawingRepository.SearchPartsWithJobContext failed for '{query}': {ex.Message}");
+            return new List<SearchResultRow>();
         }
-        return results;
+
+        // Deduplicate by (PoNumber, JobNumber, DrawingNumber); drawing match wins over po/job.
+        var seen = new Dictionary<(string, string, string), SearchResultRow>();
+        foreach (var r in raw)
+        {
+            var key = (r.PoNumber, r.JobNumber, r.DrawingNumber);
+            if (!seen.TryGetValue(key, out var existing) || r.MatchSource < existing.MatchSource)
+            {
+                seen[key] = new SearchResultRow(
+                    PoId: r.PoId, PartId: r.PartId,
+                    PoNumber: r.PoNumber, JobNumber: r.JobNumber,
+                    DrawingNumber: r.DrawingNumber, Revision: r.Revision,
+                    Description: r.Description, MatchSource: r.MatchSource);
+            }
+        }
+
+        return seen.Values
+            .OrderBy(r => r.PoNumber).ThenBy(r => r.JobNumber).ThenBy(r => r.DrawingNumber)
+            .Take(200)
+            .ToList();
     }
 
     private static void DeleteRemovedChildren(SqliteConnection conn, SqliteTransaction tx,
@@ -634,15 +683,21 @@ public class DrawingRepository
 /// <param name="ChildRevision">Revision of the removed child part</param>
 public record DeletedRelationship(string ParentDrawingNumber, string ChildDrawingNumber, string ChildRevision);
 
+/// <summary>Indicates which field caused a search result to appear.</summary>
+public enum SearchMatchSource { Drawing = 1, Po = 2, Job = 3 }
+
+/// <param name="PoId">purchase_order.id for navigation to the single-PO page</param>
 /// <param name="PartId">part.id for navigation to drawing viewer</param>
 /// <param name="PoNumber">Purchase order number</param>
 /// <param name="JobNumber">Job number</param>
 /// <param name="DrawingNumber">Matched part drawing number</param>
 /// <param name="Revision">Matched part revision</param>
 /// <param name="Description">Matched part description</param>
+/// <param name="MatchSource">Which field matched the query</param>
 public record SearchResultRow(
-    int PartId, string PoNumber, string JobNumber,
-    string DrawingNumber, string Revision, string Description);
+    int PoId, int PartId, string PoNumber, string JobNumber,
+    string DrawingNumber, string Revision, string Description,
+    SearchMatchSource MatchSource);
 
 /// <param name="Added">Number of new parent-child relationships to be added</param>
 /// <param name="Deleted">Number of existing relationships to be removed</param>

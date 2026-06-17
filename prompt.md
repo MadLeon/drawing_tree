@@ -1,3 +1,27 @@
+修改 schedule 页面
+- 将按钮名称改为 MP Schedule
+每次加载该页面都有较大延迟, 添加loading样式, 效果与本项目其他页面loading样式保持一致
+- 在 PO 号的右边, 添加一个搜索框, 样式参考搜索页面
+  - 功能包括随用户输入信息过滤下方 order_item, 参考搜索页面
+  - 支持 job number, drawing number, description 三列的匹配
+- 为 job, customer, due date 三列的标题添加点击排序功能
+- 页面打开的默认效果是按job number升序
+- 在修改时间单位的单选框左侧添加一个filter按钮
+  - 其中, 为 PO, description, customer, quantity, due date, memo, status 分别添加一个复选框
+  - 下方的界面只显示复选框check的列
+
+
+- Memo 应该设计成一种只显示固定宽度内容的格子
+  - 当选中时, 弹出一个对话框, 显示所有的笔记, 并且可以添加新笔记, 参考drawing页面的notes逻辑
+  - 每条笔记其值应该对应一个 part_note.content
+  - 鼠标悬浮在上面时, 显示具体信息
+
+- Assign step 对话框拉长一些, 下面的按钮显示不出来
+- 甘特图中的时间跨度上目前只显示 shop code, 应该使用格式 {shop code}: {description}, 超过的宽度部分以省略号结束, 鼠标移上去时弹出提示, 显示全部 description
+- status 列的文本修改为 一个分数, {完成的步骤} / {所有步骤}
+
+---
+
 设计并添加一个 Manufacturing Schedule
 - 这个页面通过同名按钮触发
 - 其设计的初衷是追踪每一个零件的生产进度, 应该是一个以时间为单位的甘特图

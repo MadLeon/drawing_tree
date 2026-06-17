@@ -117,7 +117,7 @@
                             <Button Content="View"
                                     Height="24" FontSize="11"
                                     Margin="4,2"
-                                    Tag="{Binding PartId}"
+                                    Tag="{Binding}"
                                     Click="ViewButton_Click"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

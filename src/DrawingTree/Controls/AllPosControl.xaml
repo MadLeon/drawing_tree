@@ -58,6 +58,7 @@
         <!-- PO lines DataGrid -->
         <DataGrid x:Name="ResultsGrid"
                   Grid.Row="1"
+                  VirtualizingPanel.IsVirtualizingWhenGrouping="True"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   SelectionMode="Single"
@@ -72,6 +73,25 @@
                   AlternatingRowBackground="White"
                   ColumnHeaderStyle="{StaticResource HeaderCell}"
                   CellStyle="{StaticResource BodyCell}">
+            <DataGrid.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.ContainerStyle>
+                        <Style TargetType="{x:Type GroupItem}">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type GroupItem}">
+                                        <StackPanel>
+                                            <Border Height="12" Background="Transparent"/>
+                                            <ItemsPresenter/>
+                                        </StackPanel>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </GroupStyle.ContainerStyle>
+                </GroupStyle>
+            </DataGrid.GroupStyle>
+
             <DataGrid.Columns>
                 <DataGridTextColumn Header="P.O."
                                     Binding="{Binding PoNumber}"

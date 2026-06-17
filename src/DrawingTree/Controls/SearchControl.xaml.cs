@@ -20,8 +20,11 @@ public partial class SearchControl : UserControl
     private readonly DrawingRepository _repository = new();
     private readonly DispatcherTimer _debounceTimer;
 
-    /// <summary>Fired when the user clicks View on a search result row. Argument is the part.id.</summary>
+    /// <summary>Fired when the user clicks View on a drawing-match row. Argument is part.id.</summary>
     public event EventHandler<int>? NavigateToPartRequested;
+
+    /// <summary>Fired when the user clicks View on a PO/job-match row. Argument is purchase_order.id.</summary>
+    public event EventHandler<int>? NavigateToPoRequested;
 
     public SearchControl()
     {
@@ -62,10 +65,18 @@ public partial class SearchControl : UserControl
 
     private void ViewButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is int partId)
+        if (sender is Button btn && btn.Tag is SearchResultRow row)
         {
-            Logger.Instance.Info($"SearchControl: navigate to partId={partId}");
-            NavigateToPartRequested?.Invoke(this, partId);
+            if (row.MatchSource == SearchMatchSource.Drawing)
+            {
+                Logger.Instance.Info($"SearchControl: navigate to partId={row.PartId}");
+                NavigateToPartRequested?.Invoke(this, row.PartId);
+            }
+            else
+            {
+                Logger.Instance.Info($"SearchControl: navigate to poId={row.PoId} (match={row.MatchSource})");
+                NavigateToPoRequested?.Invoke(this, row.PoId);
+            }
         }
     }
 }

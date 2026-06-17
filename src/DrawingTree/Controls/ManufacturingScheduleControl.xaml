@@ -3,11 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:DrawingTree.Controls"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="1400">
 
     <UserControl.Resources>
         <Geometry x:Key="ChevronLeftGeo">M560-240 320-480l240-240 57 57-184 183 184 184-57 57Z</Geometry>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <local:ColumnConfig x:Key="ColCfg"/>
 
         <Style x:Key="IconBtn" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
@@ -32,14 +35,12 @@
             </Setter>
         </Style>
 
-        <!-- Shared row border style for left panel -->
         <Style x:Key="LeftRowBorder" TargetType="Border">
             <Setter Property="BorderBrush" Value="#EEEEEE"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="Height" Value="32"/>
         </Style>
 
-        <!-- Cell text style -->
         <Style x:Key="CellText" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
@@ -47,7 +48,6 @@
             <Setter Property="FontSize" Value="11"/>
         </Style>
 
-        <!-- Header text style -->
         <Style x:Key="HeaderText" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Padding" Value="6,0"/>
@@ -57,236 +57,362 @@
         </Style>
     </UserControl.Resources>
 
-    <DockPanel Background="White">
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+            <BeginStoryboard>
+                <Storyboard RepeatBehavior="Forever">
+                    <DoubleAnimation
+                        Storyboard.TargetName="SpinnerRotate"
+                        Storyboard.TargetProperty="Angle"
+                        From="0" To="360"
+                        Duration="0:0:0.9"/>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </UserControl.Triggers>
 
-        <!-- ── Toolbar ─────────────────────────────────────────────── -->
-        <Border DockPanel.Dock="Top"
-                BorderBrush="#CCCCCC" BorderThickness="0,0,0,1"
-                Background="#F0F0F0" Padding="8,6" Height="40">
-            <Grid>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="BackButton"
-                            Style="{StaticResource IconBtn}"
-                            Width="32" Height="32" Margin="0,0,8,0"
-                            ToolTip="Back"
-                            Click="BackButton_Click">
-                        <Path Data="{StaticResource ChevronLeftGeo}"
-                              Stretch="Uniform" Fill="#333333" Width="20" Height="20"/>
-                    </Button>
-                    <TextBlock Text="Manufacturing Schedule"
-                               FontSize="13" FontWeight="SemiBold"
-                               Foreground="#333333"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
+    <Grid>
+        <DockPanel Background="White">
 
-                <StackPanel Orientation="Horizontal"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center">
-                    <!-- View mode selector -->
-                    <TextBlock Text="View:" FontSize="11" Foreground="#555555"
-                               VerticalAlignment="Center" Margin="0,0,6,0"/>
-                    <RadioButton x:Name="DayRadio" Content="Day"
-                                 FontSize="11" Margin="0,0,8,0"
-                                 IsChecked="True"
-                                 Checked="ViewMode_Checked"/>
-                    <RadioButton x:Name="WeekRadio" Content="Week"
-                                 FontSize="11" Margin="0,0,8,0"
-                                 Checked="ViewMode_Checked"/>
-                    <RadioButton x:Name="MonthRadio" Content="Month"
-                                 FontSize="11" Margin="0,0,8,0"
-                                 Checked="ViewMode_Checked"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+            <!-- ── Toolbar ─────────────────────────────────────────────── -->
+            <Border DockPanel.Dock="Top"
+                    BorderBrush="#CCCCCC" BorderThickness="0,0,0,1"
+                    Background="#F0F0F0" Padding="8,6" Height="40">
+                <Grid>
+                    <!-- Left: Back + Title -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="BackButton"
+                                Style="{StaticResource IconBtn}"
+                                Width="32" Height="32" Margin="0,0,8,0"
+                                ToolTip="Back"
+                                Click="BackButton_Click">
+                            <Path Data="{StaticResource ChevronLeftGeo}"
+                                  Stretch="Uniform" Fill="#333333" Width="20" Height="20"/>
+                        </Button>
+                        <TextBlock Text="MP Schedule"
+                                   FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#333333"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
 
-        <!-- ── Column header strip (always visible) ───────────────── -->
-        <Grid DockPanel.Dock="Top" Height="30"
-              Background="#F5F5F5"
-              x:Name="HeaderStrip">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="125"/>  <!-- PO -->
-                <ColumnDefinition Width="80"/>   <!-- Job -->
-                <ColumnDefinition Width="100"/>  <!-- Customer -->
-                <ColumnDefinition Width="200"/>  <!-- Drawing -->
-                <ColumnDefinition Width="150"/>  <!-- Description -->
-                <ColumnDefinition Width="50"/>   <!-- Qty -->
-                <ColumnDefinition Width="90"/>   <!-- Due -->
-                <ColumnDefinition Width="80"/>   <!-- Memo -->
-                <ColumnDefinition Width="120"/>  <!-- Status -->
-                <ColumnDefinition Width="*"/>    <!-- Gantt label placeholder -->
-            </Grid.ColumnDefinitions>
+                    <!-- Center: Search box -->
+                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="240">
+                        <TextBox x:Name="SearchBox"
+                                 Height="26" Padding="5,3" FontSize="12"
+                                 VerticalContentAlignment="Center"
+                                 TextChanged="SearchBox_TextChanged"/>
+                        <TextBlock x:Name="SearchPlaceholder"
+                                   Text="Job / Drawing / Description"
+                                   IsHitTestVisible="False"
+                                   Foreground="#AAAAAA" FontSize="12"
+                                   Margin="7,0,0,0" VerticalAlignment="Center"/>
+                    </Grid>
 
-            <TextBlock Grid.Column="0" Text="P.O."        Style="{StaticResource HeaderText}"/>
-            <TextBlock Grid.Column="1" Text="Job"         Style="{StaticResource HeaderText}"/>
-            <TextBlock Grid.Column="2" Text="Customer"    Style="{StaticResource HeaderText}"/>
-            <TextBlock Grid.Column="3" Text="Drawing"     Style="{StaticResource HeaderText}"/>
-            <TextBlock Grid.Column="4" Text="Description" Style="{StaticResource HeaderText}"/>
-            <TextBlock Grid.Column="5" Text="Qty"         Style="{StaticResource HeaderText}"/>
-            <TextBlock Grid.Column="6" Text="Due Date"    Style="{StaticResource HeaderText}"/>
-            <TextBlock Grid.Column="7" Text="Memo"        Style="{StaticResource HeaderText}"/>
-            <TextBlock Grid.Column="8" Text="Status"      Style="{StaticResource HeaderText}"/>
-            <!-- Time scale header is drawn on TimeHeaderCanvas, overlaid in the right column -->
-            <Canvas x:Name="TimeHeaderCanvas" Grid.Column="9" Background="#F5F5F5"
-                    ClipToBounds="True"/>
+                    <!-- Right: Filter + View mode -->
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center">
+                        <Button x:Name="FilterButton"
+                                Content="Filter ▾" FontSize="11"
+                                Height="24" Padding="8,0" Margin="0,0,12,0"
+                                Click="FilterButton_Click"/>
+                        <Popup x:Name="FilterPopup"
+                               PlacementTarget="{Binding ElementName=FilterButton}"
+                               Placement="Bottom"
+                               StaysOpen="False">
+                            <Border Background="White" BorderBrush="#CCCCCC" BorderThickness="1" Padding="10,8">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="6" Opacity="0.18" ShadowDepth="2"/>
+                                </Border.Effect>
+                                <StackPanel>
+                                    <TextBlock Text="COLUMNS" FontSize="9" FontWeight="SemiBold"
+                                               Foreground="#999999" Margin="0,0,0,6"/>
+                                    <CheckBox Content="P.O."         Margin="0,2" FontSize="11" IsChecked="{Binding Source={StaticResource ColCfg}, Path=ShowPo}"/>
+                                    <CheckBox Content="Customer"     Margin="0,2" FontSize="11" IsChecked="{Binding Source={StaticResource ColCfg}, Path=ShowCustomer}"/>
+                                    <CheckBox Content="Description"  Margin="0,2" FontSize="11" IsChecked="{Binding Source={StaticResource ColCfg}, Path=ShowDescription}"/>
+                                    <CheckBox Content="Quantity"     Margin="0,2" FontSize="11" IsChecked="{Binding Source={StaticResource ColCfg}, Path=ShowQuantity}"/>
+                                    <CheckBox Content="Due Date"     Margin="0,2" FontSize="11" IsChecked="{Binding Source={StaticResource ColCfg}, Path=ShowDueDate}"/>
+                                    <CheckBox Content="Memo"         Margin="0,2" FontSize="11" IsChecked="{Binding Source={StaticResource ColCfg}, Path=ShowMemo}"/>
+                                    <CheckBox Content="Status"       Margin="0,2" FontSize="11" IsChecked="{Binding Source={StaticResource ColCfg}, Path=ShowStatus}"/>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
 
-            <!-- Separator lines between columns -->
-            <Border Grid.Column="0" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-            <Border Grid.Column="1" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-            <Border Grid.Column="2" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-            <Border Grid.Column="3" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-            <Border Grid.Column="4" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-            <Border Grid.Column="5" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-            <Border Grid.Column="6" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-            <Border Grid.Column="7" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-            <Border Grid.Column="8" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-            <Border Grid.Column="9" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1" IsHitTestVisible="False"/>
-        </Grid>
+                        <TextBlock Text="View:" FontSize="11" Foreground="#555555"
+                                   VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <RadioButton x:Name="DayRadio" Content="Day"
+                                     FontSize="11" Margin="0,0,8,0"
+                                     IsChecked="True"
+                                     Checked="ViewMode_Checked"/>
+                        <RadioButton x:Name="WeekRadio" Content="Week"
+                                     FontSize="11" Margin="0,0,8,0"
+                                     Checked="ViewMode_Checked"/>
+                        <RadioButton x:Name="MonthRadio" Content="Month"
+                                     FontSize="11" Margin="0,0,8,0"
+                                     Checked="ViewMode_Checked"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
-        <!-- ── Bottom scrollbar for Gantt horizontal scroll ───────── -->
-        <Grid DockPanel.Dock="Bottom" Background="#F0F0F0" Height="17">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="995"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <ScrollBar x:Name="GanttScrollBar"
-                       Grid.Column="1"
-                       Orientation="Horizontal"
-                       Minimum="0" Maximum="1"
-                       Scroll="GanttScrollBar_Scroll"/>
-        </Grid>
-
-        <!-- ── Scrollable content ─────────────────────────────────── -->
-        <ScrollViewer x:Name="OuterScroll"
-                      VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled">
-            <Grid x:Name="ContentGrid">
+            <!-- ── Column header strip (always visible) ───────────────── -->
+            <Grid DockPanel.Dock="Top" Height="30"
+                  Background="#F5F5F5"
+                  x:Name="HeaderStrip">
                 <Grid.ColumnDefinitions>
-                    <!-- Fixed left panel (total 995px) -->
-                    <ColumnDefinition Width="995"/>
-                    <!-- Gantt right panel -->
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="125"/>  <!-- PO -->
+                    <ColumnDefinition Width="80"/>   <!-- Job -->
+                    <ColumnDefinition Width="100"/>  <!-- Customer -->
+                    <ColumnDefinition Width="200"/>  <!-- Drawing -->
+                    <ColumnDefinition Width="150"/>  <!-- Description -->
+                    <ColumnDefinition Width="50"/>   <!-- Qty -->
+                    <ColumnDefinition Width="90"/>   <!-- Due -->
+                    <ColumnDefinition Width="80"/>   <!-- Memo -->
+                    <ColumnDefinition Width="120"/>  <!-- Status -->
+                    <ColumnDefinition Width="*"/>    <!-- Gantt -->
                 </Grid.ColumnDefinitions>
 
-                <!-- ── Left panel rows ──────────────────────────── -->
-                <ItemsControl x:Name="LeftRows" Grid.Column="0"
-                              VirtualizingStackPanel.IsVirtualizing="False">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border>
-                                <Border.Style>
-                                    <Style TargetType="Border" BasedOn="{StaticResource LeftRowBorder}">
-                                        <Setter Property="Background" Value="White"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsOverdue}" Value="True">
-                                                <Setter Property="Background" Value="#FFF3F3"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
+                <TextBlock Grid.Column="0" Text="P.O." Style="{StaticResource HeaderText}"/>
 
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="125"/>
-                                        <ColumnDefinition Width="80"/>
-                                        <ColumnDefinition Width="100"/>
-                                        <ColumnDefinition Width="200"/>
-                                        <ColumnDefinition Width="150"/>
-                                        <ColumnDefinition Width="50"/>
-                                        <ColumnDefinition Width="90"/>
-                                        <ColumnDefinition Width="80"/>
-                                        <ColumnDefinition Width="120"/>
-                                    </Grid.ColumnDefinitions>
+                <!-- Job – sortable -->
+                <Border Grid.Column="1" Background="Transparent" Cursor="Hand"
+                        MouseLeftButtonDown="HeaderJob_Click">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
+                        <TextBlock Text="Job" FontSize="11" FontWeight="SemiBold" Foreground="#555555"/>
+                        <TextBlock x:Name="SortJobArrow" Text="" FontSize="9"
+                                   Foreground="#555555" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                    </StackPanel>
+                </Border>
 
-                                    <TextBlock Grid.Column="0" Text="{Binding Row.PoNumber}"
-                                               Style="{StaticResource CellText}"
-                                               ToolTip="{Binding Row.PoNumber}"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding Row.JobNumber}"
-                                               Style="{StaticResource CellText}"/>
-                                    <TextBlock Grid.Column="2" Text="{Binding Row.CustomerName}"
-                                               Style="{StaticResource CellText}"
-                                               ToolTip="{Binding Row.CustomerName}"/>
+                <!-- Customer – sortable -->
+                <Border Grid.Column="2" Background="Transparent" Cursor="Hand"
+                        MouseLeftButtonDown="HeaderCustomer_Click">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
+                        <TextBlock Text="Customer" FontSize="11" FontWeight="SemiBold" Foreground="#555555"/>
+                        <TextBlock x:Name="SortCustomerArrow" Text="" FontSize="9"
+                                   Foreground="#555555" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                    </StackPanel>
+                </Border>
 
-                                    <!-- Drawing number: clickable link to part page -->
-                                    <Border Grid.Column="3"
-                                            Background="Transparent"
-                                            Cursor="Hand"
-                                            Tag="{Binding}"
-                                            MouseLeftButtonDown="DrawingNumber_Click"
-                                            ToolTip="{Binding Row.DrawingNumber}">
-                                        <TextBlock Text="{Binding Row.DrawingNumber}">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
-                                                    <Setter Property="Foreground" Value="#0066CC"/>
-                                                    <Setter Property="TextDecorations" Value="Underline"/>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </Border>
+                <TextBlock Grid.Column="3" Text="Drawing"     Style="{StaticResource HeaderText}"/>
+                <TextBlock Grid.Column="4" Text="Description" Style="{StaticResource HeaderText}"/>
+                <TextBlock Grid.Column="5" Text="Qty"         Style="{StaticResource HeaderText}"/>
 
-                                    <TextBlock Grid.Column="4" Text="{Binding Row.Description}"
-                                               Style="{StaticResource CellText}"
-                                               ToolTip="{Binding Row.Description}"/>
-                                    <TextBlock Grid.Column="5" Text="{Binding Row.Quantity}"
-                                               Style="{StaticResource CellText}"
-                                               TextAlignment="Right"/>
-                                    <TextBlock Grid.Column="6" Text="{Binding Row.DueDate}">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsOverdue}" Value="True">
-                                                        <Setter Property="Foreground" Value="#CC0000"/>
-                                                        <Setter Property="FontWeight" Value="SemiBold"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                <!-- Due Date – sortable -->
+                <Border Grid.Column="6" Background="Transparent" Cursor="Hand"
+                        MouseLeftButtonDown="HeaderDueDate_Click">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
+                        <TextBlock Text="Due Date" FontSize="11" FontWeight="SemiBold" Foreground="#555555"/>
+                        <TextBlock x:Name="SortDueDateArrow" Text="" FontSize="9"
+                                   Foreground="#555555" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                    </StackPanel>
+                </Border>
 
-                                    <!-- Memo cell: transparent Border ensures click registers even when text is empty -->
-                                    <Border Grid.Column="7"
-                                            Background="Transparent"
-                                            Cursor="Hand"
-                                            Tag="{Binding}"
-                                            MouseLeftButtonDown="MemoCell_Click"
-                                            ToolTip="{Binding MemoText}">
-                                        <TextBlock Text="{Binding MemoText}"
-                                                   Style="{StaticResource CellText}"/>
-                                    </Border>
+                <TextBlock Grid.Column="7" Text="Memo"   Style="{StaticResource HeaderText}"/>
+                <TextBlock Grid.Column="8" Text="Status" Style="{StaticResource HeaderText}"/>
 
-                                    <TextBlock Grid.Column="8" Text="{Binding StatusText}">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding StatusText}" Value="Complete">
-                                                        <Setter Property="Foreground" Value="#228B22"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding StatusText}" Value="Not Started">
-                                                        <Setter Property="Foreground" Value="#888888"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <Canvas x:Name="TimeHeaderCanvas" Grid.Column="9" Background="#F5F5F5" ClipToBounds="True"/>
 
-                <!-- ── Gantt right panel ─────────────────────────── -->
-                <ScrollViewer Grid.Column="1"
-                              x:Name="GanttHScroll"
-                              HorizontalScrollBarVisibility="Hidden"
-                              VerticalScrollBarVisibility="Disabled"
-                              ScrollChanged="GanttHScroll_ScrollChanged"
-                              PreviewMouseWheel="GanttHScroll_PreviewMouseWheel">
-                    <Canvas x:Name="GanttCanvas"
-                            Background="Transparent"
-                            Cursor="Hand"/>
-                </ScrollViewer>
+                <!-- Separator lines -->
+                <Border Grid.Column="0" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+                <Border Grid.Column="1" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+                <Border Grid.Column="2" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+                <Border Grid.Column="3" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+                <Border Grid.Column="4" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+                <Border Grid.Column="5" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+                <Border Grid.Column="6" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+                <Border Grid.Column="7" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+                <Border Grid.Column="8" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+                <Border Grid.Column="9" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1" IsHitTestVisible="False"/>
             </Grid>
-        </ScrollViewer>
 
+            <!-- ── Bottom scrollbar for Gantt horizontal scroll ───────── -->
+            <Grid DockPanel.Dock="Bottom" Background="#F0F0F0" Height="17" x:Name="BottomScrollStrip">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="995"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <ScrollBar x:Name="GanttScrollBar"
+                           Grid.Column="1"
+                           Orientation="Horizontal"
+                           Minimum="0" Maximum="1"
+                           Scroll="GanttScrollBar_Scroll"/>
+            </Grid>
 
-    </DockPanel>
+            <!-- ── Scrollable content ─────────────────────────────────── -->
+            <ScrollViewer x:Name="OuterScroll"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <Grid x:Name="ContentGrid">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="995"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- ── Left panel rows ──────────────────────────── -->
+                    <ItemsControl x:Name="LeftRows" Grid.Column="0"
+                                  VirtualizingStackPanel.IsVirtualizing="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border>
+                                    <Border.Style>
+                                        <Style TargetType="Border" BasedOn="{StaticResource LeftRowBorder}">
+                                            <Setter Property="Background" Value="White"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                    <Setter Property="Background" Value="#FFF3F3"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+
+                                    <StackPanel Orientation="Horizontal">
+
+                                        <!-- PO (toggleable) -->
+                                        <Border Width="125"
+                                                Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowPo, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding Row.PoNumber}"
+                                                       Style="{StaticResource CellText}"
+                                                       ToolTip="{Binding Row.PoNumber}"/>
+                                        </Border>
+
+                                        <!-- Job (always visible) -->
+                                        <Border Width="80">
+                                            <TextBlock Text="{Binding Row.JobNumber}" Style="{StaticResource CellText}"/>
+                                        </Border>
+
+                                        <!-- Customer (toggleable) -->
+                                        <Border Width="100"
+                                                Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowCustomer, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding Row.CustomerName}"
+                                                       Style="{StaticResource CellText}"
+                                                       ToolTip="{Binding Row.CustomerName}"/>
+                                        </Border>
+
+                                        <!-- Drawing (always visible, clickable) -->
+                                        <Border Width="200"
+                                                Background="Transparent" Cursor="Hand"
+                                                Tag="{Binding}"
+                                                MouseLeftButtonDown="DrawingNumber_Click"
+                                                ToolTip="{Binding Row.DrawingNumber}">
+                                            <TextBlock Text="{Binding Row.DrawingNumber}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
+                                                        <Setter Property="Foreground" Value="#0066CC"/>
+                                                        <Setter Property="TextDecorations" Value="Underline"/>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+
+                                        <!-- Description (toggleable) -->
+                                        <Border Width="150"
+                                                Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowDescription, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding Row.Description}"
+                                                       Style="{StaticResource CellText}"
+                                                       ToolTip="{Binding Row.Description}"/>
+                                        </Border>
+
+                                        <!-- Qty (toggleable) -->
+                                        <Border Width="50"
+                                                Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowQuantity, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding Row.Quantity}"
+                                                       Style="{StaticResource CellText}"
+                                                       TextAlignment="Right"
+                                                       HorizontalAlignment="Stretch"/>
+                                        </Border>
+
+                                        <!-- Due Date (toggleable) -->
+                                        <Border Width="90"
+                                                Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowDueDate, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding Row.DueDate}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                                <Setter Property="Foreground" Value="#CC0000"/>
+                                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+
+                                        <!-- Memo (toggleable, clickable) -->
+                                        <Border Width="80"
+                                                Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowMemo, Converter={StaticResource BoolToVis}}"
+                                                Background="Transparent" Cursor="Hand"
+                                                Tag="{Binding}"
+                                                MouseLeftButtonDown="MemoCell_Click"
+                                                ToolTip="{Binding MemoText}">
+                                            <TextBlock Text="{Binding MemoText}" Style="{StaticResource CellText}"/>
+                                        </Border>
+
+                                        <!-- Status (toggleable) -->
+                                        <Border Width="120"
+                                                Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowStatus, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding StatusText}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding StatusText}" Value="Complete">
+                                                                <Setter Property="Foreground" Value="#228B22"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding StatusText}" Value="Not Started">
+                                                                <Setter Property="Foreground" Value="#888888"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- ── Gantt right panel ─────────────────────────── -->
+                    <ScrollViewer Grid.Column="1"
+                                  x:Name="GanttHScroll"
+                                  HorizontalScrollBarVisibility="Hidden"
+                                  VerticalScrollBarVisibility="Disabled"
+                                  ScrollChanged="GanttHScroll_ScrollChanged"
+                                  PreviewMouseWheel="GanttHScroll_PreviewMouseWheel">
+                        <Canvas x:Name="GanttCanvas"
+                                Background="Transparent"
+                                Cursor="Hand"/>
+                    </ScrollViewer>
+                </Grid>
+            </ScrollViewer>
+
+        </DockPanel>
+
+        <!-- Loading overlay -->
+        <Grid x:Name="LoadingOverlay" Visibility="Collapsed" Background="#AA000000" Panel.ZIndex="10">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Canvas Width="48" Height="48" HorizontalAlignment="Center">
+                    <Canvas.RenderTransform>
+                        <RotateTransform x:Name="SpinnerRotate" CenterX="24" CenterY="24"/>
+                    </Canvas.RenderTransform>
+
+                    <Path Stroke="White" StrokeThickness="4"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                        <Path.Data>
+                            <PathGeometry>
+                                <PathFigure StartPoint="24,4">
+                                    <ArcSegment Point="4,24" Size="20,20"
+                                                IsLargeArc="True" SweepDirection="Clockwise"/>
+                                </PathFigure>
+                            </PathGeometry>
+                        </Path.Data>
+                    </Path>
+                </Canvas>
+                <TextBlock Text="Loading..." Foreground="White"
+                           FontSize="13" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+
 </UserControl>

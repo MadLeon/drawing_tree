@@ -5,8 +5,10 @@
 /// single-PO page when the user clicks View on a row.
 /// </summary>
 
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using DrawingTree.Data;
 using DrawingTree.Logging;
 
@@ -31,7 +33,13 @@ public partial class AllPosControl : UserControl
     private void LoadAllPos()
     {
         var results = _repository.GetAllPoLines();
-        ResultsGrid.ItemsSource = results;
+
+        var view = new ListCollectionView(results);
+        view.SortDescriptions.Add(new SortDescription(nameof(PoListRow.OeNumber),   ListSortDirection.Ascending));
+        view.SortDescriptions.Add(new SortDescription(nameof(PoListRow.LineNumber),  ListSortDirection.Ascending));
+        view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(PoListRow.PoNumber)));
+
+        ResultsGrid.ItemsSource = view;
         Logger.Instance.Info($"AllPosControl: loaded {results.Count} PO line(s)");
     }
 
