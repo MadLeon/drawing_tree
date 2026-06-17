@@ -102,3 +102,13 @@
 - 在右侧甘特区域下方（DockPanel.Dock="Bottom"）新增固定底部横向 `ScrollBar`，与 GanttHScroll 双向同步，原内置滚动条设为 Hidden
 - 图纸号改为蓝色下划线可点击链接，点击触发 `OpenPartRequested` 事件，传递 `PartId` 和 `OrderItemId`
 - 在 MainWindow 新增 `OnScheduleOpenPart` / `OnPartDetailBackToSchedule` 处理器，接入 Schedule→PartDetail→DrawingViewer 的完整导航链路
+
+### 15. 修复甘特图点击无效、优化条形标签与 Memo 笔记对话框
+
+修复甘特图右侧点击完全无响应的问题，并改进条形标签显示、Status 分数格式、Memo 对话框体验。
+
+- 修复点击无效：外层 `OuterScroll` ScrollViewer 在隧道阶段捕获鼠标事件，改为在 `GanttHScroll` 上用 `AddHandler(..., handledEventsToo: true)` 注册 `PreviewMouseLeftButtonDown`，同时为 `GanttCanvas` 添加 `Background="Transparent"` 确保整块区域参与 hit-test
+- Assign Step 对话框高度从 240 增至 290，底部按钮不再被截断
+- 甘特图条形标签从仅显示 shop code 改为 `{shop code}: {description}`，超出宽度省略，Tooltip 显示完整描述
+- 新增 `GetTemplateStepCounts()` 批量查询各 part 的 process_template 步骤总数，`ScheduleViewModel` 增加 `TotalTemplateSteps` 字段，Status 列改为 `{已完成步骤}/{template总步骤数}` 分数格式
+- Memo 列从弹出 Popup 改为打开 `PartNotesDialog`（新建），对话框显示该 part 全部笔记（时间/作者/内容）并支持添加新笔记，添加后自动刷新行内容，移除旧 `MemoPopup` XAML 元素

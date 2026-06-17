@@ -24,16 +24,18 @@ public class ScheduleRepository
         var orderItemIds = rows.Select(r => r.OrderItemId).ToList();
         var partIds      = rows.Where(r => r.PartId > 0).Select(r => r.PartId).Distinct().ToList();
 
-        var stepMap = GetAllStepTrackers(orderItemIds)
+        var stepMap      = GetAllStepTrackers(orderItemIds)
             .GroupBy(s => s.OrderItemId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        var memoMap = GetLatestNotePerPart(partIds);
+        var memoMap      = GetLatestNotePerPart(partIds);
+        var templateCount = GetTemplateStepCounts(partIds);
 
         return rows.Select(row => new ScheduleViewModel(
             row,
             stepMap.TryGetValue(row.OrderItemId, out var steps) ? steps : [],
-            row.PartId > 0 ? memoMap.GetValueOrDefault(row.PartId) : null
+            row.PartId > 0 ? memoMap.GetValueOrDefault(row.PartId) : null,
+            row.PartId > 0 ? templateCount.GetValueOrDefault(row.PartId, 0) : 0
         )).ToList();
     }
 
@@ -269,6 +271,33 @@ public class ScheduleRepository
         return result;
     }
 
+    private Dictionary<int, int> GetTemplateStepCounts(List<int> partIds)
+    {
+        var result = new Dictionary<int, int>();
+        if (partIds.Count == 0) return result;
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd  = conn.CreateCommand();
+            var placeholders = string.Join(",", partIds.Select((_, i) => $"@pid{i}"));
+            cmd.CommandText = $"""
+                SELECT part_id, COUNT(*) FROM process_template
+                WHERE part_id IN ({placeholders})
+                GROUP BY part_id
+                """;
+            for (int i = 0; i < partIds.Count; i++)
+                cmd.Parameters.AddWithValue($"@pid{i}", partIds[i]);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+                result[reader.GetInt32(0)] = reader.GetInt32(1);
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"ScheduleRepository.GetTemplateStepCounts failed: {ex.Message}");
+        }
+        return result;
+    }
+
     private static void ReadStepTrackers(Microsoft.Data.Sqlite.SqliteCommand cmd,
                                           List<ScheduleStepTracker> results)
     {
@@ -329,7 +358,8 @@ public record ProcessTemplateStep(int Id, int RowNumber, string ShopCode, string
 /// <param name="Row">Base order-item data</param>
 /// <param name="Steps">Step tracker records that have a start_time</param>
 /// <param name="MemoText">Latest part note content (nullable)</param>
-public record ScheduleViewModel(ScheduleRow Row, List<ScheduleStepTracker> Steps, string? MemoText)
+/// <param name="TotalTemplateSteps">Total steps in the process template for this part</param>
+public record ScheduleViewModel(ScheduleRow Row, List<ScheduleStepTracker> Steps, string? MemoText, int TotalTemplateSteps)
 {
     /// <summary>True when the row's due date has passed today.</summary>
     public bool IsOverdue =>
@@ -337,15 +367,13 @@ public record ScheduleViewModel(ScheduleRow Row, List<ScheduleStepTracker> Steps
         DateTime.TryParse(Row.DueDate, out var due) &&
         due.Date < DateTime.Today;
 
-    /// <summary>Human-readable current status derived from step tracker data.</summary>
+    /// <summary>Fraction of completed steps over total template steps, e.g. "3/12".</summary>
     public string StatusText
     {
         get
         {
-            if (Steps.Count == 0) return "Not Started";
-            var inProgress = Steps.FirstOrDefault(s => s.EndTime == null);
-            if (inProgress != null) return $"Step {inProgress.RowNumber}: {inProgress.ShopCode}";
-            return "Complete";
+            int completed = Steps.Count(s => s.EndTime != null);
+            return $"{completed}/{TotalTemplateSteps}";
         }
     }
 }

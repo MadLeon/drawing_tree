@@ -98,6 +98,14 @@ public partial class ManufacturingScheduleControl : UserControl
     {
         ApplyViewMode();
         LoadData();
+
+        // OuterScroll (and GanttHScroll) can mark PreviewMouseLeftButtonDown as Handled,
+        // which suppresses the normal bubbling MouseLeftButtonDown on the canvas.
+        // Registering with handledEventsToo:true ensures the click fires regardless.
+        GanttHScroll.AddHandler(
+            UIElement.PreviewMouseLeftButtonDownEvent,
+            new MouseButtonEventHandler(GanttCanvas_MouseLeftButtonDown),
+            handledEventsToo: true);
     }
 
     // ── Data loading ──────────────────────────────────────────────────────
@@ -207,15 +215,16 @@ public partial class ManufacturingScheduleControl : UserControl
 
                 var color  = GetShopColor(step.ShopCode);
                 var brush  = new SolidColorBrush(color);
+                string tooltipText = step.Description != null
+                    ? $"{step.ShopCode}: {step.Description}"
+                    : step.ShopCode;
                 var border = new Rectangle
                 {
                     Width  = barWidth,
                     Height = barHeight,
                     Fill   = brush,
                     RadiusX = 2, RadiusY = 2,
-                    ToolTip = step.EndTime == null
-                        ? $"{step.ShopCode}: {step.StartTime} → in progress"
-                        : $"{step.ShopCode}: {step.StartTime} → {step.EndTime}",
+                    ToolTip = tooltipText,
                 };
                 Canvas.SetLeft(border, x1);
                 Canvas.SetTop(border, barTop);
@@ -225,9 +234,12 @@ public partial class ManufacturingScheduleControl : UserControl
 
                 if (barWidth > 28)
                 {
+                    string labelText = step.Description != null
+                        ? $"{step.ShopCode}: {step.Description}"
+                        : step.ShopCode;
                     var label = new TextBlock
                     {
-                        Text       = step.ShopCode,
+                        Text       = labelText,
                         FontSize   = 9,
                         Foreground = Brushes.White,
                         Padding    = new Thickness(3, 0, 0, 0),
@@ -466,17 +478,20 @@ public partial class ManufacturingScheduleControl : UserControl
     {
         var pos = e.GetPosition(GanttCanvas);
         int rowIndex = (int)(pos.Y / RowHeight);
+        Logger.Instance.Debug($"GanttCanvas click: pos=({pos.X:F0},{pos.Y:F0}) rowIndex={rowIndex} total={_viewModels.Count}");
         if (rowIndex < 0 || rowIndex >= _viewModels.Count) return;
 
         var vm = _viewModels[rowIndex];
         if (vm.Row.PartId <= 0)
         {
+            Logger.Instance.Debug($"GanttCanvas click: no part for oi={vm.Row.OrderItemId}");
             MessageBox.Show("This order item has no linked part and therefore no process template.",
                 "No Part", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         var steps = _repository.GetProcessTemplate(vm.Row.PartId);
+        Logger.Instance.Debug($"GanttCanvas click: partId={vm.Row.PartId} steps={steps.Count}");
         if (steps.Count == 0)
         {
             MessageBox.Show("No process template steps found for this part.",
@@ -540,16 +555,31 @@ public partial class ManufacturingScheduleControl : UserControl
         }
     }
 
-    /// <summary>Shows the memo popup for the clicked row.</summary>
+    /// <summary>Opens the notes dialog for the clicked row's part.</summary>
     private void MemoCell_Click(object sender, MouseButtonEventArgs e)
     {
-        if (sender is FrameworkElement fe && fe.Tag is ScheduleViewModel vm)
+        if (sender is not FrameworkElement fe || fe.Tag is not ScheduleViewModel vm) return;
+        if (vm.Row.PartId <= 0) return;
+
+        var dialog = new Dialogs.PartNotesDialog(vm.Row.PartId, vm.Row.DrawingNumber ?? "—")
         {
-            if (string.IsNullOrWhiteSpace(vm.MemoText)) return;
-            MemoPopupText.Text = vm.MemoText;
-            MemoPopup.IsOpen   = true;
-            e.Handled          = true;
+            Owner = Window.GetWindow(this),
+        };
+        dialog.ShowDialog();
+
+        if (dialog.NoteAdded)
+        {
+            var notes      = new Data.PartRepository().GetPartNotes(vm.Row.PartId);
+            var latestMemo = notes.Count > 0 ? notes[0].Content : null;
+            int idx        = _viewModels.IndexOf(vm);
+            if (idx >= 0)
+            {
+                _viewModels[idx] = vm with { MemoText = latestMemo };
+                LeftRows.ItemsSource = null;
+                LeftRows.ItemsSource = _viewModels;
+            }
         }
+        e.Handled = true;
     }
 
     /// <summary>

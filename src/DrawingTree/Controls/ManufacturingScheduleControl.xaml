@@ -281,31 +281,12 @@
                               ScrollChanged="GanttHScroll_ScrollChanged"
                               PreviewMouseWheel="GanttHScroll_PreviewMouseWheel">
                     <Canvas x:Name="GanttCanvas"
-                            MouseLeftButtonDown="GanttCanvas_MouseLeftButtonDown"
+                            Background="Transparent"
                             Cursor="Hand"/>
                 </ScrollViewer>
             </Grid>
         </ScrollViewer>
 
-        <!-- ── Memo popup (shown on memo cell click) ───────────────── -->
-        <Popup x:Name="MemoPopup"
-               StaysOpen="False"
-               AllowsTransparency="True"
-               PopupAnimation="Fade"
-               Placement="MousePoint">
-            <Border Background="White"
-                    BorderBrush="#AAAAAA"
-                    BorderThickness="1"
-                    CornerRadius="4"
-                    Padding="10"
-                    MaxWidth="320" MaxHeight="200">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <TextBlock x:Name="MemoPopupText"
-                               TextWrapping="Wrap"
-                               FontSize="11"/>
-                </ScrollViewer>
-            </Border>
-        </Popup>
 
     </DockPanel>
 </UserControl>
