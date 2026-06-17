@@ -228,4 +228,165 @@ public class PoRepository
 
         return topLevel;
     }
+
+    /// <summary>
+    /// Loads every order_item line across all purchase orders, joined up through
+    /// job/purchase_order/customer and down to part, for the "All POs" overview screen.
+    /// </summary>
+    public List<PoListRow> GetAllPoLines()
+    {
+        var results = new List<PoListRow>();
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT po.id, po.po_number, po.oe_number,
+                       j.job_number, oi.line_number,
+                       cust.customer_name, cc.contact_name,
+                       oi.quantity, p.drawing_number, p.revision, p.description,
+                       oi.drawing_release_date, oi.delivery_required_date
+                FROM purchase_order po
+                JOIN job j ON j.po_id = po.id
+                JOIN order_item oi ON oi.job_id = j.id
+                LEFT JOIN part p ON p.id = oi.part_id
+                LEFT JOIN customer_contact cc ON cc.id = po.contact_id
+                LEFT JOIN customer cust ON cust.id = cc.customer_id
+                ORDER BY po.po_number, j.job_number, oi.line_number
+                """;
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                results.Add(new PoListRow(
+                    PoId:         reader.GetInt32(0),
+                    PoNumber:     reader.GetString(1),
+                    OeNumber:     reader.IsDBNull(2) ? null : reader.GetString(2),
+                    JobNumber:    reader.GetString(3),
+                    LineNumber:   reader.GetInt32(4),
+                    CustomerName: reader.IsDBNull(5) ? null : reader.GetString(5),
+                    ContactName:  reader.IsDBNull(6) ? null : reader.GetString(6),
+                    Quantity:     reader.GetInt32(7),
+                    DrawingNumber: reader.IsDBNull(8) ? null : reader.GetString(8),
+                    Revision:     reader.IsDBNull(9) ? null : reader.GetString(9),
+                    Description:  reader.IsDBNull(10) ? null : reader.GetString(10),
+                    ReleaseDate:  reader.IsDBNull(11) ? null : reader.GetString(11),
+                    DueDate:      reader.IsDBNull(12) ? null : reader.GetString(12)
+                ));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.GetAllPoLines failed: {ex.Message}");
+        }
+        return results;
+    }
+
+    /// <summary>
+    /// Loads the PO header (po_number, oe_number) for the single-PO detail page.
+    /// </summary>
+    /// <param name="poId">purchase_order.id</param>
+    /// <returns>Null if no PO with that id exists.</returns>
+    public PoHeader? GetPoHeader(int poId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT po_number, oe_number FROM purchase_order WHERE id = @poId";
+            cmd.Parameters.AddWithValue("@poId", poId);
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return new PoHeader(
+                    poId,
+                    reader.GetString(0),
+                    reader.IsDBNull(1) ? null : reader.GetString(1));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.GetPoHeader failed for poId={poId}: {ex.Message}");
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Loads every order_item line under the given PO, grouped by job, for the single-PO detail page.
+    /// </summary>
+    /// <param name="poId">purchase_order.id</param>
+    public List<PoOrderItemRow> GetPoOrderItems(int poId)
+    {
+        var results = new List<PoOrderItemRow>();
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT oi.id, j.job_number, oi.line_number, oi.part_id, oi.quantity,
+                       oi.drawing_release_date, oi.delivery_required_date
+                FROM job j
+                JOIN order_item oi ON oi.job_id = j.id
+                WHERE j.po_id = @poId
+                ORDER BY j.job_number, oi.line_number
+                """;
+            cmd.Parameters.AddWithValue("@poId", poId);
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                results.Add(new PoOrderItemRow(
+                    OrderItemId: reader.GetInt32(0),
+                    JobNumber:   reader.GetString(1),
+                    LineNumber:  reader.GetInt32(2),
+                    PartId:      reader.IsDBNull(3) ? null : reader.GetInt32(3),
+                    Quantity:    reader.GetInt32(4),
+                    ReleaseDate: reader.IsDBNull(5) ? null : reader.GetString(5),
+                    DueDate:     reader.IsDBNull(6) ? null : reader.GetString(6)
+                ));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.GetPoOrderItems failed for poId={poId}: {ex.Message}");
+        }
+        return results;
+    }
 }
+
+/// <param name="PoId">purchase_order.id</param>
+/// <param name="PoNumber">Purchase order number</param>
+/// <param name="OeNumber">Customer OE/order number</param>
+public record PoHeader(int PoId, string PoNumber, string? OeNumber);
+
+/// <param name="OrderItemId">order_item.id</param>
+/// <param name="JobNumber">Job number</param>
+/// <param name="LineNumber">Order item line number</param>
+/// <param name="PartId">part.id; null if the order item has no linked part yet</param>
+/// <param name="Quantity">Order item quantity</param>
+/// <param name="ReleaseDate">Drawing release date</param>
+/// <param name="DueDate">Delivery required date</param>
+public record PoOrderItemRow(
+    int OrderItemId, string JobNumber, int LineNumber, int? PartId,
+    int Quantity, string? ReleaseDate, string? DueDate);
+
+/// <param name="PoId">purchase_order.id for navigation to the single-PO page</param>
+/// <param name="PoNumber">Purchase order number</param>
+/// <param name="OeNumber">Customer OE/order number</param>
+/// <param name="JobNumber">Job number</param>
+/// <param name="LineNumber">Order item line number</param>
+/// <param name="CustomerName">Customer name</param>
+/// <param name="ContactName">Customer contact name</param>
+/// <param name="Quantity">Order item quantity</param>
+/// <param name="DrawingNumber">Part drawing number</param>
+/// <param name="Revision">Part revision</param>
+/// <param name="Description">Part description</param>
+/// <param name="ReleaseDate">Drawing release date</param>
+/// <param name="DueDate">Delivery required date</param>
+public record PoListRow(
+    int PoId, string PoNumber, string? OeNumber,
+    string JobNumber, int LineNumber,
+    string? CustomerName, string? ContactName,
+    int Quantity, string? DrawingNumber, string? Revision, string? Description,
+    string? ReleaseDate, string? DueDate);

@@ -23,6 +23,8 @@ public class DrawingNode : INotifyPropertyChanged
     private bool _isRootNode = false;
     private string? _jobHeader;
     private string? _lineHeader;
+    private string? _releaseDate;
+    private string? _dueDate;
 
     /// <summary>Database part_tree.id for this node's parent→child edge; null for new/unsaved nodes</summary>
     public int? PartTreeId { get; set; }
@@ -179,6 +181,24 @@ public class DrawingNode : INotifyPropertyChanged
                 OnPropertyChanged();
             }
         }
+    }
+
+    /// <summary>
+    /// Drawing release date (order_item.drawing_release_date); only set on the order_item root node.
+    /// </summary>
+    public string? ReleaseDate
+    {
+        get => _releaseDate;
+        set { if (_releaseDate != value) { _releaseDate = value; OnPropertyChanged(); } }
+    }
+
+    /// <summary>
+    /// Delivery required date (order_item.delivery_required_date); only set on the order_item root node.
+    /// </summary>
+    public string? DueDate
+    {
+        get => _dueDate;
+        set { if (_dueDate != value) { _dueDate = value; OnPropertyChanged(); } }
     }
 
     /// <summary>

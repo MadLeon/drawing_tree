@@ -1,10 +1,10 @@
-<UserControl x:Class="DrawingTree.Controls.SearchControl"
+<UserControl x:Class="DrawingTree.Controls.AllPosControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignHeight="600" d:DesignWidth="1000">
+             d:DesignHeight="600" d:DesignWidth="1200">
 
     <UserControl.Resources>
         <Style x:Key="HeaderCell" TargetType="DataGridColumnHeader">
@@ -48,29 +48,14 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Top toolbar: search box occupies 1/3, spacer takes remaining 2/3 -->
+        <!-- Top toolbar -->
         <Border Grid.Row="0" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1"
                 Background="#F0F0F0" Padding="8,6">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="2*"/>
-                </Grid.ColumnDefinitions>
-                <Grid Grid.Column="0">
-                    <TextBox x:Name="SearchBox"
-                             Height="28" Padding="5,4" FontSize="13"
-                             VerticalContentAlignment="Center"
-                             TextChanged="SearchBox_TextChanged"/>
-                    <TextBlock x:Name="PlaceholderText"
-                               Text="Drawing Number / PO Number / Job Number"
-                               IsHitTestVisible="False"
-                               Foreground="#AAAAAA" FontSize="13"
-                               Margin="7,0,0,0" VerticalAlignment="Center"/>
-                </Grid>
-            </Grid>
+            <TextBlock Text="All Purchase Orders" FontSize="13" FontWeight="SemiBold"
+                       Foreground="#555555" VerticalAlignment="Center"/>
         </Border>
 
-        <!-- Search results DataGrid -->
+        <!-- PO lines DataGrid -->
         <DataGrid x:Name="ResultsGrid"
                   Grid.Row="1"
                   AutoGenerateColumns="False"
@@ -88,15 +73,30 @@
                   ColumnHeaderStyle="{StaticResource HeaderCell}"
                   CellStyle="{StaticResource BodyCell}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="PO"
+                <DataGridTextColumn Header="P.O."
                                     Binding="{Binding PoNumber}"
-                                    Width="188"/>
+                                    Width="150"/>
+                <DataGridTextColumn Header="O.E."
+                                    Binding="{Binding OeNumber}"
+                                    Width="120"/>
                 <DataGridTextColumn Header="Job No"
                                     Binding="{Binding JobNumber}"
                                     Width="100"/>
-                <DataGridTextColumn Header="Dwg No"
+                <DataGridTextColumn Header="Line No"
+                                    Binding="{Binding LineNumber}"
+                                    Width="70"/>
+                <DataGridTextColumn Header="Customer"
+                                    Binding="{Binding CustomerName}"
+                                    Width="140"/>
+                <DataGridTextColumn Header="Contact"
+                                    Binding="{Binding ContactName}"
+                                    Width="160"/>
+                <DataGridTextColumn Header="Qty"
+                                    Binding="{Binding Quantity}"
+                                    Width="60"/>
+                <DataGridTextColumn Header="Drawing Number"
                                     Binding="{Binding DrawingNumber}"
-                                    Width="180"/>
+                                    Width="220"/>
                 <DataGridTextColumn Header="Rev."
                                     Binding="{Binding Revision}"
                                     Width="60"/>
@@ -111,13 +111,19 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
+                <DataGridTextColumn Header="Rls Date"
+                                    Binding="{Binding ReleaseDate}"
+                                    Width="100"/>
+                <DataGridTextColumn Header="Due Date"
+                                    Binding="{Binding DueDate}"
+                                    Width="100"/>
                 <DataGridTemplateColumn Header="" Width="80">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Content="View"
                                     Height="24" FontSize="11"
                                     Margin="4,2"
-                                    Tag="{Binding PartId}"
+                                    Tag="{Binding PoId}"
                                     Click="ViewButton_Click"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

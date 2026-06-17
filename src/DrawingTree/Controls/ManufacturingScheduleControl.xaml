@@ -1,0 +1,311 @@
+<UserControl x:Class="DrawingTree.Controls.ManufacturingScheduleControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="1400">
+
+    <UserControl.Resources>
+        <Geometry x:Key="ChevronLeftGeo">M560-240 320-480l240-240 57 57-184 183 184 184-57 57Z</Geometry>
+
+        <Style x:Key="IconBtn" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="BtnBd" Background="Transparent" CornerRadius="2" Padding="2">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="BtnBd" Property="Background" Value="#15000000"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Shared row border style for left panel -->
+        <Style x:Key="LeftRowBorder" TargetType="Border">
+            <Setter Property="BorderBrush" Value="#EEEEEE"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Height" Value="32"/>
+        </Style>
+
+        <!-- Cell text style -->
+        <Style x:Key="CellText" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="Padding" Value="6,0"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+
+        <!-- Header text style -->
+        <Style x:Key="HeaderText" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="6,0"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#555555"/>
+        </Style>
+    </UserControl.Resources>
+
+    <DockPanel Background="White">
+
+        <!-- ── Toolbar ─────────────────────────────────────────────── -->
+        <Border DockPanel.Dock="Top"
+                BorderBrush="#CCCCCC" BorderThickness="0,0,0,1"
+                Background="#F0F0F0" Padding="8,6" Height="40">
+            <Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BackButton"
+                            Style="{StaticResource IconBtn}"
+                            Width="32" Height="32" Margin="0,0,8,0"
+                            ToolTip="Back"
+                            Click="BackButton_Click">
+                        <Path Data="{StaticResource ChevronLeftGeo}"
+                              Stretch="Uniform" Fill="#333333" Width="20" Height="20"/>
+                    </Button>
+                    <TextBlock Text="Manufacturing Schedule"
+                               FontSize="13" FontWeight="SemiBold"
+                               Foreground="#333333"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                    <!-- View mode selector -->
+                    <TextBlock Text="View:" FontSize="11" Foreground="#555555"
+                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <RadioButton x:Name="DayRadio" Content="Day"
+                                 FontSize="11" Margin="0,0,8,0"
+                                 IsChecked="True"
+                                 Checked="ViewMode_Checked"/>
+                    <RadioButton x:Name="WeekRadio" Content="Week"
+                                 FontSize="11" Margin="0,0,8,0"
+                                 Checked="ViewMode_Checked"/>
+                    <RadioButton x:Name="MonthRadio" Content="Month"
+                                 FontSize="11" Margin="0,0,8,0"
+                                 Checked="ViewMode_Checked"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ── Column header strip (always visible) ───────────────── -->
+        <Grid DockPanel.Dock="Top" Height="30"
+              Background="#F5F5F5"
+              x:Name="HeaderStrip">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="125"/>  <!-- PO -->
+                <ColumnDefinition Width="80"/>   <!-- Job -->
+                <ColumnDefinition Width="100"/>  <!-- Customer -->
+                <ColumnDefinition Width="200"/>  <!-- Drawing -->
+                <ColumnDefinition Width="150"/>  <!-- Description -->
+                <ColumnDefinition Width="50"/>   <!-- Qty -->
+                <ColumnDefinition Width="90"/>   <!-- Due -->
+                <ColumnDefinition Width="80"/>   <!-- Memo -->
+                <ColumnDefinition Width="120"/>  <!-- Status -->
+                <ColumnDefinition Width="*"/>    <!-- Gantt label placeholder -->
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" Text="P.O."        Style="{StaticResource HeaderText}"/>
+            <TextBlock Grid.Column="1" Text="Job"         Style="{StaticResource HeaderText}"/>
+            <TextBlock Grid.Column="2" Text="Customer"    Style="{StaticResource HeaderText}"/>
+            <TextBlock Grid.Column="3" Text="Drawing"     Style="{StaticResource HeaderText}"/>
+            <TextBlock Grid.Column="4" Text="Description" Style="{StaticResource HeaderText}"/>
+            <TextBlock Grid.Column="5" Text="Qty"         Style="{StaticResource HeaderText}"/>
+            <TextBlock Grid.Column="6" Text="Due Date"    Style="{StaticResource HeaderText}"/>
+            <TextBlock Grid.Column="7" Text="Memo"        Style="{StaticResource HeaderText}"/>
+            <TextBlock Grid.Column="8" Text="Status"      Style="{StaticResource HeaderText}"/>
+            <!-- Time scale header is drawn on TimeHeaderCanvas, overlaid in the right column -->
+            <Canvas x:Name="TimeHeaderCanvas" Grid.Column="9" Background="#F5F5F5"
+                    ClipToBounds="True"/>
+
+            <!-- Separator lines between columns -->
+            <Border Grid.Column="0" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+            <Border Grid.Column="1" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+            <Border Grid.Column="2" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+            <Border Grid.Column="3" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+            <Border Grid.Column="4" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+            <Border Grid.Column="5" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+            <Border Grid.Column="6" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+            <Border Grid.Column="7" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+            <Border Grid.Column="8" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
+            <Border Grid.Column="9" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1" IsHitTestVisible="False"/>
+        </Grid>
+
+        <!-- ── Bottom scrollbar for Gantt horizontal scroll ───────── -->
+        <Grid DockPanel.Dock="Bottom" Background="#F0F0F0" Height="17">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="995"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <ScrollBar x:Name="GanttScrollBar"
+                       Grid.Column="1"
+                       Orientation="Horizontal"
+                       Minimum="0" Maximum="1"
+                       Scroll="GanttScrollBar_Scroll"/>
+        </Grid>
+
+        <!-- ── Scrollable content ─────────────────────────────────── -->
+        <ScrollViewer x:Name="OuterScroll"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <Grid x:Name="ContentGrid">
+                <Grid.ColumnDefinitions>
+                    <!-- Fixed left panel (total 995px) -->
+                    <ColumnDefinition Width="995"/>
+                    <!-- Gantt right panel -->
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- ── Left panel rows ──────────────────────────── -->
+                <ItemsControl x:Name="LeftRows" Grid.Column="0"
+                              VirtualizingStackPanel.IsVirtualizing="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border>
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource LeftRowBorder}">
+                                        <Setter Property="Background" Value="White"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                <Setter Property="Background" Value="#FFF3F3"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="125"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="200"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="50"/>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="120"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0" Text="{Binding Row.PoNumber}"
+                                               Style="{StaticResource CellText}"
+                                               ToolTip="{Binding Row.PoNumber}"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Row.JobNumber}"
+                                               Style="{StaticResource CellText}"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding Row.CustomerName}"
+                                               Style="{StaticResource CellText}"
+                                               ToolTip="{Binding Row.CustomerName}"/>
+
+                                    <!-- Drawing number: clickable link to part page -->
+                                    <Border Grid.Column="3"
+                                            Background="Transparent"
+                                            Cursor="Hand"
+                                            Tag="{Binding}"
+                                            MouseLeftButtonDown="DrawingNumber_Click"
+                                            ToolTip="{Binding Row.DrawingNumber}">
+                                        <TextBlock Text="{Binding Row.DrawingNumber}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
+                                                    <Setter Property="Foreground" Value="#0066CC"/>
+                                                    <Setter Property="TextDecorations" Value="Underline"/>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+
+                                    <TextBlock Grid.Column="4" Text="{Binding Row.Description}"
+                                               Style="{StaticResource CellText}"
+                                               ToolTip="{Binding Row.Description}"/>
+                                    <TextBlock Grid.Column="5" Text="{Binding Row.Quantity}"
+                                               Style="{StaticResource CellText}"
+                                               TextAlignment="Right"/>
+                                    <TextBlock Grid.Column="6" Text="{Binding Row.DueDate}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                        <Setter Property="Foreground" Value="#CC0000"/>
+                                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+
+                                    <!-- Memo cell: transparent Border ensures click registers even when text is empty -->
+                                    <Border Grid.Column="7"
+                                            Background="Transparent"
+                                            Cursor="Hand"
+                                            Tag="{Binding}"
+                                            MouseLeftButtonDown="MemoCell_Click"
+                                            ToolTip="{Binding MemoText}">
+                                        <TextBlock Text="{Binding MemoText}"
+                                                   Style="{StaticResource CellText}"/>
+                                    </Border>
+
+                                    <TextBlock Grid.Column="8" Text="{Binding StatusText}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding StatusText}" Value="Complete">
+                                                        <Setter Property="Foreground" Value="#228B22"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding StatusText}" Value="Not Started">
+                                                        <Setter Property="Foreground" Value="#888888"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- ── Gantt right panel ─────────────────────────── -->
+                <ScrollViewer Grid.Column="1"
+                              x:Name="GanttHScroll"
+                              HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Disabled"
+                              ScrollChanged="GanttHScroll_ScrollChanged"
+                              PreviewMouseWheel="GanttHScroll_PreviewMouseWheel">
+                    <Canvas x:Name="GanttCanvas"
+                            MouseLeftButtonDown="GanttCanvas_MouseLeftButtonDown"
+                            Cursor="Hand"/>
+                </ScrollViewer>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- ── Memo popup (shown on memo cell click) ───────────────── -->
+        <Popup x:Name="MemoPopup"
+               StaysOpen="False"
+               AllowsTransparency="True"
+               PopupAnimation="Fade"
+               Placement="MousePoint">
+            <Border Background="White"
+                    BorderBrush="#AAAAAA"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="10"
+                    MaxWidth="320" MaxHeight="200">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <TextBlock x:Name="MemoPopupText"
+                               TextWrapping="Wrap"
+                               FontSize="11"/>
+                </ScrollViewer>
+            </Border>
+        </Popup>
+
+    </DockPanel>
+</UserControl>
