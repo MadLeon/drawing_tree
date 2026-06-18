@@ -242,7 +242,7 @@
             <ScrollViewer x:Name="OuterScroll"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
-                <Grid x:Name="ContentGrid">
+                <Grid x:Name="ContentGrid" VerticalAlignment="Top">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="995"/>
                         <ColumnDefinition Width="*"/>
@@ -374,16 +374,16 @@
                     </ItemsControl>
 
                     <!-- ── Gantt right panel ─────────────────────────── -->
-                    <ScrollViewer Grid.Column="1"
-                                  x:Name="GanttHScroll"
-                                  HorizontalScrollBarVisibility="Hidden"
-                                  VerticalScrollBarVisibility="Disabled"
-                                  ScrollChanged="GanttHScroll_ScrollChanged"
-                                  PreviewMouseWheel="GanttHScroll_PreviewMouseWheel">
+                    <Border Grid.Column="1"
+                            x:Name="GanttClip"
+                            ClipToBounds="True"
+                            PreviewMouseWheel="GanttClip_PreviewMouseWheel">
                         <Canvas x:Name="GanttCanvas"
                                 Background="Transparent"
-                                Cursor="Hand"/>
-                    </ScrollViewer>
+                                Cursor="Hand"
+                                VerticalAlignment="Top"
+                                MouseLeftButtonDown="GanttCanvas_MouseLeftButtonDown"/>
+                    </Border>
                 </Grid>
             </ScrollViewer>
 

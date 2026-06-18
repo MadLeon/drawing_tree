@@ -1,3 +1,19 @@
+Import Drawing
+当同一个part再次被导入时, 图纸文件的修改逻辑
+Import 中间步骤可忽略, 可以直接进入树构建
+优化 MP Schedule 点击展开, 初始加载还是分进程还是等点击加载
+
+添加 MP 功能
+
+添加 Package Tracker 功能
+- 反应 DIR 的完成情况 %
+
+在单 PO 界面
+# 工具栏最左侧的返回按钮, 样式参考 View Drawing 界面工具栏的样式
+
+添加 OE 功能
+
+---
 
 修改 Search 页面, 添加对于 PO 和 Job 的搜索支持
 当前, 点击搜索结果的view按钮, 必然会重定向到drawing. 我希望

@@ -18,6 +18,7 @@ using DrawingTree.Logging;
 
 using Color            = System.Windows.Media.Color;
 using Brushes          = System.Windows.Media.Brushes;
+using Point            = System.Windows.Point;
 using Rectangle        = System.Windows.Shapes.Rectangle;
 using MessageBox       = System.Windows.MessageBox;
 using MessageBoxButton = System.Windows.MessageBoxButton;
@@ -125,7 +126,8 @@ public partial class ManufacturingScheduleControl : UserControl
 
     private readonly List<(Rect Bounds, int RowIndex, ScheduleStepTracker Step)> _barHitList = [];
 
-    private bool _loaded = false;
+    private double _ganttOffset = 0;
+    private bool   _loaded      = false;
 
     public event EventHandler? BackRequested;
     public event EventHandler<(int PartId, int OrderItemId)>? OpenPartRequested;
@@ -148,10 +150,7 @@ public partial class ManufacturingScheduleControl : UserControl
         _loaded = true;
 
         ApplyViewMode();
-        GanttHScroll.AddHandler(
-            UIElement.PreviewMouseLeftButtonDownEvent,
-            new MouseButtonEventHandler(GanttCanvas_MouseLeftButtonDown),
-            handledEventsToo: true);
+        GanttClip.SizeChanged += (_, _) => UpdateGanttScrollBar();
 
         UpdateSortIndicators();
         UpdateColumnVisibility();
@@ -172,8 +171,8 @@ public partial class ManufacturingScheduleControl : UserControl
             Dispatcher.InvokeAsync(() =>
             {
                 double todayX    = DateToX(DateTime.Today);
-                double viewWidth = GanttHScroll.ViewportWidth;
-                GanttHScroll.ScrollToHorizontalOffset(Math.Max(0, todayX - viewWidth / 2));
+                double viewWidth = GanttClip.ActualWidth;
+                SetGanttOffset(Math.Max(0, todayX - viewWidth / 2));
             }, System.Windows.Threading.DispatcherPriority.Loaded);
         }
         catch (Exception ex)
@@ -214,8 +213,17 @@ public partial class ManufacturingScheduleControl : UserControl
 
         _viewModels          = source.ToList();
         LeftRows.ItemsSource = _viewModels;
+
+        Logger.Instance.Info(
+            $"ApplySortAndFilter: query='{query}' rows={_viewModels.Count}/{_allViewModels.Count} " +
+            $"OuterScroll.VerticalOffset={OuterScroll.VerticalOffset:F0} " +
+            $"OuterScroll.ScrollableHeight={OuterScroll.ScrollableHeight:F0}");
+
         OuterScroll.ScrollToTop();
-        Logger.Instance.Info($"ManufacturingScheduleControl: showing {_viewModels.Count}/{_allViewModels.Count} rows");
+
+        Logger.Instance.Info(
+            $"ApplySortAndFilter: after ScrollToTop VerticalOffset={OuterScroll.VerticalOffset:F0}");
+
         Render();
     }
 
@@ -288,12 +296,41 @@ public partial class ManufacturingScheduleControl : UserControl
         GanttCanvas.Children.Clear();
         _barHitList.Clear();
 
+        Logger.Instance.Info(
+            $"Render[sync]: rows={_viewModels.Count} canvasH={canvasHeight:F0} canvasW={canvasWidth:F0} " +
+            $"ganttOffset={_ganttOffset:F0}");
+
         DrawRowBands(canvasWidth);
         DrawBars();
         DrawTodayLine(canvasHeight);
         DrawDueDateLines();
 
-        Dispatcher.InvokeAsync(DrawTimeHeader, System.Windows.Threading.DispatcherPriority.Loaded);
+        // Log actual layout values after WPF completes the layout pass
+        Dispatcher.InvokeAsync(() =>
+        {
+            DrawTimeHeader();
+            UpdateGanttScrollBar();
+
+            try
+            {
+                var clipPt     = GanttClip.TransformToAncestor(OuterScroll).Transform(new Point(0, 0));
+                var leftRowsPt = LeftRows.TransformToAncestor(OuterScroll).Transform(new Point(0, 0));
+                var canvasPt   = GanttCanvas.TransformToAncestor(OuterScroll).Transform(new Point(0, 0));
+
+                Logger.Instance.Info(
+                    $"Render[layout]: " +
+                    $"OuterScroll actual=({OuterScroll.ActualWidth:F0}x{OuterScroll.ActualHeight:F0}) " +
+                    $"vOffset={OuterScroll.VerticalOffset:F0} scrollH={OuterScroll.ScrollableHeight:F0} | " +
+                    $"ContentGrid actual=({ContentGrid.ActualWidth:F0}x{ContentGrid.ActualHeight:F0}) | " +
+                    $"GanttClip actual=({GanttClip.ActualWidth:F0}x{GanttClip.ActualHeight:F0}) pos=({clipPt.X:F0},{clipPt.Y:F0}) | " +
+                    $"GanttCanvas actual=({GanttCanvas.ActualWidth:F0}x{GanttCanvas.ActualHeight:F0}) pos=({canvasPt.X:F0},{canvasPt.Y:F0}) | " +
+                    $"LeftRows actual=({LeftRows.ActualWidth:F0}x{LeftRows.ActualHeight:F0}) pos=({leftRowsPt.X:F0},{leftRowsPt.Y:F0})");
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance.Info($"Render[layout] error: {ex.Message}");
+            }
+        }, System.Windows.Threading.DispatcherPriority.Background);
     }
 
     private void DrawRowBands(double canvasWidth)
@@ -427,9 +464,18 @@ public partial class ManufacturingScheduleControl : UserControl
         }
     }
 
+    private void SetGanttOffset(double offset)
+    {
+        double max = Math.Max(0, GanttCanvas.Width - GanttClip.ActualWidth);
+        _ganttOffset = Math.Max(0, Math.Min(offset, max));
+        GanttCanvas.RenderTransform = new TranslateTransform(-_ganttOffset, 0);
+        DrawTimeHeader();
+        UpdateGanttScrollBar();
+    }
+
     private void DrawTimeHeader()
     {
-        double scrollOffset = GanttHScroll.HorizontalOffset;
+        double scrollOffset = _ganttOffset;
         TimeHeaderCanvas.Children.Clear();
 
         switch (_viewMode)
@@ -582,53 +628,47 @@ public partial class ManufacturingScheduleControl : UserControl
         Render();
 
         double todayX        = DateToX(DateTime.Today);
-        double viewportWidth = GanttHScroll.ViewportWidth;
-        GanttHScroll.ScrollToHorizontalOffset(Math.Max(0, todayX - viewportWidth / 2));
+        double viewportWidth = GanttClip.ActualWidth;
+        SetGanttOffset(Math.Max(0, todayX - viewportWidth / 2));
     }
 
-    private void GanttHScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    private void GanttClip_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        GanttHScroll.ScrollToHorizontalOffset(GanttHScroll.HorizontalOffset - e.Delta / 3.0);
+        SetGanttOffset(_ganttOffset - e.Delta / 3.0);
         e.Handled = true;
-    }
-
-    private void GanttHScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
-    {
-        if (e.HorizontalChange != 0)
-            DrawTimeHeader();
-        UpdateGanttScrollBar();
     }
 
     private void UpdateGanttScrollBar()
     {
-        GanttScrollBar.Maximum      = GanttHScroll.ScrollableWidth;
-        GanttScrollBar.ViewportSize = GanttHScroll.ViewportWidth;
-        GanttScrollBar.LargeChange  = GanttHScroll.ViewportWidth;
+        double scrollable           = Math.Max(0, GanttCanvas.Width - GanttClip.ActualWidth);
+        GanttScrollBar.Maximum      = scrollable;
+        GanttScrollBar.ViewportSize = GanttClip.ActualWidth;
+        GanttScrollBar.LargeChange  = GanttClip.ActualWidth;
         GanttScrollBar.SmallChange  = 50;
-        GanttScrollBar.Value        = GanttHScroll.HorizontalOffset;
+        GanttScrollBar.Value        = _ganttOffset;
     }
 
     private void GanttScrollBar_Scroll(object sender, System.Windows.Controls.Primitives.ScrollEventArgs e) =>
-        GanttHScroll.ScrollToHorizontalOffset(GanttScrollBar.Value);
+        SetGanttOffset(GanttScrollBar.Value);
 
     private void GanttCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         var pos      = e.GetPosition(GanttCanvas);
         int rowIndex = (int)(pos.Y / RowHeight);
-        Logger.Instance.Debug($"GanttCanvas click: pos=({pos.X:F0},{pos.Y:F0}) rowIndex={rowIndex} total={_viewModels.Count}");
+        Logger.Instance.Info($"GanttCanvas click: pos=({pos.X:F0},{pos.Y:F0}) rowIndex={rowIndex} total={_viewModels.Count}");
         if (rowIndex < 0 || rowIndex >= _viewModels.Count) return;
 
         var vm = _viewModels[rowIndex];
         if (vm.Row.PartId <= 0)
         {
-            Logger.Instance.Debug($"GanttCanvas click: no part for oi={vm.Row.OrderItemId}");
+            Logger.Instance.Info($"GanttCanvas click: no part for oi={vm.Row.OrderItemId}");
             MessageBox.Show("This order item has no linked part and therefore no process template.",
                 "No Part", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         var steps = _repository.GetProcessTemplate(vm.Row.PartId);
-        Logger.Instance.Debug($"GanttCanvas click: partId={vm.Row.PartId} steps={steps.Count}");
+        Logger.Instance.Info($"GanttCanvas click: partId={vm.Row.PartId} steps={steps.Count}");
         if (steps.Count == 0)
         {
             MessageBox.Show("No process template steps found for this part.",
