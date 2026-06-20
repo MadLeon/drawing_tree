@@ -1,223 +1,245 @@
-# Manufacturing Schedule 实现方案
-
-## Context
-
-为了追踪每个订单零件的生产实际进度，新增一个甘特图风格的 Manufacturing Schedule 页面。
-通过 MainWindow 工具栏的同名按钮进入，界面左侧为订单行基本信息，右侧为 Canvas 绘制的甘特条。
+# drawing_number 大小写重复问题：根因分析与修复方案
 
 ---
 
-## 关键设计决策（已与用户确认）
+## 一、问题现象
 
-| 决策点 | 结论 |
-|---|---|
-| 行实体 | 一行 = 一个 `order_item`，相同图纸在不同 PO 各自独立 |
-| 甘特交互 | Canvas 横条（非格子下拉），点击空白弹对话框 |
-| Status 列 | 只读，从 step_tracker 推导（第一个有 start_time 但无 end_time 的步骤） |
-| 甘特对话框字段 | 工序步骤（必填） + 实际开始日期（必填） + 实际结束日期（可选） |
-| Memo 列 | 对应 `part_note`，截断显示，点击弹悬浮面板展示全部 |
-| Due Date | `order_item.delivery_required_date` |
-| 横条颜色 | 按 `shop_code` 映射固定调色板 |
-| 高亮规则 | 超过 Due Date 的行标红；右侧绘制今日竖线 |
-| 默认时间单位 | 天，视口初始居中于今天（前后各 30 天） |
-| 数据范围 | 仅活跃 PO（`purchase_order.is_active = 1`） |
-| 数据库变更 | 无需新增字段，沿用 step_tracker.start_time / end_time |
-| 追踪阶段 | 仅追实际，后续再加计划字段 |
+用户在树构筑界面看到 `RT-87000-71200-1004-1-DD-B`，输入信息后数据没有更新到界面。
 
 ---
 
-## 布局结构
+## 二、根因分析
+
+### 数据库中存在两条重复记录
 
 ```
-ManufacturingScheduleControl
-├── DockPanel
-│   ├── [Top] StackPanel - 工具栏
-│   │   ├── Back 按钮（IconBtn 样式）
-│   │   ├── TextBlock "Manufacturing Schedule"（标题）
-│   │   └── [右对齐] Settings 图标按钮 → 弹出时间单位选择面板
-│   └── Grid (2 列)
-│       ├── Col 0 (固定 ~640px): 左侧面板
-│       │   ├── Row 0: 列标题行 (PO/Job/Customer/Drawing/Desc/Qty/Due/Memo/Status)
-│       │   └── Row 1: 数据行 ItemsControl
-│       └── Col 1 (star): 右侧面板
-│           ├── Row 0: 时间刻度标题 Canvas
-│           └── Row 1: 甘特 Canvas（包含横条 + 今日竖线）
-└── 垂直滚动：共享外层 ScrollViewer
-    水平滚动：仅右侧面板独立 ScrollViewer
+id=3452  RT-87000-71200-1004-1-DD-B (大写)  rev=0   has_parent=NULL  → 有 drawing_file
+id=4791  rt-87000-71200-1004-1-dd-b (小写)  rev=-   has_parent=1     → 在 part_tree 中
 ```
 
-左侧**不使用 DataGrid**，改用固定行高（32px）的 ItemsControl，
-每行是一个手动定义列宽的 Grid，与现有 AllPosControl 的样式保持一致。
+- `drawing_file` 表的记录绑定在 **id=3452**（有效文件）
+- `part_tree` 树结构绑定的是 **id=4791** 作为 `id=3451`（RT-87000-71200-1000-1-GA-E）的子件，quantity=2
+
+### 两者数据互不相通
+
+- 树构筑界面通过 `part_tree` → `GetPartTree()` 加载 **id=4791**，显示 `revision=-`、`description=AXIAL WEAR RING`
+- PartEditor 通过 `GetDrawingInfo("RT-...")` 大小写敏感匹配找到 **id=3452**，显示 `revision=0`、`description=Bellows Replacement Tool...`
+- 用户在任一界面保存，只会更新各自绑定的记录，另一条不受影响
+
+### 设计层面的根本原因
+
+`part` 表的约束：
+
+```sql
+UNIQUE(drawing_number, revision)
+```
+
+SQLite 的 TEXT 字段默认使用 **BINARY 排序规则**，`RT-xxx` 与 `rt-xxx` 被视为不同值，UNIQUE 约束不拦截，导致大小写不同的同一图纸号可以共存。
+
+### 问题规模
+
+查询发现数据库中存在 **170+ 组**大小写重复对，均为大写与小写版本各一条，例如：
+
+```
+sample: 4 条 (3598=SAMPLE | 3599=Sample | 5333=Sample | 3605=sample)
+rt-87640-72150-*: 约 40 组
+rt-87000-71200-*: 约 10 组
+rt-87000-71225-*: 约 37 组
+59rt-79112-*:     约 35 组
+...
+```
+
+这是系统性问题，单次导入时图纸号大小写不一致（PDF 文件名小写 vs 工程图纸编号大写）导致批量重复插入。
 
 ---
 
-## 文件清单
+## 三、修复方案
 
-### 新建文件
+三层修复，**必须按顺序执行**。
 
-#### `src/DrawingTree/Data/ScheduleRepository.cs`
+---
 
-方法：
-- `GetScheduleRows()` → `List<ScheduleRow>`
-  - JOIN: order_item → job → purchase_order → customer_contact → customer → part
-  - 过滤: `purchase_order.is_active = 1`
-  - 排序: po_number, job_number, line_number
-- `GetStepTrackers(int orderItemId)` → `List<ScheduleStepTracker>`
-  - JOIN: step_tracker → process_template（取 shop_code / description）
-  - 仅取有 start_time 的记录
-- `UpsertStepTracker(int orderItemId, int processTemplateId, string startTime, string? endTime)`
-  - 先查是否存在记录；存在则 UPDATE，不存在则 INSERT
-- `GetProcessTemplate(int partId)` → `List<ProcessTemplateStep>`
-  - 复用 PartRepository 查询逻辑，返回 (id, row_number, shop_code, description)
-- `GetPartNotes(int partId)` → 复用 `PartRepository.GetPartNotes()`，不重复写
+### Step 1：数据清理（先于 Schema 变更执行）
 
-数据模型（Records）：
+**策略**：每对重复中，保留大写版本（`drawing_number = UPPER(drawing_number)`），将小写版本的所有外键引用合并过来，再删除小写记录。
+
+```sql
+-- 先备份！
+-- Copy-Item data/record.db "data/record.db.backup-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+
+BEGIN;
+
+-- 1. 重定向 part_tree.child_id（小写 → 大写）
+UPDATE part_tree
+SET child_id = canonical.id
+FROM (
+    SELECT p_upper.id AS id, p_lower.id AS dup_id
+    FROM part p_upper
+    JOIN part p_lower
+      ON LOWER(p_upper.drawing_number) = LOWER(p_lower.drawing_number)
+     AND p_upper.revision = p_lower.revision
+     AND p_upper.drawing_number = UPPER(p_upper.drawing_number)
+     AND p_lower.drawing_number != UPPER(p_lower.drawing_number)
+) AS canonical
+WHERE part_tree.child_id = canonical.dup_id;
+
+-- 2. 重定向 part_tree.parent_id（小写 → 大写）
+UPDATE part_tree
+SET parent_id = canonical.id
+FROM (
+    SELECT p_upper.id AS id, p_lower.id AS dup_id
+    FROM part p_upper
+    JOIN part p_lower
+      ON LOWER(p_upper.drawing_number) = LOWER(p_lower.drawing_number)
+     AND p_upper.revision = p_lower.revision
+     AND p_upper.drawing_number = UPPER(p_upper.drawing_number)
+     AND p_lower.drawing_number != UPPER(p_lower.drawing_number)
+) AS canonical
+WHERE part_tree.parent_id = canonical.dup_id;
+
+-- 3. 重定向 drawing_file.part_id（仅当大写版本没有 active file 时）
+UPDATE drawing_file
+SET part_id = canonical.id
+FROM (
+    SELECT p_upper.id AS id, p_lower.id AS dup_id
+    FROM part p_upper
+    JOIN part p_lower
+      ON LOWER(p_upper.drawing_number) = LOWER(p_lower.drawing_number)
+     AND p_upper.revision = p_lower.revision
+     AND p_upper.drawing_number = UPPER(p_upper.drawing_number)
+     AND p_lower.drawing_number != UPPER(p_lower.drawing_number)
+    WHERE NOT EXISTS (
+        SELECT 1 FROM drawing_file df2
+        WHERE df2.part_id = p_upper.id AND df2.is_active = 1
+    )
+) AS canonical
+WHERE drawing_file.part_id = canonical.dup_id;
+
+-- 4. 同步大写版本的 has_parent 标记
+UPDATE part
+SET has_parent = 1
+WHERE drawing_number = UPPER(drawing_number)
+  AND EXISTS (
+      SELECT 1 FROM part p_lower
+      WHERE LOWER(p_lower.drawing_number) = LOWER(part.drawing_number)
+        AND p_lower.revision = part.revision
+        AND p_lower.drawing_number != UPPER(p_lower.drawing_number)
+        AND p_lower.has_parent = 1
+  );
+
+-- 5. 删除小写重复记录
+DELETE FROM part
+WHERE drawing_number != UPPER(drawing_number)
+  AND EXISTS (
+      SELECT 1 FROM part p2
+      WHERE LOWER(p2.drawing_number) = LOWER(part.drawing_number)
+        AND p2.revision = part.revision
+        AND p2.drawing_number = UPPER(p2.drawing_number)
+  );
+
+COMMIT;
+
+-- 验证：应返回 0 行
+SELECT LOWER(drawing_number), revision, COUNT(*)
+FROM part
+GROUP BY LOWER(drawing_number), revision
+HAVING COUNT(*) > 1;
+```
+
+> **注意**：`sample`/`sketch`/`NPN` 等无大写对应版本的特殊词不会被删除，可单独处理或保留。
+
+---
+
+### Step 2：Schema 迁移（数据清理完成后执行）
+
+在 `drawing_number` 列加入 `COLLATE NOCASE`，使 UNIQUE 约束自动变为大小写不敏感。
+
+SQLite 不支持直接修改列定义，需重建表：
+
+```sql
+BEGIN;
+
+CREATE TABLE part_new (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    previous_id INTEGER,
+    next_id INTEGER,
+    drawing_number TEXT NOT NULL COLLATE NOCASE,
+    revision TEXT NOT NULL DEFAULT '-',
+    description TEXT,
+    is_assembly INTEGER DEFAULT 0,
+    production_count INTEGER DEFAULT 0,
+    total_production_hour REAL DEFAULT 0,
+    total_administrative_hour REAL DEFAULT 0,
+    unit_price REAL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    has_parent INTEGER,
+    UNIQUE(drawing_number, revision),
+    FOREIGN KEY (previous_id) REFERENCES part_new(id) ON DELETE SET NULL,
+    FOREIGN KEY (next_id) REFERENCES part_new(id) ON DELETE SET NULL
+);
+
+INSERT INTO part_new SELECT * FROM part;
+
+DROP TABLE part;
+ALTER TABLE part_new RENAME TO part;
+
+CREATE INDEX IF NOT EXISTS idx_part_drawing_number ON part(drawing_number);
+
+COMMIT;
+```
+
+加入 `COLLATE NOCASE` 后，`INSERT INTO part (drawing_number='rt-xxx', revision='0')` 会因 UNIQUE 约束冲突而失败（若已存在 `RT-xxx` rev=0），从根本上杜绝重复。
+
+---
+
+### Step 3：代码修复（防御纵深）
+
+`DrawingRepository.cs` 的 `InsertPart()` 方法中对 `drawingNumber` 强制大写，防止大小写不规范的输入写入数据库：
+
 ```csharp
-record ScheduleRow(
-    int OrderItemId, int PartId,
-    string PoNumber, string JobNumber, string? CustomerName,
-    string? DrawingNumber, string? Description, int Quantity,
-    string? DueDate);
-
-record ScheduleStepTracker(
-    int Id, int ProcessTemplateId,
-    string ShopCode, string? Description,
-    string? StartTime, string? EndTime);
-
-record ProcessTemplateStep(int Id, int RowNumber, string ShopCode, string? Description);
+// DrawingRepository.cs:131
+cmd.Parameters.AddWithValue("@dn", drawingNumber.ToUpperInvariant());
 ```
 
-#### `src/DrawingTree/Controls/ManufacturingScheduleControl.xaml/.cs`
+与 Schema 的 `COLLATE NOCASE` 形成双重保护：COLLATE 防止重复存在，代码规范化确保存储格式一致。
 
-核心组件：
-1. **左侧列表**：ItemsControl，每行固定高度 32px，列宽参考：
-   - PO(100) / Job(80) / Customer(100) / Drawing(160) / Desc(150) / Qty(50) / Due(90) / Memo(80) / Status(120)
+---
 
-2. **Memo 单元格**：TextBlock（单行截断） + 点击后弹出 Popup，列出所有 part_note
+## 四、执行顺序
 
-3. **Status 列**：只读 TextBlock，从 step_tracker 推导：
-   - 无任何 start_time → "Not Started"
-   - 有 start_time 但 end_time 为空的第一步 → "Step N: [shop_code]"
-   - 所有步骤均有 end_time → "Complete"
+1. **备份数据库**（PowerShell）
+2. **DBeaver 执行 Step 1**，确认验证查询返回 0 行
+3. **DBeaver 执行 Step 2**（Schema 迁移）
+4. **将 Step 2 SQL 追加到 `data/db_changes.sql`**
+5. **修改代码 Step 3**（InsertPart 加 ToUpperInvariant）
 
-4. **右侧甘特 Canvas**：
-   - `DrawTimeHeader()` — 绘制天/周/月刻度
-   - `DrawTodayLine()` — 绘制红色今日竖线
-   - `DrawBarsForRow(row, yOffset, steps)` — 按 shop_code 着色绘制横条
-   - `HitTestBar(x, y)` — 返回点击位置对应的 bar（用于编辑）
-   - 点击空白 → `StepAssignmentDialog`
+---
 
-5. **颜色映射**（shop_code → Color）：
-   ```csharp
-   static readonly Dictionary<string, Color> ShopColors = new() { ... };
-   // 未知 shop_code 用哈希值取调色板颜色
-   ```
+## 五、验证
 
-6. **滚动同步**：
-   - 外层 ScrollViewer 控制垂直（左右一起动）
-   - 内层 ScrollViewer（仅右侧）控制水平（时间刻度头和甘特行联动）
-   - 水平 offset 变化时重绘今日线位置
+```sql
+-- 无重复
+SELECT LOWER(drawing_number), revision, COUNT(*)
+FROM part GROUP BY LOWER(drawing_number), revision HAVING COUNT(*) > 1;
 
-7. **Settings 面板**（ToggleButton + Popup）：
-   - 时间单位：天 / 周 / 月（RadioButton 选择）
-   - 切换后重新计算列宽并刷新 Canvas
+-- part_tree FK 完整性（不应有孤立引用）
+SELECT pt.id FROM part_tree pt
+LEFT JOIN part p ON p.id = pt.child_id WHERE p.id IS NULL;
 
-#### `src/DrawingTree/Controls/StepAssignmentDialog.xaml/.cs`
-
-新建简单的 Window 对话框：
-- 下拉列表：process_template 步骤（来自 ScheduleRepository.GetProcessTemplate）
-- DatePicker：实际开始日期（必填）
-- DatePicker：实际结束日期（可选）
-- OK / Cancel 按钮
-- 返回 `(processTemplateId, startDate, endDate?)` 或 null（取消）
-
-### 修改文件
-
-#### `src/DrawingTree/MainWindow.xaml`
-
-在 `AllPosButton` 后新增：
-```xaml
-<Button x:Name="ManufacturingScheduleButton"
-        Content="Manufacturing Schedule" Width="180"
-        Margin="0,0,10,0" Click="ManufacturingScheduleButton_Click"/>
-```
-
-#### `src/DrawingTree/MainWindow.xaml.cs`
-
-新增 `ManufacturingScheduleButton_Click`，模式与 `AllPosButton_Click` 一致：
-```csharp
-private void ManufacturingScheduleButton_Click(object sender, RoutedEventArgs e)
-{
-    MainDisplayArea.Children.Clear();
-    var ctrl = new ManufacturingScheduleControl();
-    ctrl.BackRequested += (_, _) => { MainDisplayArea.Children.Clear(); };
-    MainDisplayArea.Children.Add(ctrl);
-}
+-- drawing_file FK 完整性
+SELECT df.id FROM drawing_file df
+LEFT JOIN part p ON p.id = df.part_id WHERE p.id IS NULL;
 ```
 
 ---
 
-## Status 推导逻辑（伪代码）
+## 六、当前具体问题的临时处理
 
-```csharp
-string DeriveStatus(List<ScheduleStepTracker> steps)
-{
-    if (steps.Count == 0) return "Not Started";
-    var inProgress = steps.FirstOrDefault(s => s.StartTime != null && s.EndTime == null);
-    if (inProgress != null) return $"Step {inProgress.RowNumber}: {inProgress.ShopCode}";
-    if (steps.All(s => s.EndTime != null)) return "Complete";
-    return "Not Started";
-}
+在执行全量清理前，如需立刻恢复 `RT-87000-71200-1004-1-DD-B` 的树构筑界面功能，可单独执行：
+
+```sql
+UPDATE part_tree SET child_id = 3452 WHERE child_id = 4791;
+UPDATE part SET has_parent = 1 WHERE id = 3452;
+DELETE FROM part WHERE id = 4791;
 ```
-
----
-
-## 甘特条绘制逻辑（伪代码）
-
-```csharp
-// Each day = _dayWidth pixels (e.g., 30px at day view)
-double DateToX(DateTime date) =>
-    (date - _viewportStart).TotalDays * _dayWidth;
-
-void DrawBar(ScheduleStepTracker step, double yOffset)
-{
-    var x1 = DateToX(ParseDate(step.StartTime));
-    var x2 = step.EndTime != null
-        ? DateToX(ParseDate(step.EndTime))
-        : DateToX(DateTime.Today);  // 进行中的条延伸到今天
-    var color = GetShopColor(step.ShopCode);
-    // Draw rectangle on Canvas at (x1, yOffset, width=x2-x1, height=28)
-    // Draw step.ShopCode text inside if width > 40px
-}
-```
-
----
-
-## 数据库变更
-
-无需修改 schema。
-
-沿用 `step_tracker` 现有字段：
-- `start_time` / `end_time`（TEXT，ISO 日期格式）
-- `status`（暂时不使用，Status 列从 start_time/end_time 推导）
-
-UPSERT 策略：基于 `(order_item_id, process_template_id)` 查找已有记录，
-存在则 UPDATE，不存在则 INSERT（应用层处理，不加 UNIQUE 约束，
-避免影响条码扫描可能产生的多条记录）。
-
-记录于 `data/db_changes.sql`：`-- No schema changes for Manufacturing Schedule Phase 1`
-
----
-
-## 验证方案
-
-1. 构建应用，点击 "Manufacturing Schedule" 按钮进入页面
-2. 确认左侧列表正确显示活跃 PO 的 order_item（PO/Job/Drawing/Qty/Due Date）
-3. 在右侧甘特空白区域点击 → 确认对话框弹出并可选步骤和日期
-4. 确认后，右侧出现对应颜色横条，左侧 Status 列自动更新
-5. 再次点击同一步骤 → 确认可以修改结束日期（UPSERT 生效）
-6. 确认今日竖线位于正确位置
-7. 切换时间单位（天/周/月）→ 确认甘特条相对位置保持正确
-8. 确认超过 Due Date 的行显示红色标记
-9. 点击 Memo 单元格 → 确认弹出笔记面板
-10. 点击 Back → 确认返回正常

@@ -100,9 +100,19 @@ public partial class PartEditorControl : UserControl
     {
         if (row.PartId == null)
         {
-            row.Status = SaveStatus.Error;
-            Logger.Instance.Warning($"PartEditor save skipped: '{row.DrawingNumber}' has no DB record");
-            Snackbar.Show($"Not in database: {row.DrawingNumber}");
+            int newId = _drawingRepository.InsertPart(row.DrawingNumber, row.Revision);
+            if (newId == -1)
+            {
+                row.Status = SaveStatus.Error;
+                return;
+            }
+            row.PartId = newId;
+            _drawingRepository.UpdatePart(newId, row.Revision, row.Description, row.IsAssembly);
+            if (!string.IsNullOrEmpty(row.PdfPath))
+                _drawingRepository.UpsertDrawingFile(newId, Path.GetFileName(row.PdfPath), row.PdfPath, row.Revision);
+            row.Status = SaveStatus.Success;
+            Logger.Instance.Info($"PartEditor created new part: {row.DrawingNumber} (partId={newId})");
+            Snackbar.Show($"Created: {row.DrawingNumber}");
             return;
         }
 

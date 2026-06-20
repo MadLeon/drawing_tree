@@ -12,6 +12,7 @@ public enum SaveStatus { None, Success, Error }
 
 public class PartEditorRow : INotifyPropertyChanged
 {
+    private int?  _partId;
     private string _revision = string.Empty;
     private string _description = string.Empty;
     private string _quantityInAssembly = string.Empty;
@@ -20,8 +21,13 @@ public class PartEditorRow : INotifyPropertyChanged
     private SaveStatus _status = SaveStatus.None;
 
     public int   Index         { get; init; }
-    public int?  PartId        { get; init; }
     public string DrawingNumber { get; init; } = string.Empty;
+
+    public int? PartId
+    {
+        get => _partId;
+        set { if (_partId != value) { _partId = value; OnPropertyChanged(); } }
+    }
 
     public string Revision
     {
