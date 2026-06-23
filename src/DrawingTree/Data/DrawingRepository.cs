@@ -127,7 +127,7 @@ public class DrawingRepository
                 VALUES (@dn, @rev);
                 SELECT last_insert_rowid();
                 """;
-            cmd.Parameters.AddWithValue("@dn",  drawingNumber);
+            cmd.Parameters.AddWithValue("@dn",  drawingNumber.ToUpperInvariant());
             cmd.Parameters.AddWithValue("@rev", string.IsNullOrEmpty(revision) ? "-" : revision);
 
             var result = cmd.ExecuteScalar();

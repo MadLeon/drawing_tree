@@ -4,3 +4,142 @@
 
 -- 2026-06-15: Add index for drawing number search performance
 CREATE INDEX IF NOT EXISTS idx_part_drawing_number ON part(drawing_number);
+
+-- 2026-06-20: Fix case-duplicate records and enforce COLLATE NOCASE on drawing_number
+-- Root cause: SQLite TEXT columns use BINARY collation by default, so 'RT-xxx' and 'rt-xxx'
+-- were treated as distinct values, allowing case-variant duplicates to accumulate (170+ pairs).
+
+-- Step 1: Merge lowercase duplicates into their uppercase canonical records.
+-- Safe to re-run: UPDATE/DELETE match 0 rows when no duplicates remain.
+-- Uses UPDATE OR IGNORE + cleanup DELETE to handle cases where the canonical
+-- is already present under the same parent (avoids UNIQUE(parent_id,child_id) conflicts).
+BEGIN;
+
+-- Redirect part_tree.child_id: dup → canonical (skip if canonical already present)
+UPDATE OR IGNORE part_tree
+SET child_id = canonical.id
+FROM (
+    SELECT p_upper.id AS id, p_lower.id AS dup_id
+    FROM part p_upper
+    JOIN part p_lower
+      ON LOWER(p_upper.drawing_number) = LOWER(p_lower.drawing_number)
+     AND p_upper.revision              = p_lower.revision
+     AND p_upper.drawing_number        = UPPER(p_upper.drawing_number)
+     AND p_lower.drawing_number       != UPPER(p_lower.drawing_number)
+) AS canonical
+WHERE part_tree.child_id = canonical.dup_id;
+
+-- Remove rows that still reference dup_ids as child (UPDATE OR IGNORE skipped them
+-- because the canonical child was already present under the same parent)
+DELETE FROM part_tree
+WHERE child_id IN (
+    SELECT p_lower.id FROM part p_upper
+    JOIN part p_lower
+      ON LOWER(p_upper.drawing_number) = LOWER(p_lower.drawing_number)
+     AND p_upper.revision              = p_lower.revision
+     AND p_upper.drawing_number        = UPPER(p_upper.drawing_number)
+     AND p_lower.drawing_number       != UPPER(p_lower.drawing_number)
+);
+
+-- Redirect part_tree.parent_id: dup → canonical (skip if canonical already present)
+UPDATE OR IGNORE part_tree
+SET parent_id = canonical.id
+FROM (
+    SELECT p_upper.id AS id, p_lower.id AS dup_id
+    FROM part p_upper
+    JOIN part p_lower
+      ON LOWER(p_upper.drawing_number) = LOWER(p_lower.drawing_number)
+     AND p_upper.revision              = p_lower.revision
+     AND p_upper.drawing_number        = UPPER(p_upper.drawing_number)
+     AND p_lower.drawing_number       != UPPER(p_lower.drawing_number)
+) AS canonical
+WHERE part_tree.parent_id = canonical.dup_id;
+
+-- Remove rows that still reference dup_ids as parent_id
+DELETE FROM part_tree
+WHERE parent_id IN (
+    SELECT p_lower.id FROM part p_upper
+    JOIN part p_lower
+      ON LOWER(p_upper.drawing_number) = LOWER(p_lower.drawing_number)
+     AND p_upper.revision              = p_lower.revision
+     AND p_upper.drawing_number        = UPPER(p_upper.drawing_number)
+     AND p_lower.drawing_number       != UPPER(p_lower.drawing_number)
+);
+
+-- Redirect drawing_file.part_id only when the uppercase canonical has no active file
+UPDATE drawing_file
+SET part_id = canonical.id
+FROM (
+    SELECT p_upper.id AS id, p_lower.id AS dup_id
+    FROM part p_upper
+    JOIN part p_lower
+      ON LOWER(p_upper.drawing_number) = LOWER(p_lower.drawing_number)
+     AND p_upper.revision              = p_lower.revision
+     AND p_upper.drawing_number        = UPPER(p_upper.drawing_number)
+     AND p_lower.drawing_number       != UPPER(p_lower.drawing_number)
+    WHERE NOT EXISTS (
+        SELECT 1 FROM drawing_file df2
+        WHERE df2.part_id = p_upper.id AND df2.is_active = 1
+    )
+) AS canonical
+WHERE drawing_file.part_id = canonical.dup_id;
+
+-- Carry has_parent=1 from lowercase dup up to the uppercase canonical
+UPDATE part
+SET has_parent = 1
+WHERE drawing_number = UPPER(drawing_number)
+  AND EXISTS (
+      SELECT 1 FROM part p_lower
+      WHERE LOWER(p_lower.drawing_number) = LOWER(part.drawing_number)
+        AND p_lower.revision              = part.revision
+        AND p_lower.drawing_number       != UPPER(p_lower.drawing_number)
+        AND p_lower.has_parent            = 1
+  );
+
+-- Delete lowercase records that have an uppercase counterpart with the same revision
+DELETE FROM part
+WHERE drawing_number != UPPER(drawing_number)
+  AND EXISTS (
+      SELECT 1 FROM part p2
+      WHERE LOWER(p2.drawing_number) = LOWER(part.drawing_number)
+        AND p2.revision              = part.revision
+        AND p2.drawing_number        = UPPER(p2.drawing_number)
+  );
+
+COMMIT;
+
+-- Step 2: Rebuild part table with COLLATE NOCASE so the UNIQUE constraint
+-- becomes case-insensitive, preventing future case-duplicate inserts.
+-- Idempotent: DROP IF EXISTS handles partial-run recovery; full re-run is safe.
+BEGIN;
+
+DROP TABLE IF EXISTS part_new;
+
+CREATE TABLE part_new (
+    id                        INTEGER PRIMARY KEY AUTOINCREMENT,
+    previous_id               INTEGER,
+    next_id                   INTEGER,
+    drawing_number            TEXT NOT NULL COLLATE NOCASE,
+    revision                  TEXT NOT NULL DEFAULT '-',
+    description               TEXT,
+    is_assembly               INTEGER DEFAULT 0,
+    production_count          INTEGER DEFAULT 0,
+    total_production_hour     REAL DEFAULT 0,
+    total_administrative_hour REAL DEFAULT 0,
+    unit_price                REAL DEFAULT 0,
+    created_at                TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    updated_at                TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    has_parent                INTEGER,
+    UNIQUE(drawing_number, revision),
+    FOREIGN KEY (previous_id) REFERENCES part_new(id) ON DELETE SET NULL,
+    FOREIGN KEY (next_id)     REFERENCES part_new(id) ON DELETE SET NULL
+);
+
+INSERT INTO part_new SELECT * FROM part;
+
+DROP TABLE part;
+ALTER TABLE part_new RENAME TO part;
+
+CREATE INDEX IF NOT EXISTS idx_part_drawing_number ON part(drawing_number);
+
+COMMIT;
