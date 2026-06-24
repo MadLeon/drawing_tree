@@ -29,8 +29,11 @@ public partial class PartEditorControl : UserControl
     private readonly DrawingRepository _drawingRepository = new();
     private readonly ObservableCollection<PartEditorRow> _rows = new();
     private string _poName = string.Empty;
+    private string _jsonFilePath = string.Empty;
 
     public event EventHandler? ReturnRequested;
+    /// <summary>Fired after Save All completes. Argument is the import JSON file path.</summary>
+    public event EventHandler<string>? SaveAllCompleted;
 
     public PartEditorControl()
     {
@@ -43,6 +46,7 @@ public partial class PartEditorControl : UserControl
     /// </summary>
     public void LoadFromJsonFile(string filePath)
     {
+        _jsonFilePath = filePath;
         string baseName = Path.GetFileNameWithoutExtension(filePath);
         _poName = baseName.EndsWith("_import", StringComparison.OrdinalIgnoreCase)
             ? baseName[..^"_import".Length]
@@ -73,9 +77,10 @@ public partial class PartEditorControl : UserControl
 
                 _rows.Add(new PartEditorRow
                 {
-                    Index              = index++,
-                    PartId             = dbInfo?.PartId,
-                    DrawingNumber      = drawingNumber,
+                    Index                   = index++,
+                    PartId                  = dbInfo?.PartId,
+                    OriginalDrawingNumber   = drawingNumber,
+                    DrawingNumber           = drawingNumber,
                     Revision           = dbInfo?.Revision    ?? string.Empty,
                     Description        = dbInfo?.Description ?? string.Empty,
                     IsAssembly         = dbInfo?.IsAssembly  ?? false,
@@ -194,6 +199,68 @@ public partial class PartEditorControl : UserControl
         int saved = _rows.Count(r => r.Status == SaveStatus.Success);
         Snackbar.Show($"Saved {saved} / {_rows.Count} parts");
         Logger.Instance.Info($"PartEditor Save All: {saved}/{_rows.Count} succeeded for PO: {_poName}");
+
+        SaveAllCompleted?.Invoke(this, _jsonFilePath);
+    }
+
+    private void DrawingNumber_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement el || el.DataContext is not PartEditorRow row) return;
+        if (row.DrawingNumber == row.OriginalDrawingNumber) return;
+
+        string newNumber = row.DrawingNumber.Trim();
+        if (string.IsNullOrEmpty(newNumber))
+        {
+            row.DrawingNumber = row.OriginalDrawingNumber;
+            return;
+        }
+
+        // Update the JSON file
+        if (!string.IsNullOrEmpty(_jsonFilePath) && File.Exists(_jsonFilePath))
+        {
+            try
+            {
+                string json = File.ReadAllText(_jsonFilePath);
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement.Clone();
+
+                var options = new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+                var exportDoc = JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, JsonElement>>(json, options)!;
+
+                if (exportDoc.TryGetValue("Drawings", out var drawingsEl))
+                {
+                    var drawings = JsonSerializer.Deserialize<System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, JsonElement>>>(drawingsEl.GetRawText(), options)!;
+                    foreach (var d in drawings)
+                    {
+                        if (d.TryGetValue("DrawingNumber", out var dnEl) &&
+                            string.Equals(dnEl.GetString(), row.OriginalDrawingNumber, StringComparison.OrdinalIgnoreCase))
+                        {
+                            d["DrawingNumber"] = JsonSerializer.SerializeToElement(newNumber, options);
+                            break;
+                        }
+                    }
+                    exportDoc["Drawings"] = JsonSerializer.SerializeToElement(drawings, options);
+                }
+
+                File.WriteAllText(_jsonFilePath, JsonSerializer.Serialize(exportDoc, options));
+                Logger.Instance.Info($"PartEditor: renamed DrawingNumber '{row.OriginalDrawingNumber}' → '{newNumber}' in JSON");
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance.Error($"PartEditor: failed to update JSON for DrawingNumber change: {ex.Message}");
+            }
+        }
+
+        // Refresh the row from DB
+        DrawingInfo? dbInfo = _drawingRepository.GetDrawingInfo(newNumber);
+        row.PartId      = dbInfo?.PartId;
+        row.Revision    = dbInfo?.Revision    ?? string.Empty;
+        row.Description = dbInfo?.Description ?? string.Empty;
+        row.IsAssembly  = dbInfo?.IsAssembly  ?? false;
+        if (!string.IsNullOrEmpty(dbInfo?.PdfPath)) row.PdfPath = dbInfo.PdfPath;
+        row.Status      = SaveStatus.None;
+
+        Logger.Instance.Info($"PartEditor: Drawing Number changed to '{newNumber}', row refreshed from DB (PartId={row.PartId})");
     }
 
     private void RowBrowseButton_Click(object sender, RoutedEventArgs e)

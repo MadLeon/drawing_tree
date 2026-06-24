@@ -1,0 +1,135 @@
+<Window x:Class="DrawingTree.Dialogs.NewJobDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="New Job" Width="480"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <Style x:Key="Label" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#444"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+        </Style>
+        <Style x:Key="Field" TargetType="TextBox">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,4"/>
+        </Style>
+        <Style x:Key="Combo" TargetType="ComboBox">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="IsEditable" Value="True"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="0" Text="Create New Job" FontSize="15" FontWeight="SemiBold" Foreground="#333"/>
+
+        <!-- Form -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="110"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- OE -->
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="OE:" Style="{StaticResource Label}"/>
+            <TextBox   Grid.Row="0" Grid.Column="1" x:Name="OeBox" IsReadOnly="True" Background="#F5F5F5" Style="{StaticResource Field}"/>
+
+            <!-- Job Number -->
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Job Number:" Style="{StaticResource Label}"/>
+            <Grid Grid.Row="1" Grid.Column="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="JobNoBox" Style="{StaticResource Field}" Grid.Column="0"/>
+                <Button  x:Name="UsePrevJobBtn" Content="Use Previous" Grid.Column="1"
+                         Height="28" Padding="8,0" FontSize="11" Margin="4,4,0,4"
+                         Click="UsePrevJobBtn_Click"/>
+            </Grid>
+
+            <!-- Customer -->
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Customer:" Style="{StaticResource Label}"/>
+            <ComboBox  Grid.Row="2" Grid.Column="1" x:Name="CustomerBox" Style="{StaticResource Combo}"
+                       SelectionChanged="CustomerBox_SelectionChanged"/>
+
+            <!-- Contact -->
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Contact:" Style="{StaticResource Label}"/>
+            <ComboBox  Grid.Row="3" Grid.Column="1" x:Name="ContactBox" Style="{StaticResource Combo}"/>
+
+            <!-- Qty -->
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Qty:" Style="{StaticResource Label}"/>
+            <TextBox   Grid.Row="4" Grid.Column="1" x:Name="QtyBox" Text="1" Style="{StaticResource Field}"/>
+
+            <!-- Parts (Drawing Number) -->
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="Parts:" Style="{StaticResource Label}"/>
+            <TextBox   Grid.Row="5" Grid.Column="1" x:Name="PartsBox" Style="{StaticResource Field}"/>
+
+            <!-- Rev -->
+            <TextBlock Grid.Row="6" Grid.Column="0" Text="Rev:" Style="{StaticResource Label}"/>
+            <TextBox   Grid.Row="6" Grid.Column="1" x:Name="RevBox" Style="{StaticResource Field}"/>
+
+            <!-- Ln -->
+            <TextBlock Grid.Row="7" Grid.Column="0" Text="Ln:" Style="{StaticResource Label}"/>
+            <TextBox   Grid.Row="7" Grid.Column="1" x:Name="LnBox" Text="1" Style="{StaticResource Field}"/>
+
+            <!-- Description -->
+            <TextBlock Grid.Row="8" Grid.Column="0" Text="Description:" Style="{StaticResource Label}"/>
+            <TextBox   Grid.Row="8" Grid.Column="1" x:Name="DescBox" Style="{StaticResource Field}"/>
+
+            <!-- Price -->
+            <TextBlock Grid.Row="9" Grid.Column="0" Text="Price:" Style="{StaticResource Label}"/>
+            <TextBox   Grid.Row="9" Grid.Column="1" x:Name="PriceBox" Style="{StaticResource Field}"/>
+
+            <!-- P.O. -->
+            <TextBlock Grid.Row="10" Grid.Column="0" Text="P.O.:" Style="{StaticResource Label}"/>
+            <TextBox   Grid.Row="10" Grid.Column="1" x:Name="PoBox" Style="{StaticResource Field}"
+                       ToolTip="Leave blank to auto-generate NPO-{JobNumber}"/>
+
+            <!-- Del. Req'd -->
+            <TextBlock Grid.Row="11" Grid.Column="0" Text="Del. Req'd:" Style="{StaticResource Label}"/>
+            <TextBox   Grid.Row="11" Grid.Column="1" x:Name="DelBox" Style="{StaticResource Field}"
+                       ToolTip="e.g. 2026-12-31"/>
+        </Grid>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Return" Width="80" Height="30" Margin="0,0,8,0"
+                    Click="ReturnButton_Click"/>
+            <Button Content="Batch Create" Width="100" Height="30" Margin="0,0,8,0"
+                    Click="BatchCreateButton_Click"/>
+            <Button Content="Create Record" Width="110" Height="30" IsDefault="True"
+                    Click="CreateButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -192,7 +192,10 @@ public partial class MainWindow : Window
         MainDisplayArea.Children.Clear();
 
         _allPosControl = new AllPosControl();
-        _allPosControl.NavigateToPoRequested += OnAllPosNavigateToPo;
+        _allPosControl.NavigateToPoRequested  += OnAllPosNavigateToPo;
+        _allPosControl.ImportDrawingRequested += OnAllPosImportDrawing;
+        _allPosControl.HistoryRequested       += OnAllPosHistoryRequested;
+        _allPosControl.NavigateToTreeRequested += OnAllPosNavigateToTree;
 
         MainDisplayArea.Children.Add(_allPosControl);
         Logger.Instance.Info("All POs control displayed");
@@ -317,132 +320,104 @@ public partial class MainWindow : Window
         Logger.Instance.Info("Returned to part detail from drawing viewer");
     }
 
-    /// <summary>
-    /// Handle Import Drawing button click event
-    /// Show folder selection dialog, scan for PDF files, and display drawing editor
-    /// </summary>
-    private void ImportDrawingButton_Click(object sender, RoutedEventArgs e)
-    {
-        Logger.Instance.Info("Import Drawing button clicked");
-
-        // Show folder selection dialog
-        using (var folderDialog = new FolderBrowserDialog())
-        {
-            folderDialog.ShowNewFolderButton = false;
-
-            if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                string selectedPath = folderDialog.SelectedPath;
-                Logger.Instance.Info($"Selected folder: {selectedPath}");
-
-                // Scan folder for PDF files
-                var drawings = _drawingExtractor.ScanFolder(selectedPath);
-
-                if (drawings.Count == 0)
-                {
-                    System.Windows.MessageBox.Show(
-                        "No PDF drawings found in the selected folder.",
-                        "No Drawings Found",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                    return;
-                }
-
-                // Create and display drawing editor control
-                ShowDrawingEditor(drawings);
-            }
-            else
-            {
-                Logger.Instance.Info("Folder selection cancelled");
-            }
-        }
-    }
+    // ── Import Drawing workflow (entered from All POs "Input Data") ───────────
 
     /// <summary>
-    /// Handle Build Drawing Tree button click event.
-    /// Checks for import JSON files, prompts PO selection, then shows the tree builder.
+    /// Opens folder dialog, scans PDFs, and shows DrawingEditorControl with PO pre-filled.
+    /// Called when the user chooses "Input Data" from the All POs PO header menu.
     /// </summary>
-    private void BuildDrawingTreeButton_Click(object sender, RoutedEventArgs e)
+    private void OnAllPosImportDrawing(object? sender, string poNumber)
     {
-        Logger.Instance.Info("Build Drawing Tree button clicked");
+        Logger.Instance.Info($"Import Drawing requested for PO={poNumber}");
 
-        string importsDir = ImportsDir;
-        if (!Directory.Exists(importsDir)) Directory.CreateDirectory(importsDir);
-        var importFiles = Directory.GetFiles(importsDir, "*_import.json")
-                                   .Select(f => Path.GetFileName(f))
-                                   .OrderBy(f => f)
-                                   .ToList();
+        using var folderDialog = new FolderBrowserDialog { ShowNewFolderButton = false };
+        if (folderDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
 
-        if (importFiles.Count == 0)
+        var drawings = _drawingExtractor.ScanFolder(folderDialog.SelectedPath);
+        if (drawings.Count == 0)
         {
             System.Windows.MessageBox.Show(
-                "No import files found.\nPlease use \"Import Drawing\" first to generate a drawing list.",
-                "No Import Files",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            Logger.Instance.Warning("Build Drawing Tree: no *_import.json files found");
+                "No PDF drawings found in the selected folder.",
+                "No Drawings Found", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        var dialog = new PoSelectionDialog(importFiles) { Owner = this };
-        if (dialog.ShowDialog() != true || dialog.SelectedFile == null) return;
-
-        string selectedPath = Path.Combine(importsDir, dialog.SelectedFile);
-        ShowTreeBuilder(selectedPath);
-    }
-
-    /// <summary>
-    /// Show drawing editor control in main display area
-    /// </summary>
-    /// <param name="drawings">List of drawings to edit</param>
-    private void ShowDrawingEditor(System.Collections.Generic.List<Models.DrawingInfo> drawings)
-    {
-        // Clear main display area
         MainDisplayArea.Children.Clear();
-
-        // Create drawing editor control
-        _drawingEditorControl = new DrawingEditorControl();
+        _drawingEditorControl = new DrawingEditorControl
+        {
+            PrefilledPoNumber = poNumber
+        };
         _drawingEditorControl.LoadDrawings(drawings);
+        _drawingEditorControl.ReturnRequested  += OnDrawingEditorReturn;
+        _drawingEditorControl.ImportCompleted  += OnDrawingEditorImportCompleted;
 
-        // Subscribe to events
-        _drawingEditorControl.ReturnRequested += OnDrawingEditorReturn;
-
-        // Add to main display area
         MainDisplayArea.Children.Add(_drawingEditorControl);
-
-        Logger.Instance.Info("Drawing editor control displayed");
+        Logger.Instance.Info($"Drawing editor displayed for PO={poNumber}");
     }
 
     /// <summary>
-    /// Show tree builder control for the given import file
+    /// Fired after DrawingEditorControl exports JSON.
+    /// Auto-navigates to PartEditorControl.
     /// </summary>
-    /// <param name="importFilePath">Full path to the *_import.json file</param>
-    private void ShowTreeBuilder(string importFilePath)
+    private void OnDrawingEditorImportCompleted(object? sender, string jsonFilePath)
     {
         MainDisplayArea.Children.Clear();
+        _drawingEditorControl = null;
+
+        _partEditorControl = new PartEditorControl();
+        _partEditorControl.LoadFromJsonFile(jsonFilePath);
+        _partEditorControl.ReturnRequested   += OnPartEditorReturnToAllPos;
+        _partEditorControl.SaveAllCompleted  += OnPartEditorSaveAllCompleted;
+
+        MainDisplayArea.Children.Add(_partEditorControl);
+        Logger.Instance.Info($"Part editor auto-displayed after import for {jsonFilePath}");
+    }
+
+    /// <summary>
+    /// Fired after PartEditorControl Save All.
+    /// Auto-navigates to TreeBuilderControl.
+    /// </summary>
+    private void OnPartEditorSaveAllCompleted(object? sender, string importFilePath)
+    {
+        MainDisplayArea.Children.Clear();
+        _partEditorControl = null;
 
         _treeBuilderControl = new TreeBuilderControl();
         _treeBuilderControl.LoadFromJsonFile(importFilePath);
-        _treeBuilderControl.ReturnRequested += OnTreeBuilderReturn;
+        _treeBuilderControl.ReturnRequested += OnTreeBuilderReturnToAllPos;
 
         MainDisplayArea.Children.Add(_treeBuilderControl);
-        Logger.Instance.Info($"Tree builder displayed for {importFilePath}");
+        Logger.Instance.Info($"Tree builder auto-displayed after part editor save for {importFilePath}");
     }
 
-    /// <summary>
-    /// Handle drawing editor Return event
-    /// Clear main display area and return to empty state
-    /// </summary>
     private void OnDrawingEditorReturn(object? sender, EventArgs e)
     {
         MainDisplayArea.Children.Clear();
         _drawingEditorControl = null;
-        Logger.Instance.Info("Returned to main view");
+        if (_allPosControl != null)
+            MainDisplayArea.Children.Add(_allPosControl);
+        else
+            Logger.Instance.Info("Returned to main view from drawing editor");
     }
 
-    /// <summary>
-    /// Handle tree builder Return event
-    /// </summary>
+    private void OnPartEditorReturnToAllPos(object? sender, EventArgs e)
+    {
+        MainDisplayArea.Children.Clear();
+        _partEditorControl = null;
+        if (_allPosControl != null)
+            MainDisplayArea.Children.Add(_allPosControl);
+        Logger.Instance.Info("Returned to All POs from part editor");
+    }
+
+    private void OnTreeBuilderReturnToAllPos(object? sender, EventArgs e)
+    {
+        MainDisplayArea.Children.Clear();
+        _treeBuilderControl = null;
+        if (_allPosControl != null)
+            MainDisplayArea.Children.Add(_allPosControl);
+        Logger.Instance.Info("Returned to All POs from tree builder");
+    }
+
     private void OnTreeBuilderReturn(object? sender, EventArgs e)
     {
         MainDisplayArea.Children.Clear();
@@ -450,62 +425,49 @@ public partial class MainWindow : Window
         Logger.Instance.Info("Returned to main view from tree builder");
     }
 
-    /// <summary>
-    /// Handle Edit Part button click.
-    /// Scans imports folder for *_import.json files, prompts PO selection,
-    /// then shows the part editor populated with DB metadata for each drawing.
-    /// </summary>
-    private void EditPartButton_Click(object sender, RoutedEventArgs e)
-    {
-        Logger.Instance.Info("Edit Part button clicked");
-
-        string importsDir = ImportsDir;
-        if (!Directory.Exists(importsDir)) Directory.CreateDirectory(importsDir);
-        var importFiles = Directory.GetFiles(importsDir, "*_import.json")
-                                   .Select(f => Path.GetFileName(f))
-                                   .OrderBy(f => f)
-                                   .ToList();
-
-        if (importFiles.Count == 0)
-        {
-            System.Windows.MessageBox.Show(
-                "No import files found.\nPlease use \"Import Drawing\" first.",
-                "No Import Files",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            Logger.Instance.Warning("Edit Part: no *_import.json files found");
-            return;
-        }
-
-        var dialog = new PoSelectionDialog(importFiles) { Owner = this };
-        if (dialog.ShowDialog() != true || dialog.SelectedFile == null) return;
-
-        ShowPartEditor(Path.Combine(importsDir, dialog.SelectedFile));
-    }
-
-    /// <summary>
-    /// Show the part editor control for the given import file path.
-    /// </summary>
-    private void ShowPartEditor(string importFilePath)
-    {
-        MainDisplayArea.Children.Clear();
-
-        _partEditorControl = new PartEditorControl();
-        _partEditorControl.LoadFromJsonFile(importFilePath);
-        _partEditorControl.ReturnRequested += OnPartEditorReturn;
-
-        MainDisplayArea.Children.Add(_partEditorControl);
-        Logger.Instance.Info($"Part editor displayed for {importFilePath}");
-    }
-
-    /// <summary>
-    /// Handle part editor Return event.
-    /// </summary>
     private void OnPartEditorReturn(object? sender, EventArgs e)
     {
         MainDisplayArea.Children.Clear();
         _partEditorControl = null;
         Logger.Instance.Info("Returned to main view from part editor");
+    }
+
+    // ── History view ──────────────────────────────────────────────────────────
+
+    private void OnAllPosHistoryRequested(object? sender, EventArgs e)
+    {
+        MainDisplayArea.Children.Clear();
+
+        var historyControl = new AllPosControl { ShowHistoryOnly = true };
+        historyControl.NavigateToPoRequested += OnAllPosNavigateToPo;
+
+        MainDisplayArea.Children.Add(historyControl);
+        Logger.Instance.Info("PO History control displayed");
+    }
+
+    // ── Tree navigation from simple view ─────────────────────────────────────
+
+    private void OnAllPosNavigateToTree(object? sender, int partId)
+    {
+        MainDisplayArea.Children.Clear();
+
+        _drawingViewerControl = new DrawingViewerControl();
+        _drawingViewerControl.ShowBackButton = true;
+        _drawingViewerControl.LoadFromPartId(partId);
+        _drawingViewerControl.ReturnRequested += OnDrawingViewerReturn;
+        _drawingViewerControl.BackRequested   += OnViewerBackToAllPos;
+
+        MainDisplayArea.Children.Add(_drawingViewerControl);
+        Logger.Instance.Info($"Drawing viewer displayed for partId={partId} (from All POs tree button)");
+    }
+
+    private void OnViewerBackToAllPos(object? sender, EventArgs e)
+    {
+        MainDisplayArea.Children.Clear();
+        _drawingViewerControl = null;
+        if (_allPosControl != null)
+            MainDisplayArea.Children.Add(_allPosControl);
+        Logger.Instance.Info("Returned to All POs from drawing viewer");
     }
 
     /// <summary>

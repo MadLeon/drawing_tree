@@ -20,8 +20,15 @@ public class PartEditorRow : INotifyPropertyChanged
     private string _pdfPath = string.Empty;
     private SaveStatus _status = SaveStatus.None;
 
-    public int   Index         { get; init; }
-    public string DrawingNumber { get; init; } = string.Empty;
+    public int   Index               { get; init; }
+    public string OriginalDrawingNumber { get; init; } = string.Empty;
+
+    private string _drawingNumber = string.Empty;
+    public string DrawingNumber
+    {
+        get => _drawingNumber;
+        set { if (_drawingNumber != value) { _drawingNumber = value; OnPropertyChanged(); } }
+    }
 
     public int? PartId
     {

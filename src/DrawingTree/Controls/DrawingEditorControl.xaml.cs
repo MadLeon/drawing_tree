@@ -22,15 +22,24 @@ public partial class DrawingEditorControl : System.Windows.Controls.UserControl
 {
     private ObservableCollection<DrawingInfo> _drawingList = new ObservableCollection<DrawingInfo>();
 
-    /// <summary>
-    /// Event raised when user clicks Return button
-    /// </summary>
+    /// <summary>Event raised when user clicks Return button.</summary>
     public event EventHandler? ReturnRequested;
+    /// <summary>Fired after a successful Confirm/export. Argument is the full JSON file path.</summary>
+    public event EventHandler<string>? ImportCompleted;
+
+    /// <summary>Pre-fills the Purchase Order text box when entering from All POs.</summary>
+    public string? PrefilledPoNumber { get; set; }
 
     public DrawingEditorControl()
     {
         InitializeComponent();
         DrawingListControl.DataContext = _drawingList;
+    }
+
+    private void UserControl_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrWhiteSpace(PrefilledPoNumber))
+            PurchaseOrderTextBox.Text = PrefilledPoNumber;
     }
 
     /// <summary>
@@ -260,14 +269,21 @@ public partial class DrawingEditorControl : System.Windows.Controls.UserControl
         try
         {
             string exportedFilePath = ExportToJson(purchaseOrder);
-
-            System.Windows.MessageBox.Show(
-                $"Drawing information has been saved to:\n{exportedFilePath}",
-                "Confirmed",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
-
             Logger.Instance.Info("Drawing information confirmed and exported successfully");
+
+            if (ImportCompleted != null)
+            {
+                // Entered from All POs workflow: auto-navigate to Edit Parts
+                ImportCompleted.Invoke(this, exportedFilePath);
+            }
+            else
+            {
+                System.Windows.MessageBox.Show(
+                    $"Drawing information has been saved to:\n{exportedFilePath}",
+                    "Confirmed",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
+            }
         }
         catch (Exception ex)
         {

@@ -131,11 +131,11 @@
                                                FontSize="12" HorizontalAlignment="Center"
                                                VerticalAlignment="Center" Foreground="#888"/>
 
-                                    <!-- Col 1: Drawing Number (read-only) -->
+                                    <!-- Col 1: Drawing Number (editable; LostFocus syncs JSON) -->
                                     <TextBox Grid.Column="1"
-                                             Text="{Binding DrawingNumber, Mode=OneWay}"
-                                             IsReadOnly="True" Background="#F5F5F5"
-                                             Height="26" Padding="4,3" FontSize="12" Margin="2,1"/>
+                                             Text="{Binding DrawingNumber, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                             Height="26" Padding="4,3" FontSize="12" Margin="2,1"
+                                             LostFocus="DrawingNumber_LostFocus"/>
 
                                     <!-- Col 2: Revision -->
                                     <TextBox Grid.Column="2"

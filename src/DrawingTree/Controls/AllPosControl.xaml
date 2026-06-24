@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:DrawingTree.Controls"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="1200">
 
@@ -40,6 +41,35 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+        <Style x:Key="ThreeDotBtn" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="4,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="2" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#20000000"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ToolbarBtn" TargetType="Button">
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+        </Style>
     </UserControl.Resources>
 
     <Grid Background="White">
@@ -51,104 +81,260 @@
         <!-- Top toolbar -->
         <Border Grid.Row="0" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1"
                 Background="#F0F0F0" Padding="8,6">
-            <TextBlock Text="All Purchase Orders" FontSize="13" FontWeight="SemiBold"
-                       Foreground="#555555" VerticalAlignment="Center"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock x:Name="TitleLabel" Text="All Purchase Orders"
+                               FontSize="13" FontWeight="SemiBold" Foreground="#555555"
+                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <Button x:Name="NewJobButton" Content="New Job"
+                            Style="{StaticResource ToolbarBtn}"
+                            Click="NewJobButton_Click"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="HistoryButton" Content="History"
+                            Style="{StaticResource ToolbarBtn}"
+                            Click="HistoryButton_Click"/>
+                    <Button x:Name="ToggleViewButton" Content="简洁视图"
+                            Style="{StaticResource ToolbarBtn}"
+                            Click="ToggleViewButton_Click"/>
+                </StackPanel>
+            </Grid>
         </Border>
 
-        <!-- PO lines DataGrid -->
-        <DataGrid x:Name="ResultsGrid"
-                  Grid.Row="1"
-                  VirtualizingPanel.IsVirtualizingWhenGrouping="True"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  SelectionMode="Single"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  CanUserReorderColumns="False"
-                  CanUserResizeRows="False"
-                  GridLinesVisibility="Horizontal"
-                  HorizontalGridLinesBrush="#EEEEEE"
-                  BorderThickness="0"
-                  RowBackground="White"
-                  AlternatingRowBackground="White"
-                  ColumnHeaderStyle="{StaticResource HeaderCell}"
-                  CellStyle="{StaticResource BodyCell}">
-            <DataGrid.GroupStyle>
-                <GroupStyle>
-                    <GroupStyle.ContainerStyle>
-                        <Style TargetType="{x:Type GroupItem}">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="{x:Type GroupItem}">
-                                        <StackPanel>
-                                            <Border Height="12" Background="Transparent"/>
-                                            <ItemsPresenter/>
-                                        </StackPanel>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </GroupStyle.ContainerStyle>
-                </GroupStyle>
-            </DataGrid.GroupStyle>
+        <!-- Content area: OE View (DataGrid) and Simple View toggle -->
+        <Grid Grid.Row="1">
 
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="P.O."
-                                    Binding="{Binding PoNumber}"
-                                    Width="200"/>
-                <DataGridTextColumn Header="O.E."
-                                    Binding="{Binding OeNumber}"
-                                    Width="70"/>
-                <DataGridTextColumn Header="Job No"
-                                    Binding="{Binding JobNumber}"
-                                    Width="100"/>
-                <DataGridTextColumn Header="Line No"
-                                    Binding="{Binding LineNumber}"
-                                    Width="70"/>
-                <DataGridTextColumn Header="Customer"
-                                    Binding="{Binding CustomerName}"
-                                    Width="140"/>
-                <DataGridTextColumn Header="Contact"
-                                    Binding="{Binding ContactName}"
-                                    Width="160"/>
-                <DataGridTextColumn Header="Qty"
-                                    Binding="{Binding Quantity}"
-                                    Width="60"/>
-                <DataGridTextColumn Header="Drawing Number"
-                                    Binding="{Binding DrawingNumber}"
-                                    Width="220"/>
-                <DataGridTextColumn Header="Rev."
-                                    Binding="{Binding Revision}"
-                                    Width="60"/>
-                <DataGridTextColumn Header="Description"
-                                    Binding="{Binding Description}"
-                                    Width="*">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                            <Setter Property="ToolTip" Value="{Binding Description}"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="Rls Date"
-                                    Binding="{Binding ReleaseDate}"
-                                    Width="100"/>
-                <DataGridTextColumn Header="Due Date"
-                                    Binding="{Binding DueDate}"
-                                    Width="100"/>
-                <DataGridTemplateColumn Header="" Width="80">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Content="View"
-                                    Height="24" FontSize="11"
-                                    Margin="4,2"
-                                    Tag="{Binding PoId}"
-                                    Click="ViewButton_Click"/>
+            <!-- ── OE View ─────────────────────────────────────────────────── -->
+            <DataGrid x:Name="ResultsGrid"
+                      VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      CanUserReorderColumns="False"
+                      CanUserResizeRows="False"
+                      GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="#EEEEEE"
+                      BorderThickness="0"
+                      RowBackground="White"
+                      AlternatingRowBackground="White"
+                      ColumnHeaderStyle="{StaticResource HeaderCell}"
+                      CellStyle="{StaticResource BodyCell}"
+                      PreviewMouseRightButtonUp="ResultsGrid_MouseRightButtonUp">
+                <DataGrid.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.ContainerStyle>
+                            <Style TargetType="{x:Type GroupItem}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type GroupItem}">
+                                            <StackPanel>
+                                                <Border Height="12" Background="Transparent"/>
+                                                <ItemsPresenter/>
+                                            </StackPanel>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </GroupStyle.ContainerStyle>
+                    </GroupStyle>
+                </DataGrid.GroupStyle>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="P.O."          Binding="{Binding PoNumber}"      Width="200"/>
+                    <DataGridTextColumn Header="O.E."          Binding="{Binding OeNumber}"      Width="70"/>
+                    <DataGridTextColumn Header="Job No"        Binding="{Binding JobNumber}"     Width="100"/>
+                    <DataGridTextColumn Header="Line No"       Binding="{Binding LineNumber}"    Width="70"/>
+                    <DataGridTextColumn Header="Customer"      Binding="{Binding CustomerName}"  Width="140"/>
+                    <DataGridTextColumn Header="Contact"       Binding="{Binding ContactName}"   Width="160"/>
+                    <DataGridTextColumn Header="Qty"           Binding="{Binding Quantity}"      Width="60"/>
+                    <DataGridTextColumn Header="Drawing Number" Binding="{Binding DrawingNumber}" Width="220"/>
+                    <DataGridTextColumn Header="Rev."          Binding="{Binding Revision}"      Width="60"/>
+                    <DataGridTextColumn Header="Description"   Binding="{Binding Description}"  Width="*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                <Setter Property="ToolTip" Value="{Binding Description}"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Rls Date"      Binding="{Binding ReleaseDate}"   Width="100"/>
+                    <DataGridTextColumn Header="Due Date"      Binding="{Binding DueDate}"       Width="100"/>
+                    <DataGridTemplateColumn Header="" Width="60">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="View" Height="24" FontSize="11" Margin="4,2"
+                                        Tag="{Binding PoId}" Click="ViewButton_Click"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="" Width="30">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="⋮" Style="{StaticResource ThreeDotBtn}"
+                                        Tag="{Binding}" Click="OeRowMenu_Click">
+                                    <Button.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Edit Item" Click="EditItem_ContextMenu_Click"/>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                </Button>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- ── Simple View ────────────────────────────────────────────── -->
+            <ScrollViewer x:Name="SimpleViewScroll"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Auto"
+                          Visibility="Collapsed">
+                <ItemsControl x:Name="SimpleViewList" Background="White">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type local:PoSimpleGroup}">
+                            <Border BorderBrush="#DDDDDD" BorderThickness="0,0,0,1" Margin="0,8,0,0">
+
+                                <!-- PO header row -->
+                                <StackPanel>
+                                    <Border Background="#F0F4F8" Padding="8,5">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <WrapPanel Grid.Column="0" VerticalAlignment="Center">
+                                                <TextBlock Margin="0,0,16,0" FontSize="12" FontWeight="SemiBold" Foreground="#1A237E">
+                                                    <Run Text="PO: "/><Run Text="{Binding PoNumber}" FontWeight="Bold"/>
+                                                </TextBlock>
+                                                <TextBlock Margin="0,0,16,0" FontSize="12" Foreground="#555">
+                                                    <Run Text="OE: "/><Run Text="{Binding OeNumber}"/>
+                                                </TextBlock>
+                                                <TextBlock Margin="0,0,16,0" FontSize="12" Foreground="#555">
+                                                    <Run Text="Customer: "/><Run Text="{Binding CustomerName}"/>
+                                                </TextBlock>
+                                                <TextBlock FontSize="12" Foreground="#555">
+                                                    <Run Text="Contact: "/><Run Text="{Binding ContactName}"/>
+                                                </TextBlock>
+                                            </WrapPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Content="Tree" Height="24" FontSize="11"
+                                                        Margin="0,0,4,0" Padding="8,0"
+                                                        Tag="{Binding}" Click="SimplePoTreeButton_Click"/>
+                                                <Button Content="Package Tracker" Height="24" FontSize="11"
+                                                        Margin="0,0,4,0" Padding="8,0"
+                                                        Tag="{Binding PoId}" Click="SimplePoDetailButton_Click"/>
+                                                <Button Content="⋮" Style="{StaticResource ThreeDotBtn}"
+                                                        Tag="{Binding}" Click="PoHeaderMenu_Click">
+                                                    <Button.ContextMenu>
+                                                        <ContextMenu>
+                                                            <MenuItem Header="Mark As Shipped" Tag="{Binding PoId}"
+                                                                      Click="MarkAsShipped_Click"/>
+                                                            <MenuItem Header="Input Data" Tag="{Binding PoNumber}"
+                                                                      Click="InputData_Click"/>
+                                                        </ContextMenu>
+                                                    </Button.ContextMenu>
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Order item rows -->
+                                    <ItemsControl ItemsSource="{Binding Items}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type local:ExpandableOrderItem}">
+                                                <StackPanel>
+                                                    <!-- Main row -->
+                                                    <Border BorderBrush="#EEEEEE" BorderThickness="0,0,0,1"
+                                                            Padding="4,3">
+                                                        <Grid MinWidth="900">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="24"/>
+                                                                <ColumnDefinition Width="100"/>
+                                                                <ColumnDefinition Width="50"/>
+                                                                <ColumnDefinition Width="50"/>
+                                                                <ColumnDefinition Width="200"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="100"/>
+                                                                <ColumnDefinition Width="100"/>
+                                                                <ColumnDefinition Width="60"/>
+                                                                <ColumnDefinition Width="30"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <!-- Expand icon -->
+                                                            <Button Grid.Column="0"
+                                                                    Content="{Binding ExpandIcon}"
+                                                                    Style="{StaticResource ThreeDotBtn}"
+                                                                    FontSize="12"
+                                                                    Visibility="{Binding ExpandButtonVisibility}"
+                                                                    Tag="{Binding}"
+                                                                    Click="ExpandItem_Click"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding Row.JobNumber}"    FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding Row.LineNumber}"   FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
+                                                            <TextBlock Grid.Column="3" Text="{Binding Row.Quantity}"     FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
+                                                            <TextBlock Grid.Column="4" Text="{Binding Row.DrawingNumber}" FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
+                                                            <TextBlock Grid.Column="5" Text="{Binding Row.Description}"  FontSize="12" VerticalAlignment="Center" Margin="4,0"
+                                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding Row.Description}"/>
+                                                            <TextBlock Grid.Column="6" Text="{Binding Row.ReleaseDate}"  FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
+                                                            <TextBlock Grid.Column="7" Text="{Binding Row.DueDate}"      FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
+                                                            <Button Grid.Column="8" Content="View" Height="22" FontSize="11"
+                                                                    Margin="4,1" Tag="{Binding Row.PoId}"
+                                                                    Click="ViewButton_Click"/>
+                                                            <Button Grid.Column="9" Content="⋮"
+                                                                    Style="{StaticResource ThreeDotBtn}"
+                                                                    Tag="{Binding}" Click="ItemRowMenu_Click">
+                                                                <Button.ContextMenu>
+                                                                    <ContextMenu>
+                                                                        <MenuItem Header="Edit Item"
+                                                                                  Click="EditItem_ContextMenu_Click"/>
+                                                                    </ContextMenu>
+                                                                </Button.ContextMenu>
+                                                            </Button>
+                                                        </Grid>
+                                                    </Border>
+
+                                                    <!-- Child rows (shown when expanded) -->
+                                                    <ItemsControl ItemsSource="{Binding Children}"
+                                                                  Visibility="{Binding ChildrenVisibility}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate DataType="{x:Type local:ChildDrawingItem}">
+                                                                <Border Background="#FAFAFA"
+                                                                        BorderBrush="#EEEEEE"
+                                                                        BorderThickness="0,0,0,1"
+                                                                        Padding="28,3,4,3">
+                                                                    <Grid MinWidth="900">
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="200"/>
+                                                                            <ColumnDefinition Width="*"/>
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Grid.Column="0"
+                                                                                   Text="{Binding DrawingNumber}"
+                                                                                   FontSize="11" Foreground="#555"
+                                                                                   VerticalAlignment="Center"/>
+                                                                        <TextBlock Grid.Column="1"
+                                                                                   Text="{Binding Description}"
+                                                                                   FontSize="11" Foreground="#888"
+                                                                                   VerticalAlignment="Center"
+                                                                                   TextTrimming="CharacterEllipsis"/>
+                                                                    </Grid>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
                         </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </UserControl>
