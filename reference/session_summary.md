@@ -1,16 +1,24 @@
 # Project Session Summary
 
 ## Last Updated
-2026-06-24 | 新增 purchase_order.is_active 全量同步脚本并修复 All POs 界面过滤
+2026-06-24 | 重构 All POs 界面：简洁视图、CRUD 菜单、Import 工作流链
 
 ## Current Status
-- `scripts/update_po_is_active.py` 可重用脚本已完成：从 Excel OE 日志 AA 列读取活跃 order_item ID，全量同步 `purchase_order.is_active`（默认 dry-run，`--apply` 写入）
-- 开发库已执行同步：134 个 PO 活跃，142 个 PO 设为 inactive
-- `PoRepository.GetAllPoLines()` 已加 `WHERE po.is_active = 1`，All POs 界面只显示活跃记录
-- `GetDrawingInfo(string drawingNumber)` 按 `revision DESC` 排序，优先返回最高 revision
-- 保存 PartEditor 行时自动将 PO 下引用旧 part 的 order_item 重定向到新 part
+- All POs 界面（现标题"Order Entry"）支持 OE 视图与简洁视图切换；简洁视图按 PO 分组，支持展开子图纸
+- Import Drawing → Edit Parts → Build Tree 三步工作流通过 All POs PO 标题行"Input Data"入口串联，不再需要独立工具栏按钮
+- PO 标题行三点菜单：Mark As Shipped（设 is_active=0）、Input Data；order item 行三点/右键：Edit Item
+- 工具栏新增 New Job（含批量创建）、History（查看 is_active=0 的历史 PO）按钮
+- Edit Parts 界面 Drawing Number 文本框已可编辑，失去焦点时自动同步改动至 JSON 文件并刷新该行
 
 ## Recent Sessions
+
+2026-06-24 - 重构 All POs 界面：简洁视图、CRUD 菜单、Import 工作流链
+- 删除主工具栏三个按钮（Import Drawing / Edit Part / Build Drawing Tree），入口改由 All POs 的"Input Data"驱动
+- `AllPosControl` 新增简洁视图：按 PO 分组，展开图标懒加载子图纸，PO 标题行含 Tree/Package Tracker 按钮及三点菜单
+- `DrawingEditorControl` 新增 `ImportCompleted` 事件和 `PrefilledPoNumber`，`PartEditorControl` 新增 `SaveAllCompleted` 事件，`MainWindow` 串联三步自动导航
+- `PartEditorRow.DrawingNumber` 从 `init` 改为可设置，LostFocus 时比对值并回写 JSON、刷新该行 DB 信息
+- 新建 `NewJobDialog`（含批量创建模式）和 `EditItemDialog`（级联更新 customer/part/order_item）
+- `PoRepository` 新增 `MarkAsShipped`、`GetChildDrawings`（递归 CTE）、`CreateOrderItemCascade`、`UpdateOrderItemCascade` 等方法；`PoListRow` 增加 `PartId` 和 `OrderItemId` 字段
 
 2026-06-24 - 新增 purchase_order.is_active 全量同步脚本并修复 All POs 界面过滤
 - 新建 `scripts/update_po_is_active.py`：`openpyxl` 只读读取 Excel AA 列，temp table JOIN 解析 PO，事务写入 `is_active`；默认 dry-run，`--apply` 才执行
@@ -32,6 +40,8 @@
 - 制定三步修复方案：① SQL 数据合并（保留大写，迁移 FK）→ ② Schema 迁移（加 COLLATE NOCASE）→ ③ InsertPart 代码加 ToUpperInvariant
 
 ## Key Decisions
+- Import Drawing / Edit Parts / Build Tree 的入口统一改到 All POs 界面的 PO 三点菜单"Input Data"，三个独立工具栏按钮已移除；工作流通过事件链自动跳转，无需手动切换
+- ContextMenu 的 MenuItem 在 WPF 中不继承父 Button 的 DataContext；统一从 `ContextMenu.PlacementTarget`（即三点 Button）的 Tag 取数据
 - drawing_number 大小写问题修复顺序：先清理数据再改 Schema，因为 NOCASE 约束会拒绝已有重复数据的导入
 - PartEditor 创建新 part 时不弹 ConfirmOverwriteDialog，新建流程直接保存后返回
 - InsertPart() 已存在于 DrawingRepository.cs 但原先从未被调用，本次直接接入而非重写

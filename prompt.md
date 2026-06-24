@@ -1,6 +1,18 @@
+未来实现
+- customer 按照使用情况进行排序的功能
+
+
+---
+
 Import Drawing
-- Import 结束以后, save all 右边添加按钮直接导航到图纸树构筑界面
-- 隐藏输入相关按钮
+- 该界面将从 All PO 进入
+- Import 结束以后, 点击 Save 自动切换到 Edit Parts 界面
+- Edit Parts 界面入口同样改为 All PO
+- 编辑结束后点击 save all, 自动切换到 Build Drawing Tree 界面 
+- 移除import drawing/edit part/build drawing tree三个按钮
+- Edit Parts 界面的 Drawing Number 抓取有时会出现错误, 因为文件名并不正确
+  - 将该文本框改为可编辑状态, 一旦失去焦点检查值是否发生改变
+  - 如果发生改变, 则修改 json 文件中该项目的值, 然后重新load这行元素 (如果无法只重新加载这一个元素, 刷新页面)
 
 ---
 
@@ -9,10 +21,10 @@ MP Schedule
 为什么 MP Schedule 初始加载超级慢 --- DONE
 - 甘特图选择步骤后, 手动将之前的所有步骤标记为完成 --- DONE
 
-- 增加 PO 列宽 1/4
+- 增加 PO 列宽 1/4 --- DONE
 - 写脚本, 使用DIR Log中的数据批量更新图纸状态
 
-写可以复用的脚本, 用于手动更新数据库中 purchase_order.is_active 字段的值. 
+写可以复用的脚本, 用于手动更新数据库中 purchase_order.is_active 字段的值. --- DONE
 - 数据来自文件, 位置为 "\\rtdnas2\OE\Order Entry Log.xlsm"
 - 使用开发数据库, 但应该很容易修改目标数据库的地址
 - 该文件极度重要, 每次操作必须使用只读方式, 避免破坏该文件造成公司损失
@@ -32,18 +44,19 @@ MP Schedule
 
 ---
 
-添加 DIR 入口
+添加 DIR 入口 --- PENDING
 用例:
 - 用户能够为图纸添加 DIR
   - 在图纸界面, 用户能够点击创建按钮打开模板文件并将当前内容预填入
   - 在图纸界面, 用户能够查看所有历史 DIR 文件
 - 在工具栏中添加下拉菜单 "工具", 其中添加 "DIR Log"
   - 点击出现面板, 将提取并列出数据库中当日录入的所有 DIR 记录, 格式如下:
-  - 
+
+注: 基本上线后添加
 
 ---
 
-单 PO 页面
+单 PO 页面 --- PENDING
 - 此界面用于具体 PO 的信息展示, 并将在后续添加数据注入 Excel 文件并打印等功能
 
 注: 基本上线后添加
@@ -54,15 +67,17 @@ All POs 界面
 - All POs 按钮 -> Order Entry
 
 - 工具栏添加 History 按钮, 点击进入 **PO History 界面**
+  - 此界面与 All PO 界面相同, 但应该显示 purchase_order.is_active=false 的条目
 - 工具栏添加简洁视图按钮, 点击从OE视图切换为简洁视图模式
 
 简洁视图模式
 - 当前 OE 视图模式存在大量冗余内容, 每个区域的 PO, OE, Customer, Contact 都是重复信息
-- 将这些内容单列一行, 放在区域最上方, 采用 {标题: 字段内容} 的样式
+- 对于每个相同的 PO 区域, 把这些内容单列一行, 放在区域最上方, 采用 {标题: 字段内容} 的样式
   - 右对齐位置添加 Tree 按钮, 点击可以直接进入图纸树界面
   - Tree 按钮右边添加 Package Tracker 按钮, 点击进入单 PO 页
   - 区域的每行对应一个 order_item, 如果 order_item 对应的图纸号下方有子节点, 则最左侧应该有一个展开图标, 点击后
     - 会将所有子节点显示出来, 每行一个, 不需要采用树形结构, 按图纸号进行默认排序即可
+    - 首次渲染时可酌情不加载下级图纸, 等点击展开时再进行加载, 你可以视情况自行决定
     - 每行内容包括以下列
       - Job Number
       - Line
@@ -75,26 +90,53 @@ All POs 界面
 
 用例:
 - 用户能够对PO数据进行增删改查
-  - 为每个 PO 标题行最右边添加纵向的三个点图标, 点击出现下拉菜单, 按钮包括
+  - 为每个 PO 标题行最右边添加纵向的三个点图标, 点击出现下拉菜单, 项目包括
     - Mark As Shipped
+    - Import Data: 点击进入 Import Drawing 界面, 这是该功能的新入口
+    - Edit Parts: 点击进入 Edit Parts 界面
   - 为每个 order 行最右边添加三点图标, 点击出现下拉菜单, 按钮包括
     - Edit Item
+  - 除了点击三点图标, 在每个 order item 行点击右键, 应该也可以出现 Edit Item 选项
   - (增) 用户能够通过点击工具栏上的创建新 Job 创建新的 order_item
     - 点击按钮后, 弹出输入对话框, 输入对话框包括
-      - 
-      - 点击保存, 级联保存数据到数据库, OE 页面刷新, 如果未能正确保存, 弹出对话框并输出错误日志
+      - OE: 检索 purchase_order.oe_number 中此项的最大值, 然后+1显示 (只读项)
+      - Job Number: 检索 job.job_number 最大的值, 然后+1显示
+        - 紧贴文本框添加一个按钮 Use Previous
+        - 点击后使用 job.job_number 的最大值
+      - Customer: 下拉菜单, 列出所有 customer.customer_name, 同时该文本框应该可以被编辑, 以添加新的 customer
+      - Qty: order_item.quantity 高概率为数字
+      - Parts: part.drawing_number
+      - Rev: part.revision
+      - Contact: 下拉菜单, customer 中所有 contact
+      - Ln: order_item.line_number, 必须填, 大概率为数字, 从1开始, 初始为1
+      - Description: part.description 可空
+      - Price: part.unit_price, 大概率为 real
+      - P.O.: purchase_order.po_number 为空时储存为 NPO-{job_number}
+      - Del. Req'd: order_item.delivery_required_date
+      - 返回按钮: 放弃输入, 返回 All PO
+      - 创建新Record按钮: 点击后, 
+        - 弹出对话框请用户确认输入信息
+        - 确认后返回 All PO
+      - 批量创建按钮: 点击后, 
+        - 弹出对话框请用户确认输入信息
+        - 确认后留在此对话框
+        - Job No/Ln 增加 1, Customer/Contact/Del.Req'd 不变, 其他清零
+    - 级联保存数据到数据库, OE 页面刷新, 
+    - 如果未能正确保存, 弹出对话框并输出错误日志
+    - 如录入的信息并非正确格式, 则发出warning日志
   - (删) 用户能够通过点击三点图标下拉菜单中的 Mark As Shipped 移除当前 PO
+    - 点击后出现确认对话框
     - 数据库操作仅需将 purchase_order.active 设置为 false
+    - 数据更新后刷新页面
   - (改) 用户能够通过点击 order 行最右边的三点图标的下拉菜单中的 Edit Order 对每个 order 进行修改
-    - 点击按钮后, 弹出修改 order 对话框, 对话框包括
-    - 
+    - 点击按钮后, 弹出修改 order 对话框, 对话框与输入对话框相同
+    - 确认输入后, 对数据条目进行更新操作
 
 [此处参考OE文件的vba脚本]
 
-
 ---
 
-开发数据库中还是存在小写版本, 举例, part.id为4796和5481应该只有一条数据
+开发数据库中还是存在小写版本, 举例, part.id为4796和5481应该只有一条数据 --- DONE
 - 发现是 rev 不一致导致, rev="-"的数据只是占位版本
 - 在单 PO 界面, 全部引用的是小写的版本
 - 在 edit part 界面每行的保存按钮中添加逻辑, 查看当前 PO 下的 order_item 是否引用了与本行图纸号相同, 但rev不同的另外的一个图纸, 如果是, 则更新指向当前的新图纸
