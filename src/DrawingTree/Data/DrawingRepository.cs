@@ -41,6 +41,7 @@ public class DrawingRepository
                 FROM part p
                 LEFT JOIN drawing_file df ON df.part_id = p.id AND df.is_active = 1
                 WHERE p.drawing_number = @dn
+                ORDER BY p.revision DESC
                 LIMIT 1
                 """;
             cmd.Parameters.AddWithValue("@dn", drawingNumber);
@@ -624,6 +625,47 @@ public class DrawingRepository
             .OrderBy(r => r.PoNumber).ThenBy(r => r.JobNumber).ThenBy(r => r.DrawingNumber)
             .Take(200)
             .ToList();
+    }
+
+    /// <summary>
+    /// Updates order_item.part_id for all items in the given PO that reference the same
+    /// drawing_number but a different part — redirecting stale references to the target part.
+    /// </summary>
+    /// <param name="poNumber">PO number (e.g. "RT79-87630-PN-R005")</param>
+    /// <param name="drawingNumber">Drawing number to match (COLLATE NOCASE)</param>
+    /// <param name="targetPartId">The canonical part.id to redirect to</param>
+    /// <returns>Number of order_item rows updated</returns>
+    public int RedirectPoOrderItems(string poNumber, string drawingNumber, int targetPartId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                UPDATE order_item
+                SET part_id    = @targetPartId,
+                    updated_at = datetime('now', 'localtime')
+                WHERE id IN (
+                    SELECT oi.id
+                    FROM order_item oi
+                    JOIN job j             ON j.id   = oi.job_id
+                    JOIN purchase_order po ON po.id  = j.po_id
+                    JOIN part p            ON p.id   = oi.part_id
+                    WHERE po.po_number     = @poNumber
+                      AND p.drawing_number = @drawingNumber COLLATE NOCASE
+                      AND oi.part_id      != @targetPartId
+                )
+                """;
+            cmd.Parameters.AddWithValue("@targetPartId",  targetPartId);
+            cmd.Parameters.AddWithValue("@poNumber",      poNumber);
+            cmd.Parameters.AddWithValue("@drawingNumber", drawingNumber);
+            return cmd.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"DrawingRepository.RedirectPoOrderItems failed for PO '{poNumber}', drawing '{drawingNumber}': {ex.Message}");
+            return 0;
+        }
     }
 
     private static void DeleteRemovedChildren(SqliteConnection conn, SqliteTransaction tx,

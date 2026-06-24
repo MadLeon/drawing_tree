@@ -110,6 +110,12 @@ public partial class PartEditorControl : UserControl
             _drawingRepository.UpdatePart(newId, row.Revision, row.Description, row.IsAssembly);
             if (!string.IsNullOrEmpty(row.PdfPath))
                 _drawingRepository.UpsertDrawingFile(newId, Path.GetFileName(row.PdfPath), row.PdfPath, row.Revision);
+            if (!string.IsNullOrEmpty(_poName))
+            {
+                int redirected = _drawingRepository.RedirectPoOrderItems(_poName, row.DrawingNumber, newId);
+                if (redirected > 0)
+                    Logger.Instance.Info($"PartEditor: redirected {redirected} order_item(s) in '{_poName}' to part {newId}");
+            }
             row.Status = SaveStatus.Success;
             Logger.Instance.Info($"PartEditor created new part: {row.DrawingNumber} (partId={newId})");
             Snackbar.Show($"Created: {row.DrawingNumber}");
@@ -155,6 +161,13 @@ public partial class PartEditorControl : UserControl
 
         if (ok && !string.IsNullOrEmpty(row.QuantityInAssembly))
             ok = _drawingRepository.UpdatePartTreeQuantity(row.PartId.Value, row.QuantityInAssembly);
+
+        if (ok && !string.IsNullOrEmpty(_poName))
+        {
+            int redirected = _drawingRepository.RedirectPoOrderItems(_poName, row.DrawingNumber, row.PartId.Value);
+            if (redirected > 0)
+                Logger.Instance.Info($"PartEditor: redirected {redirected} order_item(s) in '{_poName}' to part {row.PartId}");
+        }
 
         row.Status = ok ? SaveStatus.Success : SaveStatus.Error;
 
