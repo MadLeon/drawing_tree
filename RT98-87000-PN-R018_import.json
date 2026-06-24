@@ -1,0 +1,882 @@
+{
+  "PurchaseOrder": "RT98-87000-PN-R018",
+  "ExportDate": "2026-06-20 08:27:43",
+  "TotalDrawings": 175,
+  "Drawings": [
+    {
+      "DrawingNumber": "21RT-88100-0140-001-GA-1",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\21rt-88100-0140-001-ga-1.pdf",
+      "FileName": "21rt-88100-0140-001-ga-1.pdf"
+    },
+    {
+      "DrawingNumber": "21RT-88100-0141-001-DD-2",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\21rt-88100-0141-001-dd-2.pdf",
+      "FileName": "21rt-88100-0141-001-dd-2.pdf"
+    },
+    {
+      "DrawingNumber": "21RT-88100-0142-001-DD-2",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\21rt-88100-0142-001-dd-2.pdf",
+      "FileName": "21rt-88100-0142-001-dd-2.pdf"
+    },
+    {
+      "DrawingNumber": "21RT-88100-0143-001-DD-2",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\21rt-88100-0143-001-dd-2.pdf",
+      "FileName": "21rt-88100-0143-001-dd-2.pdf"
+    },
+    {
+      "DrawingNumber": "21RT-88100-0144-001-DD-2",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\21rt-88100-0144-001-dd-2.pdf",
+      "FileName": "21rt-88100-0144-001-dd-2.pdf"
+    },
+    {
+      "DrawingNumber": "21RT-88100-0145-001-DD-2",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\21rt-88100-0145-001-dd-2.pdf",
+      "FileName": "21rt-88100-0145-001-dd-2.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0165-1-SK-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0165-1-sk-c.pdf",
+      "FileName": "rt-87000-0165-1-sk-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0166-1-GA-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0166-1-ga-c.pdf",
+      "FileName": "rt-87000-0166-1-ga-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0167-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0167-1-dd-c.pdf",
+      "FileName": "rt-87000-0167-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0168-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0168-1-dd-c.pdf",
+      "FileName": "rt-87000-0168-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0222-1-DD-2",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0222-1-dd-2.pdf",
+      "FileName": "rt-87000-0222-1-dd-2.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0223-1-GA-2",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0223-1-ga-2.pdf",
+      "FileName": "rt-87000-0223-1-ga-2.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0224-1-DD-2",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0224-1-dd-2.pdf",
+      "FileName": "rt-87000-0224-1-dd-2.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0225-01-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0225-01-dd-c.pdf",
+      "FileName": "rt-87000-0225-01-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0228-01-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0228-01-dd-c.pdf",
+      "FileName": "rt-87000-0228-01-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0229-1-GA-1",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0229-1-ga-1.pdf",
+      "FileName": "rt-87000-0229-1-ga-1.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0232-01-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0232-01-dd-c.pdf",
+      "FileName": "rt-87000-0232-01-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0300-1-GA-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0300-1-ga-d.pdf",
+      "FileName": "rt-87000-0300-1-ga-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0301-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0301-1-dd-c.pdf",
+      "FileName": "rt-87000-0301-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0302-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0302-1-dd-c.pdf",
+      "FileName": "rt-87000-0302-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0303-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0303-1-dd-c.pdf",
+      "FileName": "rt-87000-0303-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0304-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0304-1-dd-c.pdf",
+      "FileName": "rt-87000-0304-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0305-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0305-1-dd-c.pdf",
+      "FileName": "rt-87000-0305-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0306-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0306-1-dd-c.pdf",
+      "FileName": "rt-87000-0306-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0307-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0307-1-dd-c.pdf",
+      "FileName": "rt-87000-0307-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0308-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0308-1-dd-c.pdf",
+      "FileName": "rt-87000-0308-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-0309-1-DD-C",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-0309-1-dd-c.pdf",
+      "FileName": "rt-87000-0309-1-dd-c.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-70010-1000-2-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-70010-1000-2-ga-e.pdf",
+      "FileName": "rt-87000-70010-1000-2-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-70010-1000-4-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-70010-1000-4-ga-e.pdf",
+      "FileName": "rt-87000-70010-1000-4-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-70010-1000-6-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-70010-1000-6-ga-e.pdf",
+      "FileName": "rt-87000-70010-1000-6-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71100-1000-1-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71100-1000-1-ga-e.pdf",
+      "FileName": "rt-87000-71100-1000-1-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71100-1001-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71100-1001-1-dd-e.pdf",
+      "FileName": "rt-87000-71100-1001-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71100-1001-2-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71100-1001-2-dd-d.pdf",
+      "FileName": "rt-87000-71100-1001-2-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71100-1002-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71100-1002-1-dd-e.pdf",
+      "FileName": "rt-87000-71100-1002-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71100-1002-2-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71100-1002-2-dd-d.pdf",
+      "FileName": "rt-87000-71100-1002-2-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71100-1003-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71100-1003-1-dd-b.pdf",
+      "FileName": "rt-87000-71100-1003-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71100-1004-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71100-1004-1-dd-d.pdf",
+      "FileName": "rt-87000-71100-1004-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71100-1005-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71100-1005-1-dd-d.pdf",
+      "FileName": "rt-87000-71100-1005-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71100-1006-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71100-1006-1-dd-d.pdf",
+      "FileName": "rt-87000-71100-1006-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71100-1007-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71100-1007-1-dd-b.pdf",
+      "FileName": "rt-87000-71100-1007-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71100-1008-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71100-1008-1-dd-b.pdf",
+      "FileName": "rt-87000-71100-1008-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1000-1-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1000-1-ga-e.pdf",
+      "FileName": "rt-87000-71150-1000-1-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1000-2-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1000-2-ga-e.pdf",
+      "FileName": "rt-87000-71150-1000-2-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1001-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1001-1-dd-d.pdf",
+      "FileName": "rt-87000-71150-1001-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1001-2-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1001-2-dd-b.pdf",
+      "FileName": "rt-87000-71150-1001-2-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1002-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1002-1-dd-d.pdf",
+      "FileName": "rt-87000-71150-1002-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1003-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1003-1-dd-d.pdf",
+      "FileName": "rt-87000-71150-1003-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1004-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1004-1-dd-d.pdf",
+      "FileName": "rt-87000-71150-1004-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1004-2-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1004-2-dd-e.pdf",
+      "FileName": "rt-87000-71150-1004-2-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1005-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1005-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1005-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1006-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1006-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1006-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1007-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1007-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1007-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1008-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1008-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1008-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1009-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1009-1-dd-d.pdf",
+      "FileName": "rt-87000-71150-1009-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1010-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1010-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1010-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1011-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1011-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1011-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1012-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1012-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1012-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1013-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1013-1-dd-d.pdf",
+      "FileName": "rt-87000-71150-1013-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1013-2-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1013-2-dd-e.pdf",
+      "FileName": "rt-87000-71150-1013-2-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1014-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1014-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1014-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1015-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1015-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1015-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1016-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1016-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1016-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1017-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1017-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1017-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1018-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1018-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1018-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1019-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1019-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1019-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1020-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1020-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1020-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1021-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1021-1-dd-d.pdf",
+      "FileName": "rt-87000-71150-1021-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1022-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1022-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1022-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71150-1023-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71150-1023-1-dd-b.pdf",
+      "FileName": "rt-87000-71150-1023-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71200-1000-1-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71200-1000-1-ga-e.pdf",
+      "FileName": "rt-87000-71200-1000-1-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71200-1001-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71200-1001-1-dd-d.pdf",
+      "FileName": "rt-87000-71200-1001-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71200-1002-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71200-1002-1-dd-b.pdf",
+      "FileName": "rt-87000-71200-1002-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71200-1003-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71200-1003-1-dd-b.pdf",
+      "FileName": "rt-87000-71200-1003-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71200-1004-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71200-1004-1-dd-b.pdf",
+      "FileName": "rt-87000-71200-1004-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71200-1005-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71200-1005-1-dd-b.pdf",
+      "FileName": "rt-87000-71200-1005-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71200-1006-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71200-1006-1-dd-b.pdf",
+      "FileName": "rt-87000-71200-1006-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71200-1007-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71200-1007-1-dd-b.pdf",
+      "FileName": "rt-87000-71200-1007-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71200-1008-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71200-1008-1-dd-b.pdf",
+      "FileName": "rt-87000-71200-1008-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1000-1-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1000-1-ga-e.pdf",
+      "FileName": "rt-87000-71225-1000-1-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1001-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1001-1-dd-e.pdf",
+      "FileName": "rt-87000-71225-1001-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1001-2-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1001-2-dd-d.pdf",
+      "FileName": "rt-87000-71225-1001-2-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1002-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1002-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1002-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1002-2-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1002-2-dd-b.pdf",
+      "FileName": "rt-87000-71225-1002-2-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1003-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1003-1-dd-d.pdf",
+      "FileName": "rt-87000-71225-1003-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1003-2-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1003-2-dd-d.pdf",
+      "FileName": "rt-87000-71225-1003-2-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1004-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1004-1-dd-e.pdf",
+      "FileName": "rt-87000-71225-1004-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1004-2-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1004-2-dd-b.pdf",
+      "FileName": "rt-87000-71225-1004-2-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1005-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1005-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1005-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1006-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1006-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1006-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1007-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1007-1-dd-e.pdf",
+      "FileName": "rt-87000-71225-1007-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1008-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1008-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1008-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1009-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1009-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1009-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1010-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1010-1-dd-d.pdf",
+      "FileName": "rt-87000-71225-1010-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1010-2-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1010-2-dd-d.pdf",
+      "FileName": "rt-87000-71225-1010-2-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1011-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1011-1-dd-d.pdf",
+      "FileName": "rt-87000-71225-1011-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1011-2-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1011-2-dd-d.pdf",
+      "FileName": "rt-87000-71225-1011-2-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1012-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1012-1-dd-d.pdf",
+      "FileName": "rt-87000-71225-1012-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1013-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1013-1-dd-d.pdf",
+      "FileName": "rt-87000-71225-1013-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1013-2-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1013-2-dd-d.pdf",
+      "FileName": "rt-87000-71225-1013-2-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1014-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1014-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1014-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1015-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1015-1-dd-d.pdf",
+      "FileName": "rt-87000-71225-1015-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1016-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1016-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1016-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1017-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1017-1-dd-d.pdf",
+      "FileName": "rt-87000-71225-1017-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1018-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1018-1-dd-d.pdf",
+      "FileName": "rt-87000-71225-1018-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1019-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1019-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1019-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1020-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1020-1-dd-d.pdf",
+      "FileName": "rt-87000-71225-1020-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1021-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1021-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1021-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1022-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1022-1-dd-d.pdf",
+      "FileName": "rt-87000-71225-1022-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1023-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1023-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1023-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1024-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1024-1-dd-d.pdf",
+      "FileName": "rt-87000-71225-1024-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1025-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1025-1-dd-d.pdf",
+      "FileName": "rt-87000-71225-1025-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1026-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1026-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1026-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1027-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1027-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1027-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1028-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1028-1-dd-e.pdf",
+      "FileName": "rt-87000-71225-1028-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1029-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1029-1-dd-e.pdf",
+      "FileName": "rt-87000-71225-1029-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1030-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1030-1-dd-e.pdf",
+      "FileName": "rt-87000-71225-1030-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1031-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1031-1-dd-e.pdf",
+      "FileName": "rt-87000-71225-1031-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1032-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1032-1-dd-d.pdf",
+      "FileName": "rt-87000-71225-1032-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1033-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1033-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1033-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1034-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1034-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1034-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1035-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1035-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1035-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1036-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1036-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1036-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71225-1037-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71225-1037-1-dd-b.pdf",
+      "FileName": "rt-87000-71225-1037-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71230-1011-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71230-1011-1-dd-b.pdf",
+      "FileName": "rt-87000-71230-1011-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71230-1012-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71230-1012-1-dd-b.pdf",
+      "FileName": "rt-87000-71230-1012-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71300-1000-1-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71300-1000-1-ga-e.pdf",
+      "FileName": "rt-87000-71300-1000-1-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71300-1001-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71300-1001-1-dd-e.pdf",
+      "FileName": "rt-87000-71300-1001-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71300-1001-2-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71300-1001-2-dd-b.pdf",
+      "FileName": "rt-87000-71300-1001-2-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71300-1002-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71300-1002-1-dd-d.pdf",
+      "FileName": "rt-87000-71300-1002-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71300-1003-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71300-1003-1-dd-d.pdf",
+      "FileName": "rt-87000-71300-1003-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71300-1004-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71300-1004-1-dd-b.pdf",
+      "FileName": "rt-87000-71300-1004-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71300-1005-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71300-1005-1-dd-b.pdf",
+      "FileName": "rt-87000-71300-1005-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1000-1-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1000-1-ga-e.pdf",
+      "FileName": "rt-87000-71350-1000-1-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1001-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1001-1-dd-e.pdf",
+      "FileName": "rt-87000-71350-1001-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1001-2-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1001-2-dd-e.pdf",
+      "FileName": "rt-87000-71350-1001-2-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1002-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1002-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1002-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1003-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1003-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1003-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1004-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1004-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1004-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1005-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1005-1-dd-d.pdf",
+      "FileName": "rt-87000-71350-1005-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1006-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1006-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1006-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1007-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1007-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1007-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1008-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1008-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1008-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1009-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1009-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1009-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1010-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1010-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1010-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1011-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1011-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1011-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1012-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1012-1-dd-d.pdf",
+      "FileName": "rt-87000-71350-1012-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1013-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1013-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1013-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1014-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1014-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1014-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1015-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1015-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1015-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1016-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1016-1-dd-d.pdf",
+      "FileName": "rt-87000-71350-1016-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1017-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1017-1-dd-d.pdf",
+      "FileName": "rt-87000-71350-1017-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1017-2-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1017-2-dd-d.pdf",
+      "FileName": "rt-87000-71350-1017-2-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1018-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1018-1-dd-d.pdf",
+      "FileName": "rt-87000-71350-1018-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1018-2-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1018-2-dd-d.pdf",
+      "FileName": "rt-87000-71350-1018-2-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1019-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1019-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1019-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1020-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1020-1-dd-d.pdf",
+      "FileName": "rt-87000-71350-1020-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1020-2-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1020-2-dd-d.pdf",
+      "FileName": "rt-87000-71350-1020-2-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1021-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1021-1-dd-d.pdf",
+      "FileName": "rt-87000-71350-1021-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1022-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1022-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1022-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1023-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1023-1-dd-d.pdf",
+      "FileName": "rt-87000-71350-1023-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1023-2-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1023-2-dd-d.pdf",
+      "FileName": "rt-87000-71350-1023-2-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1024-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1024-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1024-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1025-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1025-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1025-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1026-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1026-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1026-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1027-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1027-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1027-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-71350-1028-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-71350-1028-1-dd-b.pdf",
+      "FileName": "rt-87000-71350-1028-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-72000-1000-1-GA-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-72000-1000-1-ga-e.pdf",
+      "FileName": "rt-87000-72000-1000-1-ga-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-72000-1001-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-72000-1001-1-dd-e.pdf",
+      "FileName": "rt-87000-72000-1001-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-72000-1002-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-72000-1002-1-dd-e.pdf",
+      "FileName": "rt-87000-72000-1002-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-72000-1003-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-72000-1003-1-dd-e.pdf",
+      "FileName": "rt-87000-72000-1003-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-72000-1004-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-72000-1004-1-dd-b.pdf",
+      "FileName": "rt-87000-72000-1004-1-dd-b.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-72000-1005-1-DD-D",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-72000-1005-1-dd-d.pdf",
+      "FileName": "rt-87000-72000-1005-1-dd-d.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-72000-1006-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-72000-1006-1-dd-e.pdf",
+      "FileName": "rt-87000-72000-1006-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-72000-1007-1-DD-E",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-72000-1007-1-dd-e.pdf",
+      "FileName": "rt-87000-72000-1007-1-dd-e.pdf"
+    },
+    {
+      "DrawingNumber": "RT-87000-72000-1008-1-DD-B",
+      "PdfPath": "G:\\A.E.C.L (CANDU)\\RT98-87000-PN-R018  BRT BELLOWS REMOVAL CUTTING TOOL FOR QINSHAN\\rt-87000-72000-1008-1-dd-b.pdf",
+      "FileName": "rt-87000-72000-1008-1-dd-b.pdf"
+    }
+  ]
+}
