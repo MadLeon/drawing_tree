@@ -1,14 +1,23 @@
 # Project Session Summary
 
 ## Last Updated
-2026-06-24 | 修复 PartEditor revision 选取逻辑并实现 PO order_item 自动重定向
+2026-06-24 | 新增 purchase_order.is_active 全量同步脚本并修复 All POs 界面过滤
 
 ## Current Status
-- `GetDrawingInfo(string drawingNumber)` 现已按 `revision DESC` 排序，优先返回最高 revision 而非占位版本（rev="-"）
-- 保存 PartEditor 行时自动将当前 PO 下引用同图纸号旧 part 的 order_item 重定向到新 part
-- 数据库中仍存在 rev="-" 占位版本与真实 revision 并存的记录（如 id=4796 vs id=5481），未做批量清理
+- `scripts/update_po_is_active.py` 可重用脚本已完成：从 Excel OE 日志 AA 列读取活跃 order_item ID，全量同步 `purchase_order.is_active`（默认 dry-run，`--apply` 写入）
+- 开发库已执行同步：134 个 PO 活跃，142 个 PO 设为 inactive
+- `PoRepository.GetAllPoLines()` 已加 `WHERE po.is_active = 1`，All POs 界面只显示活跃记录
+- `GetDrawingInfo(string drawingNumber)` 按 `revision DESC` 排序，优先返回最高 revision
+- 保存 PartEditor 行时自动将 PO 下引用旧 part 的 order_item 重定向到新 part
 
 ## Recent Sessions
+
+2026-06-24 - 新增 purchase_order.is_active 全量同步脚本并修复 All POs 界面过滤
+- 新建 `scripts/update_po_is_active.py`：`openpyxl` 只读读取 Excel AA 列，temp table JOIN 解析 PO，事务写入 `is_active`；默认 dry-run，`--apply` 才执行
+- 使用 `os.environ["USERPROFILE"]` 构建路径，不硬编码用户名
+- 18 个单元测试（`scripts/test_update_po_is_active.py`）全部通过，使用 in-memory SQLite + mock openpyxl
+- 修复 `apply_changes` 中 "cannot start a transaction within a transaction" 错误：连接改用 `isolation_level=None`
+- `PoRepository.GetAllPoLines()` 加 `WHERE po.is_active = 1`，All POs 界面只显示活跃 PO
 
 2026-06-24 - 修复 PartEditor revision 选取逻辑并实现 PO order_item 自动重定向
 - 发现 `GetDrawingInfo(string)` 无 ORDER BY，LIMIT 1 随机返回任一 revision，可能选中占位版本 rev="-"

@@ -15,28 +15,39 @@ public class ScheduleRepository
     /// <summary>
     /// Returns all order items from active POs, each augmented with its step trackers
     /// and latest memo text, ready for rendering in the Gantt view.
+    /// Uses a single connection for all queries to minimise network overhead on prod DB.
     /// </summary>
     public List<ScheduleViewModel> GetScheduleViewModels()
     {
-        var rows = GetScheduleRows();
-        if (rows.Count == 0) return [];
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
 
-        var orderItemIds = rows.Select(r => r.OrderItemId).ToList();
-        var partIds      = rows.Where(r => r.PartId > 0).Select(r => r.PartId).Distinct().ToList();
+            var rows = GetScheduleRows(conn);
+            if (rows.Count == 0) return [];
 
-        var stepMap      = GetAllStepTrackers(orderItemIds)
-            .GroupBy(s => s.OrderItemId)
-            .ToDictionary(g => g.Key, g => g.ToList());
+            var orderItemIds  = rows.Select(r => r.OrderItemId).ToList();
+            var partIds       = rows.Where(r => r.PartId > 0).Select(r => r.PartId).Distinct().ToList();
 
-        var memoMap      = GetLatestNotePerPart(partIds);
-        var templateCount = GetTemplateStepCounts(partIds);
+            var stepMap       = GetAllStepTrackers(conn, orderItemIds)
+                .GroupBy(s => s.OrderItemId)
+                .ToDictionary(g => g.Key, g => g.ToList());
 
-        return rows.Select(row => new ScheduleViewModel(
-            row,
-            stepMap.TryGetValue(row.OrderItemId, out var steps) ? steps : [],
-            row.PartId > 0 ? memoMap.GetValueOrDefault(row.PartId) : null,
-            row.PartId > 0 ? templateCount.GetValueOrDefault(row.PartId, 0) : 0
-        )).ToList();
+            var memoMap       = GetLatestNotePerPart(conn, partIds);
+            var templateCount = GetTemplateStepCounts(conn, partIds);
+
+            return rows.Select(row => new ScheduleViewModel(
+                row,
+                stepMap.TryGetValue(row.OrderItemId, out var steps) ? steps : [],
+                row.PartId > 0 ? memoMap.GetValueOrDefault(row.PartId) : null,
+                row.PartId > 0 ? templateCount.GetValueOrDefault(row.PartId, 0) : 0
+            )).ToList();
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"ScheduleRepository.GetScheduleViewModels failed: {ex.Message}");
+            return [];
+        }
     }
 
     /// <summary>
@@ -158,143 +169,190 @@ public class ScheduleRepository
         }
     }
 
-    // ── Private helpers ────────────────────────────────────────────────────
-
-    private List<ScheduleRow> GetScheduleRows()
+    /// <summary>
+    /// Marks a set of process template steps as complete for the given order item.
+    /// Steps that already have an end_time are skipped. Steps without a tracker
+    /// are inserted with start_time = end_time = endDate. All mutations run in
+    /// a single transaction.
+    /// </summary>
+    /// <param name="orderItemId">order_item.id</param>
+    /// <param name="processTemplateIds">process_template.id values to mark complete</param>
+    /// <param name="endDate">ISO date string used as the completion date</param>
+    public void MarkPreviousStepsComplete(int orderItemId, List<int> processTemplateIds, string endDate)
     {
-        var results = new List<ScheduleRow>();
+        if (processTemplateIds.Count == 0) return;
         try
         {
             using var conn = DatabaseConnectionFactory.OpenDevConnection();
-            using var cmd  = conn.CreateCommand();
-            cmd.CommandText = """
-                SELECT oi.id, COALESCE(oi.part_id, 0), po.po_number,
-                       j.job_number, oi.line_number,
-                       c.customer_name, p.drawing_number, p.description,
-                       oi.quantity, oi.delivery_required_date
-                FROM order_item oi
-                JOIN job j ON j.id = oi.job_id
-                JOIN purchase_order po ON po.id = j.po_id
-                LEFT JOIN customer_contact cc ON cc.id = po.contact_id
-                LEFT JOIN customer c ON c.id = cc.customer_id
-                LEFT JOIN part p ON p.id = oi.part_id
-                WHERE po.is_active = 1
-                ORDER BY po.po_number, j.job_number, oi.line_number
-                """;
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using var tx   = conn.BeginTransaction();
+
+            foreach (int ptId in processTemplateIds)
             {
-                results.Add(new ScheduleRow(
-                    OrderItemId:  reader.GetInt32(0),
-                    PartId:       reader.GetInt32(1),
-                    PoNumber:     reader.GetString(2),
-                    JobNumber:    reader.GetString(3),
-                    LineNumber:   reader.GetInt32(4),
-                    CustomerName: reader.IsDBNull(5) ? null : reader.GetString(5),
-                    DrawingNumber:reader.IsDBNull(6) ? null : reader.GetString(6),
-                    Description:  reader.IsDBNull(7) ? null : reader.GetString(7),
-                    Quantity:     reader.GetInt32(8),
-                    DueDate:      reader.IsDBNull(9) ? null : reader.GetString(9)));
+                using var checkCmd = conn.CreateCommand();
+                checkCmd.Transaction = tx;
+                checkCmd.CommandText = """
+                    SELECT id, end_time FROM step_tracker
+                    WHERE order_item_id = @oi AND process_template_id = @pt
+                    LIMIT 1
+                    """;
+                checkCmd.Parameters.AddWithValue("@oi", orderItemId);
+                checkCmd.Parameters.AddWithValue("@pt", ptId);
+
+                int?   existingId  = null;
+                bool   alreadyDone = false;
+                using (var r = checkCmd.ExecuteReader())
+                {
+                    if (r.Read())
+                    {
+                        existingId  = r.GetInt32(0);
+                        alreadyDone = !r.IsDBNull(1);
+                    }
+                }
+                if (alreadyDone) continue;
+
+                using var cmd = conn.CreateCommand();
+                cmd.Transaction = tx;
+                if (existingId.HasValue)
+                {
+                    cmd.CommandText = """
+                        UPDATE step_tracker
+                        SET end_time = @end, updated_at = datetime('now', 'localtime')
+                        WHERE id = @id
+                        """;
+                    cmd.Parameters.AddWithValue("@id", existingId.Value);
+                }
+                else
+                {
+                    cmd.CommandText = """
+                        INSERT INTO step_tracker (order_item_id, process_template_id, start_time, end_time)
+                        VALUES (@oi, @pt, @end, @end)
+                        """;
+                    cmd.Parameters.AddWithValue("@oi", orderItemId);
+                    cmd.Parameters.AddWithValue("@pt", ptId);
+                }
+                cmd.Parameters.AddWithValue("@end", endDate);
+                cmd.ExecuteNonQuery();
             }
-            Logger.Instance.Info($"ScheduleRepository: loaded {results.Count} schedule rows");
+
+            tx.Commit();
+            Logger.Instance.Info(
+                $"ScheduleRepository: marked previous steps complete oi={orderItemId} count={processTemplateIds.Count}");
         }
         catch (Exception ex)
         {
-            Logger.Instance.Error($"ScheduleRepository.GetScheduleRows failed: {ex.Message}");
+            Logger.Instance.Error($"ScheduleRepository.MarkPreviousStepsComplete failed: {ex.Message}");
+            throw;
         }
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────
+
+    private List<ScheduleRow> GetScheduleRows(Microsoft.Data.Sqlite.SqliteConnection conn)
+    {
+        var results = new List<ScheduleRow>();
+        using var cmd  = conn.CreateCommand();
+        cmd.CommandText = """
+            SELECT oi.id, COALESCE(oi.part_id, 0), po.po_number,
+                   j.job_number, oi.line_number,
+                   c.customer_name, p.drawing_number, p.description,
+                   oi.quantity, oi.delivery_required_date
+            FROM order_item oi
+            JOIN job j ON j.id = oi.job_id
+            JOIN purchase_order po ON po.id = j.po_id
+            LEFT JOIN customer_contact cc ON cc.id = po.contact_id
+            LEFT JOIN customer c ON c.id = cc.customer_id
+            LEFT JOIN part p ON p.id = oi.part_id
+            WHERE po.is_active = 1
+            ORDER BY po.po_number, j.job_number, oi.line_number
+            """;
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            results.Add(new ScheduleRow(
+                OrderItemId:  reader.GetInt32(0),
+                PartId:       reader.GetInt32(1),
+                PoNumber:     reader.GetString(2),
+                JobNumber:    reader.GetString(3),
+                LineNumber:   reader.GetInt32(4),
+                CustomerName: reader.IsDBNull(5) ? null : reader.GetString(5),
+                DrawingNumber:reader.IsDBNull(6) ? null : reader.GetString(6),
+                Description:  reader.IsDBNull(7) ? null : reader.GetString(7),
+                Quantity:     reader.GetInt32(8),
+                DueDate:      reader.IsDBNull(9) ? null : reader.GetString(9)));
+        }
+        Logger.Instance.Info($"ScheduleRepository: loaded {results.Count} schedule rows");
         return results;
     }
 
-    private List<ScheduleStepTracker> GetAllStepTrackers(List<int> orderItemIds)
+    private List<ScheduleStepTracker> GetAllStepTrackers(
+        Microsoft.Data.Sqlite.SqliteConnection conn, List<int> orderItemIds)
     {
         if (orderItemIds.Count == 0) return [];
 
-        var results = new List<ScheduleStepTracker>();
-        try
-        {
-            using var conn = DatabaseConnectionFactory.OpenDevConnection();
-            using var cmd  = conn.CreateCommand();
-            var placeholders = string.Join(",", orderItemIds.Select((_, i) => $"@id{i}"));
-            cmd.CommandText = $"""
-                SELECT st.id, st.order_item_id, st.process_template_id, pt.row_number,
-                       pt.shop_code, pt.description, st.start_time, st.end_time
-                FROM step_tracker st
-                JOIN process_template pt ON pt.id = st.process_template_id
-                WHERE st.order_item_id IN ({placeholders}) AND st.start_time IS NOT NULL
-                ORDER BY st.order_item_id, pt.row_number
-                """;
-            for (int i = 0; i < orderItemIds.Count; i++)
-                cmd.Parameters.AddWithValue($"@id{i}", orderItemIds[i]);
-            ReadStepTrackers(cmd, results);
-        }
-        catch (Exception ex)
-        {
-            Logger.Instance.Error($"ScheduleRepository.GetAllStepTrackers failed: {ex.Message}");
-        }
+        var results     = new List<ScheduleStepTracker>();
+        using var cmd   = conn.CreateCommand();
+        var placeholders = string.Join(",", orderItemIds.Select((_, i) => $"@id{i}"));
+        cmd.CommandText = $"""
+            SELECT st.id, st.order_item_id, st.process_template_id, pt.row_number,
+                   pt.shop_code, pt.description, st.start_time, st.end_time
+            FROM step_tracker st
+            JOIN process_template pt ON pt.id = st.process_template_id
+            WHERE st.order_item_id IN ({placeholders}) AND st.start_time IS NOT NULL
+            ORDER BY st.order_item_id, pt.row_number
+            """;
+        for (int i = 0; i < orderItemIds.Count; i++)
+            cmd.Parameters.AddWithValue($"@id{i}", orderItemIds[i]);
+        ReadStepTrackers(cmd, results);
         return results;
     }
 
-    private Dictionary<int, string> GetLatestNotePerPart(List<int> partIds)
+    private Dictionary<int, string> GetLatestNotePerPart(
+        Microsoft.Data.Sqlite.SqliteConnection conn, List<int> partIds)
     {
         var result = new Dictionary<int, string>();
         if (partIds.Count == 0) return result;
-        try
+        using var cmd   = conn.CreateCommand();
+        var placeholders = string.Join(",", partIds.Select((_, i) => $"@pid{i}"));
+        cmd.CommandText = $"""
+            SELECT pn.part_id, pn.content
+            FROM part_note pn
+            JOIN (
+                SELECT part_id, MAX(created_at) AS max_created
+                FROM part_note
+                WHERE part_id IN ({placeholders})
+                GROUP BY part_id
+            ) latest ON latest.part_id = pn.part_id
+                     AND latest.max_created = pn.created_at
+            """;
+        for (int i = 0; i < partIds.Count; i++)
+            cmd.Parameters.AddWithValue($"@pid{i}", partIds[i]);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
         {
-            using var conn = DatabaseConnectionFactory.OpenDevConnection();
-            using var cmd  = conn.CreateCommand();
-            var placeholders = string.Join(",", partIds.Select((_, i) => $"@pid{i}"));
-            cmd.CommandText = $"""
-                SELECT pn.part_id, pn.content
-                FROM part_note pn
-                JOIN (
-                    SELECT part_id, MAX(created_at) AS max_created
-                    FROM part_note
-                    WHERE part_id IN ({placeholders})
-                    GROUP BY part_id
-                ) latest ON latest.part_id = pn.part_id
-                         AND latest.max_created = pn.created_at
-                """;
-            for (int i = 0; i < partIds.Count; i++)
-                cmd.Parameters.AddWithValue($"@pid{i}", partIds[i]);
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
-            {
-                int pid = reader.GetInt32(0);
-                if (!result.ContainsKey(pid))
-                    result[pid] = reader.GetString(1);
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.Instance.Error($"ScheduleRepository.GetLatestNotePerPart failed: {ex.Message}");
+            int pid = reader.GetInt32(0);
+            if (!result.ContainsKey(pid))
+                result[pid] = reader.GetString(1);
         }
         return result;
     }
 
-    private Dictionary<int, int> GetTemplateStepCounts(List<int> partIds)
+    private Dictionary<int, int> GetTemplateStepCounts(
+        Microsoft.Data.Sqlite.SqliteConnection conn, List<int> partIds)
     {
         var result = new Dictionary<int, int>();
         if (partIds.Count == 0) return result;
-        try
-        {
-            using var conn = DatabaseConnectionFactory.OpenDevConnection();
-            using var cmd  = conn.CreateCommand();
-            var placeholders = string.Join(",", partIds.Select((_, i) => $"@pid{i}"));
-            cmd.CommandText = $"""
-                SELECT part_id, COUNT(*) FROM process_template
-                WHERE part_id IN ({placeholders})
-                GROUP BY part_id
-                """;
-            for (int i = 0; i < partIds.Count; i++)
-                cmd.Parameters.AddWithValue($"@pid{i}", partIds[i]);
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
-                result[reader.GetInt32(0)] = reader.GetInt32(1);
-        }
-        catch (Exception ex)
-        {
-            Logger.Instance.Error($"ScheduleRepository.GetTemplateStepCounts failed: {ex.Message}");
-        }
+        using var cmd   = conn.CreateCommand();
+        var placeholders = string.Join(",", partIds.Select((_, i) => $"@pid{i}"));
+        cmd.CommandText = $"""
+            SELECT part_id, COUNT(*) FROM process_template
+            WHERE part_id IN ({placeholders})
+            GROUP BY part_id
+            """;
+        for (int i = 0; i < partIds.Count; i++)
+            cmd.Parameters.AddWithValue($"@pid{i}", partIds[i]);
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            result[reader.GetInt32(0)] = reader.GetInt32(1);
         return result;
     }
 

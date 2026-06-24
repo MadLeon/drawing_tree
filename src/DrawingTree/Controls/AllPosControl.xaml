@@ -95,10 +95,10 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="P.O."
                                     Binding="{Binding PoNumber}"
-                                    Width="150"/>
+                                    Width="200"/>
                 <DataGridTextColumn Header="O.E."
                                     Binding="{Binding OeNumber}"
-                                    Width="120"/>
+                                    Width="70"/>
                 <DataGridTextColumn Header="Job No"
                                     Binding="{Binding JobNumber}"
                                     Width="100"/>

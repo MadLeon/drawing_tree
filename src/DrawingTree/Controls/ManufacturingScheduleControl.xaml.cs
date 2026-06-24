@@ -712,6 +712,17 @@ public partial class ManufacturingScheduleControl : UserControl
                 result.StartDate,
                 result.EndDate);
 
+            if (result.MarkPreviousComplete)
+            {
+                var selected    = steps.FirstOrDefault(s => s.Id == result.ProcessTemplateId);
+                var previousIds = steps
+                    .Where(s => s.RowNumber < (selected?.RowNumber ?? int.MaxValue))
+                    .Select(s => s.Id)
+                    .ToList();
+                if (previousIds.Count > 0)
+                    _repository.MarkPreviousStepsComplete(vm.Row.OrderItemId, previousIds, result.StartDate);
+            }
+
             var refreshed = _repository.GetStepTrackers(vm.Row.OrderItemId);
             var updated   = vm with { Steps = refreshed };
             _viewModels[rowIndex] = updated;

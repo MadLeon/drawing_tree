@@ -71,7 +71,8 @@ public partial class StepAssignmentDialog : Window
         Result = new StepAssignmentResult(
             selectedStep.Id,
             StartDatePicker.SelectedDate.Value.ToString("yyyy-MM-dd"),
-            EndDatePicker.SelectedDate?.ToString("yyyy-MM-dd"));
+            EndDatePicker.SelectedDate?.ToString("yyyy-MM-dd"),
+            MarkPreviousCheck.IsChecked == true);
 
         DialogResult = true;
     }
@@ -84,4 +85,5 @@ public partial class StepAssignmentDialog : Window
 /// <param name="ProcessTemplateId">process_template.id chosen by the user</param>
 /// <param name="StartDate">ISO date string (yyyy-MM-dd)</param>
 /// <param name="EndDate">ISO date string or null</param>
-public record StepAssignmentResult(int ProcessTemplateId, string StartDate, string? EndDate);
+/// <param name="MarkPreviousComplete">When true, mark all steps before this one as complete</param>
+public record StepAssignmentResult(int ProcessTemplateId, string StartDate, string? EndDate, bool MarkPreviousComplete);
