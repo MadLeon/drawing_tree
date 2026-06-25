@@ -1,0 +1,80 @@
+sequenceDiagram
+    actor User
+    participant TBC as TreeBuilderControl
+    participant PR as PoRepository
+    participant DR as DrawingRepository
+    participant DB as SQLite DB
+
+    User->>TBC: 打开 import.json
+    TBC->>TBC: LoadFromJsonFile() 解析 JSON 填充左栏
+    TBC->>TBC: 显示 Loading 遮罩
+
+    TBC->>+PR: GetGroupsForPo(poName)
+    PR->>+DB: SELECT purchase_order join job join order_item join part WHERE po_number=@po
+    DB-->>-PR: rows (job, line, drawing_number, part_id)
+    PR-->>-TBC: List of PoTreeGroup
+
+    alt 无根节点组
+        TBC->>TBC: 关闭遮罩, 加载结束
+    else 有根节点组
+        loop 左栏每条图纸
+            TBC->>+DR: GetDrawingInfo(drawingNumber)
+            DR->>+DB: SELECT part + drawing_file WHERE drawing_number=@dn LIMIT 1
+            DB-->>-DR: part_id, revision, description, file_path
+            DR-->>-TBC: DrawingInfo (含 PartId)
+            TBC->>TBC: 补全 _leftDrawings 元数据
+        end
+
+        loop 每个 PoTreeGroup
+            TBC->>+PR: GetPartTree(group.PartId)
+            PR->>+DB: WITH RECURSIVE tree CTE 递归查 part_tree + part + drawing_file
+            DB-->>-PR: 子树行集 (part_tree_id, part_id, drawing_number, parent_part_id)
+            PR-->>-TBC: List of DrawingNode (内存中已组装层级)
+            TBC->>TBC: SetupRootNodeFromGroup() 从左栏移除根节点 创建根 DrawingNode
+            TBC->>TBC: AttachDbChildren() 递归 匹配左栏则移除并挂载 无匹配则 WARNING
+        end
+
+        TBC->>TBC: 关闭 Loading 遮罩
+    end
+
+    Note over User,TBC: 用户拖拽 / 移除 / 编辑 Info 面板 (纯内存操作 不访问 DB)
+
+    User->>TBC: 点击 Info Save 按钮
+    TBC->>+DR: UpdatePart(partId, revision, description, isAssembly)
+    DR->>+DB: UPDATE part SET revision/description/is_assembly/updated_at WHERE id=@partId
+    DB-->>-DR: OK
+    DR-->>-TBC: true
+
+    opt InfoFilePath 非空
+        TBC->>+DR: UpsertDrawingFile(partId, fileName, filePath, revision)
+        DR->>+DB: BEGIN TRANSACTION
+        DR->>DB: UPDATE drawing_file SET is_active=0 WHERE part_id=@partId
+        DR->>DB: INSERT INTO drawing_file ON CONFLICT file_path DO UPDATE
+        DR->>DB: COMMIT
+        DB-->>-DR: OK
+        DR-->>-TBC: true
+        TBC->>TBC: 更新内存 _selectedDrawing
+    end
+
+    User->>TBC: 点击 Toolbar Save 按钮
+    TBC->>+DR: SaveTree(_rootNodes)
+    DR->>+DB: BEGIN TRANSACTION
+
+    loop 递归遍历每个父节点的子边
+        DR->>DB: SELECT part_tree WHERE parent_id=@pid (CheckOrphanedEdges)
+        DB-->>DR: DB 已有边列表
+        DR->>DR: 对比当前树 childIds 孤立边则写 WARNING 日志
+
+        alt 子节点 PartTreeId 已存在 (已有边)
+            DR->>DB: UPDATE part_tree SET quantity/updated_at WHERE id=@partTreeId AND quantity!=@qty
+        else 新边
+            DR->>DB: INSERT INTO part_tree (parent_id, child_id, quantity)
+            DB-->>DR: last_insert_rowid 回写 PartTreeId
+            DR->>DB: UPDATE part SET has_parent=1 WHERE id=@childId
+        end
+    end
+
+    DR->>DB: COMMIT
+    DB-->>-DR: OK
+    DR-->>-TBC: 完成
+    TBC->>TBC: _hasUnsavedChanges = false

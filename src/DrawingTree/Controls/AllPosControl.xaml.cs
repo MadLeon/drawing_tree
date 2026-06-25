@@ -144,7 +144,7 @@ public partial class AllPosControl : UserControl
 
         ResultsGrid.Visibility     = Visibility.Visible;
         SimpleViewScroll.Visibility = Visibility.Collapsed;
-        ToggleViewButton.Content   = "简洁视图";
+        ToggleViewButton.Content   = "Simple View";
     }
 
     // ── Simple View ───────────────────────────────────────────────────────────
@@ -156,7 +156,7 @@ public partial class AllPosControl : UserControl
 
         ResultsGrid.Visibility     = Visibility.Collapsed;
         SimpleViewScroll.Visibility = Visibility.Visible;
-        ToggleViewButton.Content   = "OE 视图";
+        ToggleViewButton.Content   = "OE View";
     }
 
     private static List<PoSimpleGroup> BuildSimpleGroups(List<PoListRow> rows)

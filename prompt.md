@@ -132,7 +132,31 @@ All POs 界面
     - 点击按钮后, 弹出修改 order 对话框, 对话框与输入对话框相同
     - 确认输入后, 对数据条目进行更新操作
 
-[此处参考OE文件的vba脚本]
+---
+
+修改 New Job 对话框
+- Contact 下拉菜单
+  - 在 Customer 未选择时应该无法编辑
+  - 每当 Customer 改变时, 获取数据库该客户下的所有联系人并填充下拉菜单
+- 调整三个按钮的顺序: Create Record > Batch Create > Cancel (修改名称)
+
+Edit Item 对话框
+- 修改标题为 {PO} / {Job}
+- 修改两个按钮的顺序: Save > Cancel
+
+All PO 界面
+- New Job 按钮同样右对齐
+- 简洁视图不要使用中文
+- 修改 History 按钮的名字为 History Orders
+- All Purchase Orders 标题的右侧显示当前共有多少个活跃的 PO
+- 移除 OE/Simple 视图每行最后的 view 按钮
+- 简洁视图的每行内容, 只有其存在子节点才在最前方显示展开按钮, 若没有则显示空白
+- 每个PO区域, 应该包含一个Header row
+- 展开后的子节点, 其图纸号与描述应该与父节点对其
+- 展开后的子节点, 其内容应该遵循与edit parts界面相同的显示逻辑, 
+  - 确保调用revision最新的那条 & 在sql中使用降序排列, 并limit最上面的一个
+- 在每个po的三点菜单中添加一个 Edit Parts 选项, 直接进入 Edit Part 的选择 json 文件对话框
+
 
 ---
 

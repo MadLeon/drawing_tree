@@ -98,7 +98,7 @@
                     <Button x:Name="HistoryButton" Content="History"
                             Style="{StaticResource ToolbarBtn}"
                             Click="HistoryButton_Click"/>
-                    <Button x:Name="ToggleViewButton" Content="简洁视图"
+                    <Button x:Name="ToggleViewButton" Content="Simple View"
                             Style="{StaticResource ToolbarBtn}"
                             Click="ToggleViewButton_Click"/>
                 </StackPanel>
@@ -146,8 +146,8 @@
                 </DataGrid.GroupStyle>
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="P.O."          Binding="{Binding PoNumber}"      Width="200"/>
-                    <DataGridTextColumn Header="O.E."          Binding="{Binding OeNumber}"      Width="70"/>
-                    <DataGridTextColumn Header="Job No"        Binding="{Binding JobNumber}"     Width="100"/>
+                    <DataGridTextColumn Header="O.E."          Binding="{Binding OeNumber}"      Width="80"/>
+                    <DataGridTextColumn Header="Job No"        Binding="{Binding JobNumber}"     Width="80"/>
                     <DataGridTextColumn Header="Line No"       Binding="{Binding LineNumber}"    Width="70"/>
                     <DataGridTextColumn Header="Customer"      Binding="{Binding CustomerName}"  Width="140"/>
                     <DataGridTextColumn Header="Contact"       Binding="{Binding ContactName}"   Width="160"/>
@@ -165,7 +165,7 @@
                     </DataGridTextColumn>
                     <DataGridTextColumn Header="Rls Date"      Binding="{Binding ReleaseDate}"   Width="100"/>
                     <DataGridTextColumn Header="Due Date"      Binding="{Binding DueDate}"       Width="100"/>
-                    <DataGridTemplateColumn Header="" Width="60">
+                    <DataGridTemplateColumn Header="" Width="80">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Button Content="View" Height="24" FontSize="11" Margin="4,2"
@@ -173,7 +173,7 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="" Width="30">
+                    <DataGridTemplateColumn Header="" Width="50">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Button Content="⋮" Style="{StaticResource ThreeDotBtn}"
