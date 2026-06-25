@@ -74,11 +74,11 @@
                     <!-- Expand button (24px) -->
                     <Border Width="24">
                         <Button Style="{StaticResource IconBtn}"
-                                Width="20" Height="20"
+                                Width="18" Height="18"
                                 Visibility="{Binding ExpandButtonVisibility}"
                                 Tag="{Binding}" Click="ExpandToggle_Click"
                                 ToolTip="Expand / Collapse">
-                            <Path Stretch="Uniform" Fill="#555555" Width="14" Height="14"
+                            <Path Stretch="Uniform" Fill="#555555" Width="12" Height="12"
                                   Data="{Binding ExpandIconGeometry}"/>
                         </Button>
                     </Border>

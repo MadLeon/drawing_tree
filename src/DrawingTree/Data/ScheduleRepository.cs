@@ -274,12 +274,21 @@ public class ScheduleRepository
                         FROM part_tree pt
                         JOIN bom ON pt.parent_id = bom.child_id
                     )
-                    SELECT bom.root_id, p.id, p.drawing_number, p.description,
+                    SELECT bom.root_id,
+                           latest.id,
+                           latest.drawing_number,
+                           latest.description,
                            CAST(SUM(bom.cum_qty) AS INTEGER) AS total_path_qty
                     FROM bom
-                    JOIN part p ON p.id = bom.child_id
-                    GROUP BY bom.root_id, p.id, p.drawing_number, p.description
-                    ORDER BY bom.root_id, p.drawing_number
+                    JOIN part orig ON orig.id = bom.child_id
+                    JOIN part latest ON latest.id = (
+                        SELECT id FROM part
+                        WHERE UPPER(drawing_number) = UPPER(orig.drawing_number)
+                        ORDER BY revision DESC
+                        LIMIT 1
+                    )
+                    GROUP BY bom.root_id, latest.id, latest.drawing_number, latest.description
+                    ORDER BY bom.root_id, latest.drawing_number
                     """;
                 for (int i = 0; i < partIds.Count; i++)
                     cmd.Parameters.AddWithValue(paramNames[i], partIds[i]);

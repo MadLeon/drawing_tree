@@ -851,19 +851,32 @@ public partial class ManufacturingScheduleControl : UserControl
         if (rowIndex < 0 || rowIndex >= _displayRows.Count) return;
 
         var displayRow = _displayRows[rowIndex];
-        if (displayRow.IsChild || displayRow.Vm == null) return;
 
-        var vm = displayRow.Vm;
-        if (vm.Row.PartId <= 0)
+        int partId;
+        int orderItemId;
+
+        if (displayRow.IsChild)
         {
-            Logger.Instance.Info($"GanttCanvas click: no part for oi={vm.Row.OrderItemId}");
-            MessageBox.Show("This order item has no linked part and therefore no process template.",
-                "No Part", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
+            partId      = displayRow.ChildPartId;
+            orderItemId = displayRow.ParentOiId;
+        }
+        else
+        {
+            if (displayRow.Vm == null) return;
+            var vm = displayRow.Vm;
+            if (vm.Row.PartId <= 0)
+            {
+                Logger.Instance.Info($"GanttCanvas click: no part for oi={vm.Row.OrderItemId}");
+                MessageBox.Show("This order item has no linked part and therefore no process template.",
+                    "No Part", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            partId      = vm.Row.PartId;
+            orderItemId = vm.Row.OrderItemId;
         }
 
-        var steps = _repository.GetProcessTemplate(vm.Row.PartId);
-        Logger.Instance.Info($"GanttCanvas click: partId={vm.Row.PartId} steps={steps.Count}");
+        var steps = _repository.GetProcessTemplate(partId);
+        Logger.Instance.Info($"GanttCanvas click: partId={partId} steps={steps.Count}");
         if (steps.Count == 0)
         {
             MessageBox.Show("No process template steps found for this part.",
@@ -902,7 +915,7 @@ public partial class ManufacturingScheduleControl : UserControl
         try
         {
             _repository.UpsertStepTracker(
-                vm.Row.OrderItemId,
+                orderItemId,
                 result.ProcessTemplateId,
                 result.StartDate,
                 result.EndDate);
@@ -915,21 +928,33 @@ public partial class ManufacturingScheduleControl : UserControl
                     .Select(s => s.Id)
                     .ToList();
                 if (previousIds.Count > 0)
-                    _repository.MarkPreviousStepsComplete(vm.Row.OrderItemId, previousIds, result.StartDate);
+                    _repository.MarkPreviousStepsComplete(orderItemId, previousIds, result.StartDate);
             }
 
-            var refreshed = _repository.GetStepTrackers(vm.Row.OrderItemId);
-            var updated   = vm with { Steps = refreshed };
+            if (!displayRow.IsChild)
+            {
+                var vm        = displayRow.Vm!;
+                var refreshed = _repository.GetStepTrackers(orderItemId);
+                var updated   = vm with { Steps = refreshed };
 
-            int vIdx = _viewModels.FindIndex(v => v.Row.OrderItemId == vm.Row.OrderItemId);
-            if (vIdx >= 0) _viewModels[vIdx] = updated;
-            int allIdx = _allViewModels.FindIndex(v => v.Row.OrderItemId == vm.Row.OrderItemId);
-            if (allIdx >= 0) _allViewModels[allIdx] = updated;
+                int vIdx = _viewModels.FindIndex(v => v.Row.OrderItemId == orderItemId);
+                if (vIdx >= 0) _viewModels[vIdx] = updated;
+                int allIdx = _allViewModels.FindIndex(v => v.Row.OrderItemId == orderItemId);
+                if (allIdx >= 0) _allViewModels[allIdx] = updated;
+            }
+            else
+            {
+                var refreshed = _repository.GetChildStepTrackers(
+                    new List<int> { orderItemId },
+                    new List<int> { partId });
+                var key = (orderItemId, partId);
+                _childStepMap[key] = refreshed.TryGetValue(key, out var s) ? s : [];
+            }
 
             _displayRows         = BuildDisplayRows();
             LeftRows.ItemsSource = _displayRows;
             Render();
-            Logger.Instance.Info($"ManufacturingScheduleControl: saved step for oi={vm.Row.OrderItemId}");
+            Logger.Instance.Info($"ManufacturingScheduleControl: saved step for oi={orderItemId} part={partId}");
         }
         catch (Exception ex)
         {
@@ -951,8 +976,11 @@ public partial class ManufacturingScheduleControl : UserControl
         double savedOffset = OuterScroll.VerticalOffset;
         _displayRows         = BuildDisplayRows();
         LeftRows.ItemsSource = _displayRows;
-        Render();
-        OuterScroll.ScrollToVerticalOffset(savedOffset);
+        _ = Dispatcher.InvokeAsync(() =>
+        {
+            Render();
+            OuterScroll.ScrollToVerticalOffset(savedOffset);
+        }, System.Windows.Threading.DispatcherPriority.Background);
     }
 
     private void MemoCell_Click(object sender, MouseButtonEventArgs e)
