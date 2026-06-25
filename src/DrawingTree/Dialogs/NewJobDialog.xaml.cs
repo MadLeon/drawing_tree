@@ -44,13 +44,16 @@ public partial class NewJobDialog : Window
 
     private void CustomerBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        string? selected = CustomerBox.Text;
+        string? selected = CustomerBox.SelectedItem as string;
         var customer = _customers.FirstOrDefault(c => c.Name == selected);
         if (customer == null)
         {
+            ContactBox.IsEnabled   = false;
             ContactBox.ItemsSource = null;
+            ContactBox.Text        = string.Empty;
             return;
         }
+        ContactBox.IsEnabled = true;
         var contacts = _repository.GetContactsByCustomer(customer.Id);
         ContactBox.ItemsSource = contacts.Select(c => c.Name).ToList();
         if (contacts.Count == 1)

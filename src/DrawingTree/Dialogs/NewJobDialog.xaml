@@ -85,7 +85,7 @@
 
             <!-- Contact -->
             <TextBlock Grid.Row="3" Grid.Column="0" Text="Contact:" Style="{StaticResource Label}"/>
-            <ComboBox  Grid.Row="3" Grid.Column="1" x:Name="ContactBox" Style="{StaticResource Combo}"/>
+            <ComboBox  Grid.Row="3" Grid.Column="1" x:Name="ContactBox" Style="{StaticResource Combo}" IsEnabled="False"/>
 
             <!-- Qty -->
             <TextBlock Grid.Row="4" Grid.Column="0" Text="Qty:" Style="{StaticResource Label}"/>
@@ -124,12 +124,12 @@
 
         <!-- Buttons -->
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Return" Width="80" Height="30" Margin="0,0,8,0"
-                    Click="ReturnButton_Click"/>
+            <Button Content="Create Record" Width="110" Height="30" Margin="0,0,8,0" IsDefault="True"
+                    Click="CreateButton_Click"/>
             <Button Content="Batch Create" Width="100" Height="30" Margin="0,0,8,0"
                     Click="BatchCreateButton_Click"/>
-            <Button Content="Create Record" Width="110" Height="30" IsDefault="True"
-                    Click="CreateButton_Click"/>
+            <Button Content="Cancel" Width="80" Height="30"
+                    Click="ReturnButton_Click"/>
         </StackPanel>
     </Grid>
 </Window>
