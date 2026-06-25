@@ -247,7 +247,10 @@ public class PoRepository
                        cust.customer_name, cc.contact_name,
                        oi.quantity, p.drawing_number, p.revision, p.description,
                        oi.drawing_release_date, oi.delivery_required_date,
-                       oi.part_id, oi.id AS order_item_id
+                       oi.part_id, oi.id AS order_item_id,
+                       CASE WHEN oi.part_id IS NOT NULL
+                                 AND EXISTS (SELECT 1 FROM part_tree WHERE parent_id = oi.part_id)
+                            THEN 1 ELSE 0 END AS has_children
                 FROM purchase_order po
                 JOIN job j ON j.po_id = po.id
                 JOIN order_item oi ON oi.job_id = j.id
@@ -276,7 +279,8 @@ public class PoRepository
                     ReleaseDate:   reader.IsDBNull(11) ? null : reader.GetString(11),
                     DueDate:       reader.IsDBNull(12) ? null : reader.GetString(12),
                     PartId:        reader.IsDBNull(13) ? null : reader.GetInt32(13),
-                    OrderItemId:   reader.GetInt32(14)
+                    OrderItemId:   reader.GetInt32(14),
+                    HasChildren:   reader.GetInt32(15) != 0
                 ));
             }
         }
@@ -320,15 +324,22 @@ public class PoRepository
             using var conn = DatabaseConnectionFactory.OpenDevConnection();
             using var cmd = conn.CreateCommand();
             cmd.CommandText = """
-                WITH RECURSIVE descendants(id) AS (
+                WITH RECURSIVE descendants(child_id) AS (
                     SELECT child_id FROM part_tree WHERE parent_id = @partId
                     UNION ALL
-                    SELECT pt.child_id FROM part_tree pt JOIN descendants d ON pt.parent_id = d.id
+                    SELECT pt.child_id FROM part_tree pt JOIN descendants d ON pt.parent_id = d.child_id
                 )
-                SELECT p.id, p.drawing_number, p.revision, p.description
-                FROM part p
-                JOIN descendants d ON p.id = d.id
-                ORDER BY p.drawing_number
+                SELECT DISTINCT p2.id, p2.drawing_number, p2.revision, p2.description
+                FROM descendants d
+                JOIN part p1 ON p1.id = d.child_id
+                JOIN part p2 ON UPPER(p2.drawing_number) = UPPER(p1.drawing_number)
+                WHERE p2.id = (
+                    SELECT id FROM part
+                    WHERE UPPER(drawing_number) = UPPER(p1.drawing_number)
+                    ORDER BY revision DESC
+                    LIMIT 1
+                )
+                ORDER BY p2.drawing_number
                 """;
             cmd.Parameters.AddWithValue("@partId", partId);
             using var reader = cmd.ExecuteReader();
@@ -347,6 +358,67 @@ public class PoRepository
             Logger.Instance.Error($"PoRepository.GetChildDrawings failed for partId={partId}: {ex.Message}");
         }
         return results;
+    }
+
+    /// <summary>
+    /// Batch-fetches all descendant drawings for multiple root part IDs in a single query.
+    /// Mirrors GetChildDrawings logic but carries root_id through the recursion.
+    /// </summary>
+    /// <param name="partIds">Root part IDs to fetch children for.</param>
+    /// <returns>Dictionary keyed by root partId; missing keys mean no children found.</returns>
+    public Dictionary<int, List<ChildDrawingRow>> GetAllChildDrawings(IEnumerable<int> partIds)
+    {
+        var result = new Dictionary<int, List<ChildDrawingRow>>();
+        var ids = partIds.ToList();
+        if (ids.Count == 0) return result;
+
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+
+            var paramNames = ids.Select((_, i) => $"@p{i}").ToList();
+            cmd.CommandText = $"""
+                WITH RECURSIVE descendants(root_id, child_id) AS (
+                    SELECT parent_id, child_id FROM part_tree WHERE parent_id IN ({string.Join(",", paramNames)})
+                    UNION ALL
+                    SELECT d.root_id, pt.child_id
+                    FROM part_tree pt JOIN descendants d ON pt.parent_id = d.child_id
+                )
+                SELECT DISTINCT d.root_id, p2.id, p2.drawing_number, p2.revision, p2.description
+                FROM descendants d
+                JOIN part p1 ON p1.id = d.child_id
+                JOIN part p2 ON UPPER(p2.drawing_number) = UPPER(p1.drawing_number)
+                WHERE p2.id = (
+                    SELECT id FROM part
+                    WHERE UPPER(drawing_number) = UPPER(p1.drawing_number)
+                    ORDER BY revision DESC LIMIT 1
+                )
+                ORDER BY d.root_id, p2.drawing_number
+                """;
+            for (int i = 0; i < ids.Count; i++)
+                cmd.Parameters.AddWithValue(paramNames[i], ids[i]);
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                int rootId = reader.GetInt32(0);
+                var row = new ChildDrawingRow(
+                    PartId:        reader.GetInt32(1),
+                    DrawingNumber: reader.GetString(2),
+                    Revision:      reader.IsDBNull(3) ? null : reader.GetString(3),
+                    Description:   reader.IsDBNull(4) ? null : reader.GetString(4)
+                );
+                if (!result.TryGetValue(rootId, out var list))
+                    result[rootId] = list = new List<ChildDrawingRow>();
+                list.Add(row);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.GetAllChildDrawings failed: {ex.Message}");
+        }
+        return result;
     }
 
     /// <summary>Returns true if the given part has any direct children in part_tree.</summary>
@@ -797,7 +869,7 @@ public record PoListRow(
     string? CustomerName, string? ContactName,
     int Quantity, string? DrawingNumber, string? Revision, string? Description,
     string? ReleaseDate, string? DueDate,
-    int? PartId = null, int OrderItemId = 0);
+    int? PartId = null, int OrderItemId = 0, bool HasChildren = false);
 
 /// <summary>Flat child drawing row returned by GetChildDrawings.</summary>
 public record ChildDrawingRow(int PartId, string DrawingNumber, string? Revision, string? Description);

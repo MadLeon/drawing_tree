@@ -56,11 +56,10 @@ public class ExpandableOrderItem : INotifyPropertyChanged
         }
     }
 
-    public bool HasPartId => Row.PartId.HasValue;
-
     public string ExpandIcon => IsExpanded ? "▾" : "▸";
 
-    public Visibility ExpandButtonVisibility => HasPartId ? Visibility.Visible : Visibility.Hidden;
+    public Visibility ExpandButtonVisibility => Row.HasChildren ? Visibility.Visible : Visibility.Hidden;
+    public Visibility PartButtonVisibility   => Row.PartId.HasValue ? Visibility.Visible : Visibility.Collapsed;
 
     public Visibility ChildrenVisibility => IsExpanded ? Visibility.Visible : Visibility.Collapsed;
 
@@ -98,8 +97,12 @@ public partial class AllPosControl : UserControl
     public event EventHandler<string>? ImportDrawingRequested;
     /// <summary>Fired when the user clicks the "Tree" button for a specific part.</summary>
     public event EventHandler<int>? NavigateToTreeRequested;
+    /// <summary>Fired when the user clicks the part icon on an order item row. Args: (PartId, OrderItemId).</summary>
+    public event EventHandler<(int PartId, int OrderItemId)>? NavigateToPartRequested;
     /// <summary>Fired when the user clicks the History button.</summary>
     public event EventHandler? HistoryRequested;
+    /// <summary>Fired when the user chooses "Edit Parts" from a PO menu.</summary>
+    public event EventHandler? EditPartsRequested;
 
     public AllPosControl()
     {
@@ -123,6 +126,9 @@ public partial class AllPosControl : UserControl
     private void LoadData()
     {
         _allRows = _repository.GetAllPoLines(activeOnly: !ShowHistoryOnly);
+
+        int poCount = _allRows.Select(r => r.PoId).Distinct().Count();
+        PoCountLabel.Text = $"({poCount})";
 
         if (_isSimpleView)
             ApplySimpleView();
@@ -157,6 +163,37 @@ public partial class AllPosControl : UserControl
         ResultsGrid.Visibility     = Visibility.Collapsed;
         SimpleViewScroll.Visibility = Visibility.Visible;
         ToggleViewButton.Content   = "OE View";
+
+        var partIds = groups
+            .SelectMany(g => g.Items)
+            .Where(i => i.Row.HasChildren && i.Row.PartId.HasValue)
+            .Select(i => i.Row.PartId!.Value)
+            .Distinct()
+            .ToList();
+        if (partIds.Count > 0)
+            _ = PrefetchChildrenAsync(groups, partIds);
+    }
+
+    private async Task PrefetchChildrenAsync(List<PoSimpleGroup> groups, List<int> partIds)
+    {
+        var lookup = await Task.Run(() => _repository.GetAllChildDrawings(partIds));
+
+        foreach (var item in groups.SelectMany(g => g.Items))
+        {
+            if (!item.Row.PartId.HasValue) continue;
+            if (!lookup.TryGetValue(item.Row.PartId.Value, out var rows)) continue;
+            if (item.Children.Count > 0) continue;
+
+            foreach (var r in rows)
+                item.Children.Add(new ChildDrawingItem
+                {
+                    DrawingNumber = r.DrawingNumber,
+                    Revision      = r.Revision,
+                    Description   = r.Description
+                });
+        }
+
+        Logger.Instance.Info($"AllPosControl: prefetched children for {lookup.Count} part(s)");
     }
 
     private static List<PoSimpleGroup> BuildSimpleGroups(List<PoListRow> rows)
@@ -252,6 +289,12 @@ public partial class AllPosControl : UserControl
         ImportDrawingRequested?.Invoke(this, group.PoNumber);
     }
 
+    private void EditParts_Click(object sender, RoutedEventArgs e)
+    {
+        Logger.Instance.Info("AllPosControl: Edit Parts requested");
+        EditPartsRequested?.Invoke(this, EventArgs.Empty);
+    }
+
     private static PoSimpleGroup? GetPoGroupFromMenuSender(object sender)
     {
         if (sender is not MenuItem mi) return null;
@@ -280,6 +323,13 @@ public partial class AllPosControl : UserControl
     }
 
     // ── Simple view — order item row menu ────────────────────────────────────
+
+    private void OpenPartButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not ExpandableOrderItem item) return;
+        if (!item.Row.PartId.HasValue) return;
+        NavigateToPartRequested?.Invoke(this, (item.Row.PartId.Value, item.Row.OrderItemId));
+    }
 
     private void ItemRowMenu_Click(object sender, RoutedEventArgs e)
     {

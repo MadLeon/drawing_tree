@@ -1,16 +1,24 @@
 # Project Session Summary
 
 ## Last Updated
-2026-06-24 | 重构 All POs 界面：简洁视图、CRUD 菜单、Import 工作流链
+2026-06-25 | 实现 MP Schedule 展开功能并修复 WPF 资源前向引用崩溃
 
 ## Current Status
+- MP Schedule（甘特图）支持展开子节点：add_box/indeterminate_check_box 图标切换，子节点显示 Drawing、Description、Qty（累计）、Memo（part_note）、Status（分数）、Gantt 条形图
+- 子节点 step tracker 数据通过 `GetChildStepTrackers` 批量预加载，与父节点数据合并在单一 Task.Run 中完成
+- WPF XAML 资源顺序已修正：`IconBtn`、`LeftRowBorder`、`CellText`、`HeaderText` 样式移至 DataTemplate 之前，消除 `XamlParseException`
 - All POs 界面（现标题"Order Entry"）支持 OE 视图与简洁视图切换；简洁视图按 PO 分组，支持展开子图纸
-- Import Drawing → Edit Parts → Build Tree 三步工作流通过 All POs PO 标题行"Input Data"入口串联，不再需要独立工具栏按钮
-- PO 标题行三点菜单：Mark As Shipped（设 is_active=0）、Input Data；order item 行三点/右键：Edit Item
-- 工具栏新增 New Job（含批量创建）、History（查看 is_active=0 的历史 PO）按钮
-- Edit Parts 界面 Drawing Number 文本框已可编辑，失去焦点时自动同步改动至 JSON 文件并刷新该行
+- Import Drawing → Edit Parts → Build Tree 三步工作流通过 All POs PO 标题行"Input Data"入口串联
 
 ## Recent Sessions
+
+2026-06-25 - 实现 MP Schedule 展开功能并修复 WPF 资源前向引用崩溃
+- `ScheduleRepository` 新增 `GetChildStepTrackers(orderItemIds, childPartIds)`：JOIN step_tracker 与 process_template，返回 `(OiId, ChildPartId) → List<StepTracker>` 字典
+- `ScheduleDisplayRow` 新增 `Steps` 属性；`ManufacturingScheduleControl` 新增 `_childStepMap` 字段，`PrefetchChildrenAsync` 在单一 Task.Run 中批量加载 BOM 和子步骤数据
+- `BuildDisplayRows` 子行改用真实步骤计算 StatusText（`{completed}/{total}`），`Steps` 属性传入子行
+- `DrawBars` 重构为 `DrawStepBar` 辅助方法，父子行均可渲染 Gantt 条形图
+- `MemoCell_Click` 新增子节点 memo 更新路径，写回 `_childDataMap` 对应条目
+- 修复崩溃（`XamlParseException: Cannot find resource 'LeftRowBorder'`）：将四个样式定义从 DataTemplate 之后移至之前，消除 WPF 解析期前向引用问题
 
 2026-06-24 - 重构 All POs 界面：简洁视图、CRUD 菜单、Import 工作流链
 - 删除主工具栏三个按钮（Import Drawing / Edit Part / Build Drawing Tree），入口改由 All POs 的"Input Data"驱动
@@ -40,6 +48,7 @@
 - 制定三步修复方案：① SQL 数据合并（保留大写，迁移 FK）→ ② Schema 迁移（加 COLLATE NOCASE）→ ③ InsertPart 代码加 ToUpperInvariant
 
 ## Key Decisions
+- WPF `UserControl.Resources` 内 DataTemplate 引用的 `StaticResource` 样式必须定义在 DataTemplate **之前**；若样式在 DataTemplate 之后，WPF 在 Dispatcher layout pass 应用模板时找不到资源，抛出 `XamlParseException`（crash）
 - Import Drawing / Edit Parts / Build Tree 的入口统一改到 All POs 界面的 PO 三点菜单"Input Data"，三个独立工具栏按钮已移除；工作流通过事件链自动跳转，无需手动切换
 - ContextMenu 的 MenuItem 在 WPF 中不继承父 Button 的 DataContext；统一从 `ContextMenu.PlacementTarget`（即三点 Button）的 Tag 取数据
 - drawing_number 大小写问题修复顺序：先清理数据再改 Schema，因为 NOCASE 约束会拒绝已有重复数据的导入

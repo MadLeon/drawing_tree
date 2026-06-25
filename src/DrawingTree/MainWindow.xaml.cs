@@ -196,6 +196,8 @@ public partial class MainWindow : Window
         _allPosControl.ImportDrawingRequested += OnAllPosImportDrawing;
         _allPosControl.HistoryRequested       += OnAllPosHistoryRequested;
         _allPosControl.NavigateToTreeRequested += OnAllPosNavigateToTree;
+        _allPosControl.NavigateToPartRequested += OnAllPosNavigateToPart;
+        _allPosControl.EditPartsRequested     += OnAllPosEditParts;
 
         MainDisplayArea.Children.Add(_allPosControl);
         Logger.Instance.Info("All POs control displayed");
@@ -318,6 +320,35 @@ public partial class MainWindow : Window
         if (_partDetailControl != null)
             MainDisplayArea.Children.Add(_partDetailControl);
         Logger.Instance.Info("Returned to part detail from drawing viewer");
+    }
+
+    // ── Edit Parts workflow (entered from All POs "Edit Parts" menu) ─────────
+
+    /// <summary>
+    /// Opens a file dialog to select an *_import.json file, then shows the PartEditorControl.
+    /// Called when the user chooses "Edit Parts" from a PO three-dot menu in All POs.
+    /// </summary>
+    private void OnAllPosEditParts(object? sender, EventArgs e)
+    {
+        string dir = ImportsDir;
+        if (!Directory.Exists(dir))
+            Directory.CreateDirectory(dir);
+
+        using var dialog = new System.Windows.Forms.OpenFileDialog
+        {
+            Title            = "Select Import JSON File",
+            Filter           = "Import JSON files|*_import.json|All JSON files|*.json",
+            InitialDirectory = dir
+        };
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+
+        MainDisplayArea.Children.Clear();
+        _partEditorControl = new PartEditorControl();
+        _partEditorControl.LoadFromJsonFile(dialog.FileName);
+        _partEditorControl.ReturnRequested  += OnPartEditorReturnToAllPos;
+        _partEditorControl.SaveAllCompleted += OnPartEditorSaveAllCompleted;
+        MainDisplayArea.Children.Add(_partEditorControl);
+        Logger.Instance.Info($"Part editor displayed from AllPos Edit Parts for {dialog.FileName}");
     }
 
     // ── Import Drawing workflow (entered from All POs "Input Data") ───────────
@@ -445,7 +476,29 @@ public partial class MainWindow : Window
         Logger.Instance.Info("PO History control displayed");
     }
 
-    // ── Tree navigation from simple view ─────────────────────────────────────
+    // ── Part / Tree navigation from simple view ──────────────────────────────
+
+    private void OnAllPosNavigateToPart(object? sender, (int PartId, int OrderItemId) args)
+    {
+        MainDisplayArea.Children.Clear();
+
+        _partDetailControl = new PartDetailControl();
+        _partDetailControl.LoadPart(args.PartId, args.OrderItemId);
+        _partDetailControl.BackRequested     += OnPartDetailBackToAllPos;
+        _partDetailControl.ViewTreeRequested += OnPartDetailViewTree;
+
+        MainDisplayArea.Children.Add(_partDetailControl);
+        Logger.Instance.Info($"Part detail displayed for partId={args.PartId}, orderItemId={args.OrderItemId} (from All POs)");
+    }
+
+    private void OnPartDetailBackToAllPos(object? sender, EventArgs e)
+    {
+        MainDisplayArea.Children.Clear();
+        _partDetailControl = null;
+        if (_allPosControl != null)
+            MainDisplayArea.Children.Add(_allPosControl);
+        Logger.Instance.Info("Returned to All POs from part detail");
+    }
 
     private void OnAllPosNavigateToTree(object? sender, int partId)
     {

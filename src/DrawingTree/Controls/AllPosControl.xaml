@@ -8,6 +8,7 @@
              d:DesignHeight="600" d:DesignWidth="1200">
 
     <UserControl.Resources>
+        <Geometry x:Key="OpenInNewGeo">M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z</Geometry>
         <Style x:Key="HeaderCell" TargetType="DataGridColumnHeader">
             <Setter Property="Background" Value="#F5F5F5"/>
             <Setter Property="Foreground" Value="#555555"/>
@@ -89,13 +90,16 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock x:Name="TitleLabel" Text="All Purchase Orders"
                                FontSize="13" FontWeight="SemiBold" Foreground="#555555"
+                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock x:Name="PoCountLabel" Text=""
+                               FontSize="12" Foreground="#888888"
                                VerticalAlignment="Center" Margin="0,0,12,0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button x:Name="NewJobButton" Content="New Job"
                             Style="{StaticResource ToolbarBtn}"
                             Click="NewJobButton_Click"/>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="HistoryButton" Content="History"
+                    <Button x:Name="HistoryButton" Content="History Orders"
                             Style="{StaticResource ToolbarBtn}"
                             Click="HistoryButton_Click"/>
                     <Button x:Name="ToggleViewButton" Content="Simple View"
@@ -165,14 +169,6 @@
                     </DataGridTextColumn>
                     <DataGridTextColumn Header="Rls Date"      Binding="{Binding ReleaseDate}"   Width="100"/>
                     <DataGridTextColumn Header="Due Date"      Binding="{Binding DueDate}"       Width="100"/>
-                    <DataGridTemplateColumn Header="" Width="80">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Button Content="View" Height="24" FontSize="11" Margin="4,2"
-                                        Tag="{Binding PoId}" Click="ViewButton_Click"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
                     <DataGridTemplateColumn Header="" Width="50">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -237,10 +233,36 @@
                                                                       Click="MarkAsShipped_Click"/>
                                                             <MenuItem Header="Input Data" Tag="{Binding PoNumber}"
                                                                       Click="InputData_Click"/>
+                                                            <MenuItem Header="Edit Parts"
+                                                                      Click="EditParts_Click"/>
                                                         </ContextMenu>
                                                     </Button.ContextMenu>
                                                 </Button>
                                             </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Column header row -->
+                                    <Border Background="#E8EAF0" Padding="0,3">
+                                        <Grid MinWidth="900">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="24"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="50"/>
+                                                <ColumnDefinition Width="50"/>
+                                                <ColumnDefinition Width="200"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="30"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="1" Text="Job"            FontSize="11" FontWeight="SemiBold" Foreground="#555" VerticalAlignment="Center" Margin="4,0"/>
+                                            <TextBlock Grid.Column="2" Text="Ln"             FontSize="11" FontWeight="SemiBold" Foreground="#555" VerticalAlignment="Center" Margin="4,0"/>
+                                            <TextBlock Grid.Column="3" Text="Qty"            FontSize="11" FontWeight="SemiBold" Foreground="#555" VerticalAlignment="Center" Margin="4,0"/>
+                                            <TextBlock Grid.Column="4" Text="Drawing Number" FontSize="11" FontWeight="SemiBold" Foreground="#555" VerticalAlignment="Center" Margin="4,0"/>
+                                            <TextBlock Grid.Column="5" Text="Description"    FontSize="11" FontWeight="SemiBold" Foreground="#555" VerticalAlignment="Center" Margin="4,0"/>
+                                            <TextBlock Grid.Column="6" Text="Rls Date"       FontSize="11" FontWeight="SemiBold" Foreground="#555" VerticalAlignment="Center" Margin="4,0"/>
+                                            <TextBlock Grid.Column="7" Text="Due Date"       FontSize="11" FontWeight="SemiBold" Foreground="#555" VerticalAlignment="Center" Margin="4,0"/>
                                         </Grid>
                                     </Border>
 
@@ -251,7 +273,7 @@
                                                 <StackPanel>
                                                     <!-- Main row -->
                                                     <Border BorderBrush="#EEEEEE" BorderThickness="0,0,0,1"
-                                                            Padding="4,3">
+                                                            Padding="0,3">
                                                         <Grid MinWidth="900">
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="24"/>
@@ -262,7 +284,6 @@
                                                                 <ColumnDefinition Width="*"/>
                                                                 <ColumnDefinition Width="100"/>
                                                                 <ColumnDefinition Width="100"/>
-                                                                <ColumnDefinition Width="60"/>
                                                                 <ColumnDefinition Width="30"/>
                                                             </Grid.ColumnDefinitions>
                                                             <!-- Expand icon -->
@@ -273,18 +294,30 @@
                                                                     Visibility="{Binding ExpandButtonVisibility}"
                                                                     Tag="{Binding}"
                                                                     Click="ExpandItem_Click"/>
-                                                            <TextBlock Grid.Column="1" Text="{Binding Row.JobNumber}"    FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
-                                                            <TextBlock Grid.Column="2" Text="{Binding Row.LineNumber}"   FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
-                                                            <TextBlock Grid.Column="3" Text="{Binding Row.Quantity}"     FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding Row.JobNumber}"     FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding Row.LineNumber}"    FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
+                                                            <TextBlock Grid.Column="3" Text="{Binding Row.Quantity}"      FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
                                                             <TextBlock Grid.Column="4" Text="{Binding Row.DrawingNumber}" FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
-                                                            <TextBlock Grid.Column="5" Text="{Binding Row.Description}"  FontSize="12" VerticalAlignment="Center" Margin="4,0"
-                                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding Row.Description}"/>
-                                                            <TextBlock Grid.Column="6" Text="{Binding Row.ReleaseDate}"  FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
-                                                            <TextBlock Grid.Column="7" Text="{Binding Row.DueDate}"      FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
-                                                            <Button Grid.Column="8" Content="View" Height="22" FontSize="11"
-                                                                    Margin="4,1" Tag="{Binding Row.PoId}"
-                                                                    Click="ViewButton_Click"/>
-                                                            <Button Grid.Column="9" Content="⋮"
+                                                            <Grid Grid.Column="5" VerticalAlignment="Center" Margin="4,0">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="{Binding Row.Description}" FontSize="12"
+                                                                           TextTrimming="CharacterEllipsis" ToolTip="{Binding Row.Description}"/>
+                                                                <Button Grid.Column="1"
+                                                                        Visibility="{Binding PartButtonVisibility}"
+                                                                        Tag="{Binding}" Click="OpenPartButton_Click"
+                                                                        Style="{StaticResource ThreeDotBtn}" Padding="2,0" Margin="4,0,0,0"
+                                                                        ToolTip="Open Part">
+                                                                    <Viewbox Width="13" Height="13">
+                                                                        <Path Data="{StaticResource OpenInNewGeo}" Stretch="Uniform" Fill="#555555"/>
+                                                                    </Viewbox>
+                                                                </Button>
+                                                            </Grid>
+                                                            <TextBlock Grid.Column="6" Text="{Binding Row.ReleaseDate}"   FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
+                                                            <TextBlock Grid.Column="7" Text="{Binding Row.DueDate}"       FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
+                                                            <Button Grid.Column="8" Content="⋮"
                                                                     Style="{StaticResource ThreeDotBtn}"
                                                                     Tag="{Binding}" Click="ItemRowMenu_Click">
                                                                 <Button.ContextMenu>
@@ -305,21 +338,30 @@
                                                                 <Border Background="#FAFAFA"
                                                                         BorderBrush="#EEEEEE"
                                                                         BorderThickness="0,0,0,1"
-                                                                        Padding="28,3,4,3">
+                                                                        Padding="0,3">
                                                                     <Grid MinWidth="900">
                                                                         <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="24"/>
+                                                                            <ColumnDefinition Width="100"/>
+                                                                            <ColumnDefinition Width="50"/>
+                                                                            <ColumnDefinition Width="50"/>
                                                                             <ColumnDefinition Width="200"/>
                                                                             <ColumnDefinition Width="*"/>
+                                                                            <ColumnDefinition Width="100"/>
+                                                                            <ColumnDefinition Width="100"/>
+                                                                            <ColumnDefinition Width="30"/>
                                                                         </Grid.ColumnDefinitions>
-                                                                        <TextBlock Grid.Column="0"
+                                                                        <TextBlock Grid.Column="4"
                                                                                    Text="{Binding DrawingNumber}"
                                                                                    FontSize="11" Foreground="#555"
-                                                                                   VerticalAlignment="Center"/>
-                                                                        <TextBlock Grid.Column="1"
+                                                                                   VerticalAlignment="Center"
+                                                                                   Margin="4,0"/>
+                                                                        <TextBlock Grid.Column="5"
                                                                                    Text="{Binding Description}"
                                                                                    FontSize="11" Foreground="#888"
                                                                                    VerticalAlignment="Center"
-                                                                                   TextTrimming="CharacterEllipsis"/>
+                                                                                   TextTrimming="CharacterEllipsis"
+                                                                                   Margin="4,0"/>
                                                                     </Grid>
                                                                 </Border>
                                                             </DataTemplate>

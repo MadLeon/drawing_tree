@@ -12,6 +12,7 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <local:ColumnConfig x:Key="ColCfg"/>
 
+        <!-- Styles must be declared before the DataTemplates that reference them -->
         <Style x:Key="IconBtn" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -55,6 +56,200 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="#555555"/>
         </Style>
+
+        <!-- Parent row DataTemplate -->
+        <DataTemplate x:Key="ParentRowTemplate" DataType="{x:Type local:ScheduleDisplayRow}">
+            <Border>
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource LeftRowBorder}">
+                        <Setter Property="Background" Value="White"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                <Setter Property="Background" Value="#FFF3F3"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <StackPanel Orientation="Horizontal">
+                    <!-- Expand button (24px) -->
+                    <Border Width="24">
+                        <Button Style="{StaticResource IconBtn}"
+                                Width="20" Height="20"
+                                Visibility="{Binding ExpandButtonVisibility}"
+                                Tag="{Binding}" Click="ExpandToggle_Click"
+                                ToolTip="Expand / Collapse">
+                            <Path Stretch="Uniform" Fill="#555555" Width="14" Height="14"
+                                  Data="{Binding ExpandIconGeometry}"/>
+                        </Button>
+                    </Border>
+                    <!-- PO (toggleable) -->
+                    <Border Width="125"
+                            Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowPo, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding PoNumber}"
+                                   Style="{StaticResource CellText}"
+                                   ToolTip="{Binding PoNumber}"/>
+                    </Border>
+                    <!-- Job (always visible) -->
+                    <Border Width="80">
+                        <TextBlock Text="{Binding JobNumber}" Style="{StaticResource CellText}"/>
+                    </Border>
+                    <!-- Customer (toggleable) -->
+                    <Border Width="100"
+                            Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowCustomer, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding CustomerName}"
+                                   Style="{StaticResource CellText}"
+                                   ToolTip="{Binding CustomerName}"/>
+                    </Border>
+                    <!-- Drawing (always visible, clickable) -->
+                    <Border Width="200"
+                            Background="Transparent" Cursor="Hand"
+                            Tag="{Binding}"
+                            MouseLeftButtonDown="DrawingNumber_Click"
+                            ToolTip="{Binding DrawingNumber}">
+                        <TextBlock Text="{Binding DrawingNumber}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
+                                    <Setter Property="Foreground" Value="#0066CC"/>
+                                    <Setter Property="TextDecorations" Value="Underline"/>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Border>
+                    <!-- Description (toggleable) -->
+                    <Border Width="150"
+                            Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowDescription, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding Description}"
+                                   Style="{StaticResource CellText}"
+                                   ToolTip="{Binding Description}"/>
+                    </Border>
+                    <!-- Qty (toggleable) -->
+                    <Border Width="50"
+                            Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowQuantity, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding QtyText}"
+                                   Style="{StaticResource CellText}"
+                                   TextAlignment="Right"
+                                   HorizontalAlignment="Stretch"/>
+                    </Border>
+                    <!-- Due Date (toggleable) -->
+                    <Border Width="90"
+                            Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowDueDate, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding DueDate}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                            <Setter Property="Foreground" Value="#CC0000"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Border>
+                    <!-- Memo (toggleable, clickable) -->
+                    <Border Width="80"
+                            Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowMemo, Converter={StaticResource BoolToVis}}"
+                            Background="Transparent" Cursor="Hand"
+                            Tag="{Binding}"
+                            MouseLeftButtonDown="MemoCell_Click"
+                            ToolTip="{Binding MemoText}">
+                        <TextBlock Text="{Binding MemoText}" Style="{StaticResource CellText}"/>
+                    </Border>
+                    <!-- Status (toggleable) -->
+                    <Border Width="120"
+                            Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowStatus, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding StatusText}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding StatusText}" Value="Complete">
+                                            <Setter Property="Foreground" Value="#228B22"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding StatusText}" Value="Not Started">
+                                            <Setter Property="Foreground" Value="#888888"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- Child row DataTemplate -->
+        <DataTemplate x:Key="ChildRowTemplate" DataType="{x:Type local:ScheduleDisplayRow}">
+            <Border BorderBrush="#DDDDEE" BorderThickness="0,0,0,1" Height="32" Background="#F5F5FF">
+                <StackPanel Orientation="Horizontal">
+                    <!-- Indent (24px, no button) -->
+                    <Border Width="24"/>
+                    <!-- PO placeholder (toggleable) -->
+                    <Border Width="125"
+                            Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowPo, Converter={StaticResource BoolToVis}}"/>
+                    <!-- Job placeholder (always visible) -->
+                    <Border Width="80"/>
+                    <!-- Customer placeholder (toggleable) -->
+                    <Border Width="100"
+                            Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowCustomer, Converter={StaticResource BoolToVis}}"/>
+                    <!-- Drawing (always visible, hyperlink) -->
+                    <Border Width="200"
+                            Background="Transparent" Cursor="Hand"
+                            Tag="{Binding}"
+                            MouseLeftButtonDown="DrawingNumber_Click"
+                            ToolTip="{Binding DrawingNumber}">
+                        <TextBlock Text="{Binding DrawingNumber}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
+                                    <Setter Property="Foreground" Value="#0066CC"/>
+                                    <Setter Property="TextDecorations" Value="Underline"/>
+                                    <Setter Property="FontSize" Value="11"/>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Border>
+                    <!-- Description (toggleable) -->
+                    <Border Width="150"
+                            Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowDescription, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding Description}"
+                                   Style="{StaticResource CellText}"
+                                   ToolTip="{Binding Description}"/>
+                    </Border>
+                    <!-- Qty (toggleable, cumulative) -->
+                    <Border Width="50"
+                            Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowQuantity, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding QtyText}"
+                                   Style="{StaticResource CellText}"
+                                   TextAlignment="Right"
+                                   HorizontalAlignment="Stretch"/>
+                    </Border>
+                    <!-- Due Date placeholder (toggleable) -->
+                    <Border Width="90"
+                            Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowDueDate, Converter={StaticResource BoolToVis}}"/>
+                    <!-- Memo (toggleable, clickable, from part_note) -->
+                    <Border Width="80"
+                            Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowMemo, Converter={StaticResource BoolToVis}}"
+                            Background="Transparent" Cursor="Hand"
+                            Tag="{Binding}"
+                            MouseLeftButtonDown="MemoCell_Click"
+                            ToolTip="{Binding MemoText}">
+                        <TextBlock Text="{Binding MemoText}" Style="{StaticResource CellText}"/>
+                    </Border>
+                    <!-- Status (toggleable, fraction of template steps) -->
+                    <Border Width="120"
+                            Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowStatus, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="{Binding StatusText}"
+                                   Style="{StaticResource CellText}"
+                                   Foreground="#888888"/>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- Template selector -->
+        <local:ScheduleRowTemplateSelector x:Key="RowSelector"
+            ParentTemplate="{StaticResource ParentRowTemplate}"
+            ChildTemplate="{StaticResource ChildRowTemplate}"/>
+
     </UserControl.Resources>
 
     <UserControl.Triggers>
@@ -159,6 +354,7 @@
                   Background="#F5F5F5"
                   x:Name="HeaderStrip">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="24"/>   <!-- Expand icon -->
                     <ColumnDefinition Width="125"/>  <!-- PO -->
                     <ColumnDefinition Width="80"/>   <!-- Job -->
                     <ColumnDefinition Width="100"/>  <!-- Customer -->
@@ -171,10 +367,10 @@
                     <ColumnDefinition Width="*"/>    <!-- Gantt -->
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="P.O." Style="{StaticResource HeaderText}"/>
+                <TextBlock Grid.Column="1" Text="P.O." Style="{StaticResource HeaderText}"/>
 
                 <!-- Job – sortable -->
-                <Border Grid.Column="1" Background="Transparent" Cursor="Hand"
+                <Border Grid.Column="2" Background="Transparent" Cursor="Hand"
                         MouseLeftButtonDown="HeaderJob_Click">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
                         <TextBlock Text="Job" FontSize="11" FontWeight="SemiBold" Foreground="#555555"/>
@@ -184,7 +380,7 @@
                 </Border>
 
                 <!-- Customer – sortable -->
-                <Border Grid.Column="2" Background="Transparent" Cursor="Hand"
+                <Border Grid.Column="3" Background="Transparent" Cursor="Hand"
                         MouseLeftButtonDown="HeaderCustomer_Click">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
                         <TextBlock Text="Customer" FontSize="11" FontWeight="SemiBold" Foreground="#555555"/>
@@ -193,12 +389,12 @@
                     </StackPanel>
                 </Border>
 
-                <TextBlock Grid.Column="3" Text="Drawing"     Style="{StaticResource HeaderText}"/>
-                <TextBlock Grid.Column="4" Text="Description" Style="{StaticResource HeaderText}"/>
-                <TextBlock Grid.Column="5" Text="Qty"         Style="{StaticResource HeaderText}"/>
+                <TextBlock Grid.Column="4" Text="Drawing"     Style="{StaticResource HeaderText}"/>
+                <TextBlock Grid.Column="5" Text="Description" Style="{StaticResource HeaderText}"/>
+                <TextBlock Grid.Column="6" Text="Qty"         Style="{StaticResource HeaderText}"/>
 
                 <!-- Due Date – sortable -->
-                <Border Grid.Column="6" Background="Transparent" Cursor="Hand"
+                <Border Grid.Column="7" Background="Transparent" Cursor="Hand"
                         MouseLeftButtonDown="HeaderDueDate_Click">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
                         <TextBlock Text="Due Date" FontSize="11" FontWeight="SemiBold" Foreground="#555555"/>
@@ -207,28 +403,29 @@
                     </StackPanel>
                 </Border>
 
-                <TextBlock Grid.Column="7" Text="Memo"   Style="{StaticResource HeaderText}"/>
-                <TextBlock Grid.Column="8" Text="Status" Style="{StaticResource HeaderText}"/>
+                <TextBlock Grid.Column="8"  Text="Memo"   Style="{StaticResource HeaderText}"/>
+                <TextBlock Grid.Column="9"  Text="Status" Style="{StaticResource HeaderText}"/>
 
-                <Canvas x:Name="TimeHeaderCanvas" Grid.Column="9" Background="#F5F5F5" ClipToBounds="True"/>
+                <Canvas x:Name="TimeHeaderCanvas" Grid.Column="10" Background="#F5F5F5" ClipToBounds="True"/>
 
                 <!-- Separator lines -->
-                <Border Grid.Column="0" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-                <Border Grid.Column="1" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-                <Border Grid.Column="2" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-                <Border Grid.Column="3" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-                <Border Grid.Column="4" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-                <Border Grid.Column="5" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-                <Border Grid.Column="6" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-                <Border Grid.Column="7" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-                <Border Grid.Column="8" BorderBrush="#CCCCCC" BorderThickness="0,0,1,1" IsHitTestVisible="False"/>
-                <Border Grid.Column="9" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1" IsHitTestVisible="False"/>
+                <Border Grid.Column="0"  BorderBrush="#CCCCCC" BorderThickness="0,0,0,1"  IsHitTestVisible="False"/>
+                <Border Grid.Column="1"  BorderBrush="#CCCCCC" BorderThickness="0,0,1,1"  IsHitTestVisible="False"/>
+                <Border Grid.Column="2"  BorderBrush="#CCCCCC" BorderThickness="0,0,1,1"  IsHitTestVisible="False"/>
+                <Border Grid.Column="3"  BorderBrush="#CCCCCC" BorderThickness="0,0,1,1"  IsHitTestVisible="False"/>
+                <Border Grid.Column="4"  BorderBrush="#CCCCCC" BorderThickness="0,0,1,1"  IsHitTestVisible="False"/>
+                <Border Grid.Column="5"  BorderBrush="#CCCCCC" BorderThickness="0,0,1,1"  IsHitTestVisible="False"/>
+                <Border Grid.Column="6"  BorderBrush="#CCCCCC" BorderThickness="0,0,1,1"  IsHitTestVisible="False"/>
+                <Border Grid.Column="7"  BorderBrush="#CCCCCC" BorderThickness="0,0,1,1"  IsHitTestVisible="False"/>
+                <Border Grid.Column="8"  BorderBrush="#CCCCCC" BorderThickness="0,0,1,1"  IsHitTestVisible="False"/>
+                <Border Grid.Column="9"  BorderBrush="#CCCCCC" BorderThickness="0,0,1,1"  IsHitTestVisible="False"/>
+                <Border Grid.Column="10" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1"  IsHitTestVisible="False"/>
             </Grid>
 
             <!-- ── Bottom scrollbar for Gantt horizontal scroll ───────── -->
             <Grid DockPanel.Dock="Bottom" Background="#F0F0F0" Height="17" x:Name="BottomScrollStrip">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="995"/>
+                    <ColumnDefinition Width="1019"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <ScrollBar x:Name="GanttScrollBar"
@@ -244,134 +441,14 @@
                           HorizontalScrollBarVisibility="Disabled">
                 <Grid x:Name="ContentGrid" VerticalAlignment="Top">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="995"/>
+                        <ColumnDefinition Width="1019"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- ── Left panel rows ──────────────────────────── -->
                     <ItemsControl x:Name="LeftRows" Grid.Column="0"
-                                  VirtualizingStackPanel.IsVirtualizing="False">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border>
-                                    <Border.Style>
-                                        <Style TargetType="Border" BasedOn="{StaticResource LeftRowBorder}">
-                                            <Setter Property="Background" Value="White"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsOverdue}" Value="True">
-                                                    <Setter Property="Background" Value="#FFF3F3"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-
-                                    <StackPanel Orientation="Horizontal">
-
-                                        <!-- PO (toggleable) -->
-                                        <Border Width="125"
-                                                Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowPo, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="{Binding Row.PoNumber}"
-                                                       Style="{StaticResource CellText}"
-                                                       ToolTip="{Binding Row.PoNumber}"/>
-                                        </Border>
-
-                                        <!-- Job (always visible) -->
-                                        <Border Width="80">
-                                            <TextBlock Text="{Binding Row.JobNumber}" Style="{StaticResource CellText}"/>
-                                        </Border>
-
-                                        <!-- Customer (toggleable) -->
-                                        <Border Width="100"
-                                                Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowCustomer, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="{Binding Row.CustomerName}"
-                                                       Style="{StaticResource CellText}"
-                                                       ToolTip="{Binding Row.CustomerName}"/>
-                                        </Border>
-
-                                        <!-- Drawing (always visible, clickable) -->
-                                        <Border Width="200"
-                                                Background="Transparent" Cursor="Hand"
-                                                Tag="{Binding}"
-                                                MouseLeftButtonDown="DrawingNumber_Click"
-                                                ToolTip="{Binding Row.DrawingNumber}">
-                                            <TextBlock Text="{Binding Row.DrawingNumber}">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
-                                                        <Setter Property="Foreground" Value="#0066CC"/>
-                                                        <Setter Property="TextDecorations" Value="Underline"/>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </Border>
-
-                                        <!-- Description (toggleable) -->
-                                        <Border Width="150"
-                                                Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowDescription, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="{Binding Row.Description}"
-                                                       Style="{StaticResource CellText}"
-                                                       ToolTip="{Binding Row.Description}"/>
-                                        </Border>
-
-                                        <!-- Qty (toggleable) -->
-                                        <Border Width="50"
-                                                Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowQuantity, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="{Binding Row.Quantity}"
-                                                       Style="{StaticResource CellText}"
-                                                       TextAlignment="Right"
-                                                       HorizontalAlignment="Stretch"/>
-                                        </Border>
-
-                                        <!-- Due Date (toggleable) -->
-                                        <Border Width="90"
-                                                Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowDueDate, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="{Binding Row.DueDate}">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsOverdue}" Value="True">
-                                                                <Setter Property="Foreground" Value="#CC0000"/>
-                                                                <Setter Property="FontWeight" Value="SemiBold"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </Border>
-
-                                        <!-- Memo (toggleable, clickable) -->
-                                        <Border Width="80"
-                                                Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowMemo, Converter={StaticResource BoolToVis}}"
-                                                Background="Transparent" Cursor="Hand"
-                                                Tag="{Binding}"
-                                                MouseLeftButtonDown="MemoCell_Click"
-                                                ToolTip="{Binding MemoText}">
-                                            <TextBlock Text="{Binding MemoText}" Style="{StaticResource CellText}"/>
-                                        </Border>
-
-                                        <!-- Status (toggleable) -->
-                                        <Border Width="120"
-                                                Visibility="{Binding Source={StaticResource ColCfg}, Path=ShowStatus, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="{Binding StatusText}">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource CellText}">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding StatusText}" Value="Complete">
-                                                                <Setter Property="Foreground" Value="#228B22"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding StatusText}" Value="Not Started">
-                                                                <Setter Property="Foreground" Value="#888888"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </Border>
-
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                                  VirtualizingStackPanel.IsVirtualizing="False"
+                                  ItemTemplateSelector="{StaticResource RowSelector}"/>
 
                     <!-- ── Gantt right panel ─────────────────────────── -->
                     <Border Grid.Column="1"

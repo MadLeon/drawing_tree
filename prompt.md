@@ -1,10 +1,21 @@
 未来实现
 - customer 按照使用情况进行排序的功能
+- 写脚本, 使用DIR Log中的数据批量更新图纸状态
+- 在图纸界面, 用户能够点击创建按钮使用软件 UI 编写 MP (未来实现)
 
+--
+
+- All PO 简单视图中, 为展开项目添加功能
+  - [x] 一个打开零件图标, 位于 description 之后, 点击进入相应的 Part 页面
+  - [ ] 状态列 (后续开发)
+  - [ ] 完成度 (后续开发)
 
 ---
 
-Import Drawing
+---
+
+[x] Import Drawing
+
 - 该界面将从 All PO 进入
 - Import 结束以后, 点击 Save 自动切换到 Edit Parts 界面
 - Edit Parts 界面入口同样改为 All PO
@@ -16,15 +27,13 @@ Import Drawing
 
 ---
 
-MP Schedule
-优化 MP Schedule 点击展开, 初始加载还是分进程还是等点击加载
-为什么 MP Schedule 初始加载超级慢 --- DONE
-- 甘特图选择步骤后, 手动将之前的所有步骤标记为完成 --- DONE
+[x] MP Schedule
+- 为什么 MP Schedule 初始加载超级慢
+- 甘特图选择步骤后, 手动将之前的所有步骤标记为完成
+- 增加 PO 列宽 1/4
 
-- 增加 PO 列宽 1/4 --- DONE
-- 写脚本, 使用DIR Log中的数据批量更新图纸状态
+写可以复用的脚本, 用于手动更新数据库中 purchase_order.is_active 字段的值.
 
-写可以复用的脚本, 用于手动更新数据库中 purchase_order.is_active 字段的值. --- DONE
 - 数据来自文件, 位置为 "\\rtdnas2\OE\Order Entry Log.xlsm"
 - 使用开发数据库, 但应该很容易修改目标数据库的地址
 - 该文件极度重要, 每次操作必须使用只读方式, 避免破坏该文件造成公司损失
@@ -36,7 +45,7 @@ MP Schedule
 
 ---
 
-添加 MP 功能
+[ ] 添加 MP 功能
 用例:
 - 用户能够增删改查 MP
   - 在图纸界面, 用户能够点击创建按钮打开模板文件并将当前内容预填入
@@ -44,7 +53,7 @@ MP Schedule
 
 ---
 
-添加 DIR 入口 --- PENDING
+[ ] 添加 DIR 入口
 用例:
 - 用户能够为图纸添加 DIR
   - 在图纸界面, 用户能够点击创建按钮打开模板文件并将当前内容预填入
@@ -56,14 +65,16 @@ MP Schedule
 
 ---
 
-单 PO 页面 --- PENDING
+[ ] 单 PO 页面
 - 此界面用于具体 PO 的信息展示, 并将在后续添加数据注入 Excel 文件并打印等功能
 
 注: 基本上线后添加
 
 ---
 
-All POs 界面
+## 已实现
+
+[x] All POs 界面
 - All POs 按钮 -> Order Entry
 
 - 工具栏添加 History 按钮, 点击进入 **PO History 界面**
@@ -134,17 +145,17 @@ All POs 界面
 
 ---
 
-修改 New Job 对话框
+修改 New Job 对话框 --- done
 - Contact 下拉菜单
   - 在 Customer 未选择时应该无法编辑
   - 每当 Customer 改变时, 获取数据库该客户下的所有联系人并填充下拉菜单
 - 调整三个按钮的顺序: Create Record > Batch Create > Cancel (修改名称)
 
-Edit Item 对话框
+Edit Item 对话框 --- done
 - 修改标题为 {PO} / {Job}
 - 修改两个按钮的顺序: Save > Cancel
 
-All PO 界面
+All PO 界面 --- done
 - New Job 按钮同样右对齐
 - 简洁视图不要使用中文
 - 修改 History 按钮的名字为 History Orders
@@ -157,6 +168,11 @@ All PO 界面
   - 确保调用revision最新的那条 & 在sql中使用降序排列, 并limit最上面的一个
 - 在每个po的三点菜单中添加一个 Edit Parts 选项, 直接进入 Edit Part 的选择 json 文件对话框
 
+零件加载讨论 --- done
+All PO 页面中, 对于每个可展开的 order item, 目前的逻辑是: 点击按钮 > 数据库检索 > 展开
+展开会会有明显卡顿, 我希望优化这个过程
+我的想法是分线程专门加载所有子节点, 在主页面渲染后后台进行
+这个方法是否可行, 是否过于复杂, 你有什么好的建议
 
 ---
 
@@ -177,7 +193,6 @@ All PO 界面
 Edit part 选择 RT79-87630-PN-R005_import, 但显示的条目仍然是占位数据
 
 ---
-## 已实现
 
 修改 Search 页面, 添加对于 PO 和 Job 的搜索支持
 当前, 点击搜索结果的view按钮, 必然会重定向到drawing. 我希望

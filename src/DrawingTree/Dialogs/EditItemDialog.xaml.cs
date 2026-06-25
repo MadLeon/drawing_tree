@@ -31,7 +31,7 @@ public partial class EditItemDialog : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        TitleBlock.Text = $"Edit Item — {_row.PoNumber} / Job {_row.JobNumber} / Ln {_row.LineNumber}";
+        TitleBlock.Text = $"{_row.PoNumber} / {_row.JobNumber}";
 
         _customers = _repository.GetAllCustomers();
         CustomerBox.ItemsSource = _customers.Select(c => c.Name).ToList();

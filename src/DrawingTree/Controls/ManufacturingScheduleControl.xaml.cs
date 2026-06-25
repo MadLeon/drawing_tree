@@ -4,6 +4,7 @@
 /// active POs; right Canvas displays coloured step-tracker bars per row.
 /// </summary>
 
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -53,6 +54,96 @@ public class ColumnConfig : INotifyPropertyChanged
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(p));
 }
 
+// ── Schedule Display Row ───────────────────────────────────────────────────
+
+/// <summary>
+/// Flat display item for LeftRows: either a parent order-item row or a child BOM row.
+/// Using a flat list ensures the GanttCanvas bands stay vertically aligned with LeftRows.
+/// </summary>
+public class ScheduleDisplayRow : INotifyPropertyChanged
+{
+    private static readonly Geometry AddBoxGeo;
+    private static readonly Geometry IndeterminateBoxGeo;
+
+    static ScheduleDisplayRow()
+    {
+        AddBoxGeo = Geometry.Parse("M440-280h80v-160h160v-80H520v-160h-80v160H280v80h160v160ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z");
+        AddBoxGeo.Freeze();
+        IndeterminateBoxGeo = Geometry.Parse("M280-440h400v-80H280v80Zm-80 320q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z");
+        IndeterminateBoxGeo.Freeze();
+    }
+
+    public bool               IsChild     { get; init; }
+    public ScheduleViewModel? Vm          { get; init; }
+
+    private bool _hasChildren;
+    public bool HasChildren
+    {
+        get => _hasChildren;
+        set { _hasChildren = value; OnChanged(); OnChanged(nameof(ExpandButtonVisibility)); }
+    }
+
+    private bool _isExpanded;
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set { _isExpanded = value; OnChanged(); OnChanged(nameof(ExpandIconGeometry)); }
+    }
+
+    public Geometry ExpandIconGeometry   => _isExpanded ? IndeterminateBoxGeo : AddBoxGeo;
+    public Visibility ExpandButtonVisibility =>
+        !IsChild && _hasChildren ? Visibility.Visible : Visibility.Hidden;
+
+    // Child-only
+    public int ChildPartId { get; init; }
+    public int ParentOiId  { get; init; }
+
+    // Display fields
+    public string? DrawingNumber { get; init; }
+    public string? Description   { get; init; }
+    public string  QtyText       { get; init; } = "";
+    public List<ScheduleStepTracker> Steps { get; init; } = [];
+
+    private string? _memoText;
+    public string? MemoText
+    {
+        get => _memoText;
+        set { _memoText = value; OnChanged(); }
+    }
+
+    private string _statusText = "";
+    public string StatusText
+    {
+        get => _statusText;
+        set { _statusText = value; OnChanged(); }
+    }
+
+    // Parent pass-through properties
+    public string? PoNumber     => Vm?.Row.PoNumber;
+    public string? JobNumber    => Vm?.Row.JobNumber;
+    public string? CustomerName => Vm?.Row.CustomerName;
+    public string? DueDate      => Vm?.Row.DueDate;
+    public bool    IsOverdue    => Vm?.IsOverdue ?? false;
+    public int     PartId       => IsChild ? ChildPartId : (Vm?.Row.PartId ?? 0);
+    public int     OrderItemId  => IsChild ? 0 : (Vm?.Row.OrderItemId ?? 0);
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnChanged([CallerMemberName] string? p = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(p));
+}
+
+// ── DataTemplate Selector ─────────────────────────────────────────────────
+
+/// <summary>Selects parent or child DataTemplate for schedule display rows.</summary>
+public class ScheduleRowTemplateSelector : DataTemplateSelector
+{
+    public DataTemplate? ParentTemplate { get; set; }
+    public DataTemplate? ChildTemplate  { get; set; }
+
+    public override DataTemplate? SelectTemplate(object item, DependencyObject container)
+        => item is ScheduleDisplayRow r && r.IsChild ? ChildTemplate : ParentTemplate;
+}
+
 // ── Control ────────────────────────────────────────────────────────────────
 
 public partial class ManufacturingScheduleControl : UserControl
@@ -96,6 +187,7 @@ public partial class ManufacturingScheduleControl : UserControl
 
     // ── Column widths (must match XAML DataTemplate Border widths) ─────────
 
+    private const int ColWidthExpand      = 24;
     private const int ColWidthPo          = 125;
     private const int ColWidthJob         = 80;
     private const int ColWidthCustomer    = 100;
@@ -111,6 +203,10 @@ public partial class ManufacturingScheduleControl : UserControl
     private readonly ScheduleRepository _repository = new();
     private List<ScheduleViewModel>     _allViewModels = [];
     private List<ScheduleViewModel>     _viewModels    = [];
+    private Dictionary<int, List<ScheduleChildItemData>> _childDataMap = new();
+    private Dictionary<(int OiId, int ChildPartId), List<ScheduleStepTracker>> _childStepMap = new();
+    private readonly HashSet<int>       _expandedOiIds = [];
+    private List<ScheduleDisplayRow>    _displayRows   = [];
     private ColumnConfig                _colCfg        = null!;
 
     private enum GanttViewMode { Day, Week, Month }
@@ -174,6 +270,8 @@ public partial class ManufacturingScheduleControl : UserControl
                 double viewWidth = GanttClip.ActualWidth;
                 SetGanttOffset(Math.Max(0, todayX - viewWidth / 2));
             }, System.Windows.Threading.DispatcherPriority.Loaded);
+
+            _ = PrefetchChildrenAsync();
         }
         catch (Exception ex)
         {
@@ -182,6 +280,50 @@ public partial class ManufacturingScheduleControl : UserControl
         finally
         {
             LoadingOverlay.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private async Task PrefetchChildrenAsync()
+    {
+        try
+        {
+            var partIds = _allViewModels
+                .Where(vm => vm.Row.PartId > 0)
+                .Select(vm => vm.Row.PartId)
+                .Distinct()
+                .ToList();
+            if (partIds.Count == 0) return;
+
+            var orderItemIds = _allViewModels.Select(vm => vm.Row.OrderItemId).ToList();
+
+            (var childData, var childSteps) = await Task.Run(() =>
+            {
+                var cd = _repository.GetAllScheduleChildItems(partIds);
+                var allChildPartIds = cd.Values.SelectMany(v => v)
+                    .Select(c => c.ChildPartId).Distinct().ToList();
+                var cs = allChildPartIds.Count > 0 && orderItemIds.Count > 0
+                    ? _repository.GetChildStepTrackers(orderItemIds, allChildPartIds)
+                    : new Dictionary<(int, int), List<ScheduleStepTracker>>();
+                return (cd, cs);
+            });
+
+            _childDataMap = childData;
+            _childStepMap = childSteps;
+
+            foreach (var row in _displayRows.Where(r => !r.IsChild && r.Vm != null))
+            {
+                int pid = row.Vm!.Row.PartId;
+                row.HasChildren = pid > 0 &&
+                    _childDataMap.TryGetValue(pid, out var ch) && ch.Count > 0;
+            }
+
+            Logger.Instance.Info(
+                $"ManufacturingScheduleControl: prefetched children for {_childDataMap.Count} part(s), " +
+                $"child steps for {_childStepMap.Count} (oi,part) pairs");
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"ManufacturingScheduleControl.PrefetchChildrenAsync failed: {ex.Message}", ex);
         }
     }
 
@@ -211,20 +353,64 @@ public partial class ManufacturingScheduleControl : UserControl
             _                                         => source,
         };
 
-        _viewModels          = source.ToList();
-        LeftRows.ItemsSource = _viewModels;
+        _viewModels  = source.ToList();
+        _displayRows = BuildDisplayRows();
+        LeftRows.ItemsSource = _displayRows;
 
         Logger.Instance.Info(
             $"ApplySortAndFilter: query='{query}' rows={_viewModels.Count}/{_allViewModels.Count} " +
-            $"OuterScroll.VerticalOffset={OuterScroll.VerticalOffset:F0} " +
-            $"OuterScroll.ScrollableHeight={OuterScroll.ScrollableHeight:F0}");
+            $"display={_displayRows.Count}");
 
         OuterScroll.ScrollToTop();
-
-        Logger.Instance.Info(
-            $"ApplySortAndFilter: after ScrollToTop VerticalOffset={OuterScroll.VerticalOffset:F0}");
-
         Render();
+    }
+
+    private List<ScheduleDisplayRow> BuildDisplayRows()
+    {
+        var result = new List<ScheduleDisplayRow>();
+        foreach (var vm in _viewModels)
+        {
+            int  pid         = vm.Row.PartId;
+            bool hasChildren = pid > 0 &&
+                _childDataMap.TryGetValue(pid, out var ch) && ch.Count > 0;
+            bool isExpanded  = _expandedOiIds.Contains(vm.Row.OrderItemId) && hasChildren;
+
+            var parentRow = new ScheduleDisplayRow
+            {
+                IsChild       = false,
+                Vm            = vm,
+                DrawingNumber = vm.Row.DrawingNumber,
+                Description   = vm.Row.Description,
+                QtyText       = vm.Row.Quantity.ToString(),
+            };
+            parentRow.HasChildren = hasChildren;
+            parentRow.IsExpanded  = isExpanded;
+            parentRow.MemoText    = vm.MemoText;
+            parentRow.StatusText  = vm.StatusText;
+            result.Add(parentRow);
+
+            if (!isExpanded || !_childDataMap.TryGetValue(pid, out var children)) continue;
+            foreach (var child in children)
+            {
+                var childSteps = _childStepMap.TryGetValue(
+                    (vm.Row.OrderItemId, child.ChildPartId), out var s) ? s : [];
+                int completed = childSteps.Count(st => st.EndTime != null);
+                var childRow = new ScheduleDisplayRow
+                {
+                    IsChild       = true,
+                    ChildPartId   = child.ChildPartId,
+                    ParentOiId    = vm.Row.OrderItemId,
+                    DrawingNumber = child.DrawingNumber,
+                    Description   = child.Description,
+                    QtyText       = (vm.Row.Quantity * child.CumulativePathQty).ToString(),
+                    Steps         = childSteps,
+                };
+                childRow.MemoText   = child.MemoText;
+                childRow.StatusText = child.TemplateSteps > 0 ? $"{completed}/{child.TemplateSteps}" : "-";
+                result.Add(childRow);
+            }
+        }
+        return result;
     }
 
     private static bool ContainsIgnoreCase(string? text, string query) =>
@@ -234,14 +420,14 @@ public partial class ManufacturingScheduleControl : UserControl
 
     private void UpdateColumnVisibility()
     {
-        // Header column widths
-        HeaderStrip.ColumnDefinitions[0].Width = _colCfg.ShowPo          ? new GridLength(ColWidthPo)          : new GridLength(0);
-        HeaderStrip.ColumnDefinitions[2].Width = _colCfg.ShowCustomer    ? new GridLength(ColWidthCustomer)    : new GridLength(0);
-        HeaderStrip.ColumnDefinitions[4].Width = _colCfg.ShowDescription ? new GridLength(ColWidthDescription) : new GridLength(0);
-        HeaderStrip.ColumnDefinitions[5].Width = _colCfg.ShowQuantity    ? new GridLength(ColWidthQuantity)    : new GridLength(0);
-        HeaderStrip.ColumnDefinitions[6].Width = _colCfg.ShowDueDate     ? new GridLength(ColWidthDueDate)     : new GridLength(0);
-        HeaderStrip.ColumnDefinitions[7].Width = _colCfg.ShowMemo        ? new GridLength(ColWidthMemo)        : new GridLength(0);
-        HeaderStrip.ColumnDefinitions[8].Width = _colCfg.ShowStatus      ? new GridLength(ColWidthStatus)      : new GridLength(0);
+        // Header column widths (col 0 = expand icon, always 24px)
+        HeaderStrip.ColumnDefinitions[1].Width = _colCfg.ShowPo          ? new GridLength(ColWidthPo)          : new GridLength(0);
+        HeaderStrip.ColumnDefinitions[3].Width = _colCfg.ShowCustomer    ? new GridLength(ColWidthCustomer)    : new GridLength(0);
+        HeaderStrip.ColumnDefinitions[5].Width = _colCfg.ShowDescription ? new GridLength(ColWidthDescription) : new GridLength(0);
+        HeaderStrip.ColumnDefinitions[6].Width = _colCfg.ShowQuantity    ? new GridLength(ColWidthQuantity)    : new GridLength(0);
+        HeaderStrip.ColumnDefinitions[7].Width = _colCfg.ShowDueDate     ? new GridLength(ColWidthDueDate)     : new GridLength(0);
+        HeaderStrip.ColumnDefinitions[8].Width = _colCfg.ShowMemo        ? new GridLength(ColWidthMemo)        : new GridLength(0);
+        HeaderStrip.ColumnDefinitions[9].Width = _colCfg.ShowStatus      ? new GridLength(ColWidthStatus)      : new GridLength(0);
 
         // Left panel total width
         var leftWidth = new GridLength(ComputeLeftWidth());
@@ -251,7 +437,7 @@ public partial class ManufacturingScheduleControl : UserControl
 
     private int ComputeLeftWidth()
     {
-        int w = ColWidthJob + ColWidthDrawing; // always visible
+        int w = ColWidthExpand + ColWidthJob + ColWidthDrawing; // always visible
         if (_colCfg.ShowPo)          w += ColWidthPo;
         if (_colCfg.ShowCustomer)    w += ColWidthCustomer;
         if (_colCfg.ShowDescription) w += ColWidthDescription;
@@ -289,7 +475,7 @@ public partial class ManufacturingScheduleControl : UserControl
     private void Render()
     {
         double canvasWidth  = _totalDays * _pixelsPerDay;
-        double canvasHeight = _viewModels.Count * RowHeight;
+        double canvasHeight = _displayRows.Count * RowHeight;
 
         GanttCanvas.Width  = canvasWidth;
         GanttCanvas.Height = canvasHeight;
@@ -297,7 +483,7 @@ public partial class ManufacturingScheduleControl : UserControl
         _barHitList.Clear();
 
         Logger.Instance.Info(
-            $"Render[sync]: rows={_viewModels.Count} canvasH={canvasHeight:F0} canvasW={canvasWidth:F0} " +
+            $"Render[sync]: rows={_displayRows.Count} canvasH={canvasHeight:F0} canvasW={canvasWidth:F0} " +
             $"ganttOffset={_ganttOffset:F0}");
 
         DrawRowBands(canvasWidth);
@@ -335,92 +521,96 @@ public partial class ManufacturingScheduleControl : UserControl
 
     private void DrawRowBands(double canvasWidth)
     {
-        for (int i = 0; i < _viewModels.Count; i++)
+        for (int i = 0; i < _displayRows.Count; i++)
         {
-            double y    = i * RowHeight;
-            var    band = new Rectangle
-            {
-                Width  = canvasWidth,
-                Height = RowHeight,
-                Fill   = i % 2 == 0 ? Brushes.White : new SolidColorBrush(Color.FromRgb(250, 250, 250)),
-            };
-            if (_viewModels[i].IsOverdue)
-                band.Fill = new SolidColorBrush(Color.FromArgb(60, 220, 50, 50));
+            double y   = i * RowHeight;
+            var    row = _displayRows[i];
 
+            SolidColorBrush fill;
+            if (row.IsChild)
+                fill = new SolidColorBrush(Color.FromRgb(245, 245, 255));
+            else if (row.IsOverdue)
+                fill = new SolidColorBrush(Color.FromArgb(60, 220, 50, 50));
+            else
+                fill = i % 2 == 0
+                    ? new SolidColorBrush(Colors.White)
+                    : new SolidColorBrush(Color.FromRgb(250, 250, 250));
+
+            var band = new Rectangle { Width = canvasWidth, Height = RowHeight, Fill = fill };
             Canvas.SetLeft(band, 0);
             Canvas.SetTop(band, y);
             GanttCanvas.Children.Add(band);
 
-            var line = new Line
+            GanttCanvas.Children.Add(new Line
             {
-                X1 = 0, X2 = canvasWidth,
-                Y1 = y + RowHeight, Y2 = y + RowHeight,
-                Stroke          = new SolidColorBrush(Color.FromRgb(238, 238, 238)),
-                StrokeThickness = 1,
-            };
-            GanttCanvas.Children.Add(line);
+                X1 = 0, X2 = canvasWidth, Y1 = y + RowHeight, Y2 = y + RowHeight,
+                Stroke = new SolidColorBrush(Color.FromRgb(238, 238, 238)), StrokeThickness = 1,
+            });
         }
     }
 
     private void DrawBars()
     {
-        for (int i = 0; i < _viewModels.Count; i++)
+        for (int i = 0; i < _displayRows.Count; i++)
         {
-            var    vm     = _viewModels[i];
+            var    row    = _displayRows[i];
             double rowTop = i * RowHeight;
+            var    steps  = row.IsChild ? row.Steps : row.Vm != null ? row.Vm.Steps : [];
+            foreach (var step in steps)
+                DrawStepBar(step, rowTop, i);
+        }
+    }
 
-            foreach (var step in vm.Steps)
+    private void DrawStepBar(ScheduleStepTracker step, double rowTop, int rowIndex)
+    {
+        if (!DateTime.TryParse(step.StartTime, out var startDate)) return;
+        var endDate = step.EndTime != null && DateTime.TryParse(step.EndTime, out var ed)
+            ? ed : DateTime.Today;
+
+        double x1       = DateToX(startDate);
+        double x2       = DateToX(endDate.AddDays(1));
+        if (x2 <= x1) x2 = x1 + 2;
+
+        double barWidth  = x2 - x1;
+        double barTop    = rowTop + 3;
+        double barHeight = RowHeight - 6;
+
+        var    color   = GetShopColor(step.ShopCode);
+        string tooltip = step.Description != null
+            ? $"{step.ShopCode}: {step.Description}"
+            : step.ShopCode;
+
+        var bar = new Rectangle
+        {
+            Width   = barWidth,
+            Height  = barHeight,
+            Fill    = new SolidColorBrush(color),
+            RadiusX = 2, RadiusY = 2,
+            ToolTip = tooltip,
+        };
+        Canvas.SetLeft(bar, x1);
+        Canvas.SetTop(bar, barTop);
+        GanttCanvas.Children.Add(bar);
+
+        _barHitList.Add((new Rect(x1, barTop, barWidth, barHeight), rowIndex, step));
+
+        if (barWidth > 28)
+        {
+            var label = new TextBlock
             {
-                if (!DateTime.TryParse(step.StartTime, out var startDate)) continue;
-                var endDate = step.EndTime != null && DateTime.TryParse(step.EndTime, out var ed)
-                    ? ed : DateTime.Today;
-
-                double x1       = DateToX(startDate);
-                double x2       = DateToX(endDate.AddDays(1));
-                if (x2 <= x1) x2 = x1 + 2;
-
-                double barWidth  = x2 - x1;
-                double barTop    = rowTop + 3;
-                double barHeight = RowHeight - 6;
-
-                var color       = GetShopColor(step.ShopCode);
-                string tooltip  = step.Description != null
-                    ? $"{step.ShopCode}: {step.Description}"
-                    : step.ShopCode;
-
-                var bar = new Rectangle
-                {
-                    Width   = barWidth,
-                    Height  = barHeight,
-                    Fill    = new SolidColorBrush(color),
-                    RadiusX = 2, RadiusY = 2,
-                    ToolTip = tooltip,
-                };
-                Canvas.SetLeft(bar, x1);
-                Canvas.SetTop(bar, barTop);
-                GanttCanvas.Children.Add(bar);
-
-                _barHitList.Add((new Rect(x1, barTop, barWidth, barHeight), i, step));
-
-                if (barWidth > 28)
-                {
-                    var label = new TextBlock
-                    {
-                        Text             = tooltip,
-                        FontSize         = 9,
-                        Foreground       = Brushes.White,
-                        Padding          = new Thickness(3, 0, 0, 0),
-                        Width            = barWidth,
-                        Height           = barHeight,
-                        TextTrimming     = TextTrimming.CharacterEllipsis,
-                        VerticalAlignment = VerticalAlignment.Center,
-                        ToolTip          = tooltip,
-                    };
-                    Canvas.SetLeft(label, x1);
-                    Canvas.SetTop(label, barTop);
-                    GanttCanvas.Children.Add(label);
-                }
-            }
+                Text              = tooltip,
+                FontSize          = 9,
+                Foreground        = Brushes.White,
+                Padding           = new Thickness(3, 0, 0, 0),
+                Width             = barWidth,
+                Height            = barHeight,
+                TextTrimming      = TextTrimming.CharacterEllipsis,
+                VerticalAlignment = VerticalAlignment.Center,
+                ToolTip           = tooltip,
+            };
+            Canvas.SetLeft(label, x1);
+            Canvas.SetTop(label, barTop);
+            GanttCanvas.Children.Add(label);
         }
     }
 
@@ -442,9 +632,11 @@ public partial class ManufacturingScheduleControl : UserControl
 
     private void DrawDueDateLines()
     {
-        for (int i = 0; i < _viewModels.Count; i++)
+        for (int i = 0; i < _displayRows.Count; i++)
         {
-            var vm = _viewModels[i];
+            var row = _displayRows[i];
+            if (row.IsChild || row.Vm == null) continue;
+            var vm = row.Vm;
             if (vm.Row.DueDate == null) continue;
             if (!DateTime.TryParse(vm.Row.DueDate, out var due)) continue;
 
@@ -655,10 +847,13 @@ public partial class ManufacturingScheduleControl : UserControl
     {
         var pos      = e.GetPosition(GanttCanvas);
         int rowIndex = (int)(pos.Y / RowHeight);
-        Logger.Instance.Info($"GanttCanvas click: pos=({pos.X:F0},{pos.Y:F0}) rowIndex={rowIndex} total={_viewModels.Count}");
-        if (rowIndex < 0 || rowIndex >= _viewModels.Count) return;
+        Logger.Instance.Info($"GanttCanvas click: pos=({pos.X:F0},{pos.Y:F0}) rowIndex={rowIndex} total={_displayRows.Count}");
+        if (rowIndex < 0 || rowIndex >= _displayRows.Count) return;
 
-        var vm = _viewModels[rowIndex];
+        var displayRow = _displayRows[rowIndex];
+        if (displayRow.IsChild || displayRow.Vm == null) return;
+
+        var vm = displayRow.Vm;
         if (vm.Row.PartId <= 0)
         {
             Logger.Instance.Info($"GanttCanvas click: no part for oi={vm.Row.OrderItemId}");
@@ -725,13 +920,14 @@ public partial class ManufacturingScheduleControl : UserControl
 
             var refreshed = _repository.GetStepTrackers(vm.Row.OrderItemId);
             var updated   = vm with { Steps = refreshed };
-            _viewModels[rowIndex] = updated;
 
+            int vIdx = _viewModels.FindIndex(v => v.Row.OrderItemId == vm.Row.OrderItemId);
+            if (vIdx >= 0) _viewModels[vIdx] = updated;
             int allIdx = _allViewModels.FindIndex(v => v.Row.OrderItemId == vm.Row.OrderItemId);
             if (allIdx >= 0) _allViewModels[allIdx] = updated;
 
-            LeftRows.ItemsSource = null;
-            LeftRows.ItemsSource = _viewModels;
+            _displayRows         = BuildDisplayRows();
+            LeftRows.ItemsSource = _displayRows;
             Render();
             Logger.Instance.Info($"ManufacturingScheduleControl: saved step for oi={vm.Row.OrderItemId}");
         }
@@ -742,12 +938,29 @@ public partial class ManufacturingScheduleControl : UserControl
         }
     }
 
+    private void ExpandToggle_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement fe || fe.Tag is not ScheduleDisplayRow row || row.IsChild) return;
+
+        int oiId = row.Vm!.Row.OrderItemId;
+        if (_expandedOiIds.Contains(oiId))
+            _expandedOiIds.Remove(oiId);
+        else
+            _expandedOiIds.Add(oiId);
+
+        double savedOffset = OuterScroll.VerticalOffset;
+        _displayRows         = BuildDisplayRows();
+        LeftRows.ItemsSource = _displayRows;
+        Render();
+        OuterScroll.ScrollToVerticalOffset(savedOffset);
+    }
+
     private void MemoCell_Click(object sender, MouseButtonEventArgs e)
     {
-        if (sender is not FrameworkElement fe || fe.Tag is not ScheduleViewModel vm) return;
-        if (vm.Row.PartId <= 0) return;
+        if (sender is not FrameworkElement fe || fe.Tag is not ScheduleDisplayRow row) return;
+        if (row.PartId <= 0) return;
 
-        var dialog = new Dialogs.PartNotesDialog(vm.Row.PartId, vm.Row.DrawingNumber ?? "—")
+        var dialog = new Dialogs.PartNotesDialog(row.PartId, row.DrawingNumber ?? "—")
         {
             Owner = Window.GetWindow(this),
         };
@@ -755,30 +968,43 @@ public partial class ManufacturingScheduleControl : UserControl
 
         if (dialog.NoteAdded)
         {
-            var notes      = new Data.PartRepository().GetPartNotes(vm.Row.PartId);
+            var notes      = new Data.PartRepository().GetPartNotes(row.PartId);
             var latestMemo = notes.Count > 0 ? notes[0].Content : null;
-            int idx        = _viewModels.IndexOf(vm);
-            if (idx >= 0)
+
+            if (!row.IsChild)
             {
-                var updated      = vm with { MemoText = latestMemo };
-                _viewModels[idx] = updated;
-
-                int allIdx = _allViewModels.FindIndex(v => v.Row.OrderItemId == vm.Row.OrderItemId);
-                if (allIdx >= 0) _allViewModels[allIdx] = updated;
-
-                LeftRows.ItemsSource = null;
-                LeftRows.ItemsSource = _viewModels;
+                int vIdx = _viewModels.FindIndex(v => v.Row.OrderItemId == row.OrderItemId);
+                if (vIdx >= 0)
+                {
+                    var updated = _viewModels[vIdx] with { MemoText = latestMemo };
+                    _viewModels[vIdx] = updated;
+                    int allIdx = _allViewModels.FindIndex(v => v.Row.OrderItemId == row.OrderItemId);
+                    if (allIdx >= 0) _allViewModels[allIdx] = updated;
+                }
             }
+            else
+            {
+                var parentVm = _allViewModels.FirstOrDefault(vm => vm.Row.OrderItemId == row.ParentOiId);
+                if (parentVm != null && _childDataMap.TryGetValue(parentVm.Row.PartId, out var childList))
+                {
+                    int idx = childList.FindIndex(c => c.ChildPartId == row.ChildPartId);
+                    if (idx >= 0)
+                        childList[idx] = childList[idx] with { MemoText = latestMemo };
+                }
+            }
+
+            _displayRows         = BuildDisplayRows();
+            LeftRows.ItemsSource = _displayRows;
         }
         e.Handled = true;
     }
 
     private void DrawingNumber_Click(object sender, MouseButtonEventArgs e)
     {
-        if (sender is FrameworkElement fe && fe.Tag is ScheduleViewModel vm)
+        if (sender is FrameworkElement fe && fe.Tag is ScheduleDisplayRow row)
         {
-            if (vm.Row.PartId <= 0) return;
-            OpenPartRequested?.Invoke(this, (vm.Row.PartId, vm.Row.OrderItemId));
+            if (row.PartId <= 0) return;
+            OpenPartRequested?.Invoke(this, (row.PartId, row.OrderItemId));
             e.Handled = true;
         }
     }

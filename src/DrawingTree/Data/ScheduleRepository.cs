@@ -245,6 +245,149 @@ public class ScheduleRepository
         }
     }
 
+    /// <summary>
+    /// Batch-fetches all BOM children for the given root part IDs via part_tree recursion.
+    /// Returns cumulative path quantities (excluding order_item.quantity multiplier),
+    /// latest part_note, and process_template step count per child part.
+    /// </summary>
+    public Dictionary<int, List<ScheduleChildItemData>> GetAllScheduleChildItems(List<int> partIds)
+    {
+        var result = new Dictionary<int, List<ScheduleChildItemData>>();
+        if (partIds.Count == 0) return result;
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+
+            var paramNames   = partIds.Select((_, i) => $"@r{i}").ToList();
+            var rootInClause = string.Join(",", paramNames);
+
+            var childRows = new List<(int RootId, int ChildId, string Drawing, string? Desc, int PathQty)>();
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = $"""
+                    WITH RECURSIVE bom(root_id, child_id, cum_qty) AS (
+                        SELECT parent_id, child_id, quantity
+                        FROM part_tree
+                        WHERE parent_id IN ({rootInClause})
+                        UNION ALL
+                        SELECT bom.root_id, pt.child_id, bom.cum_qty * pt.quantity
+                        FROM part_tree pt
+                        JOIN bom ON pt.parent_id = bom.child_id
+                    )
+                    SELECT bom.root_id, p.id, p.drawing_number, p.description,
+                           CAST(SUM(bom.cum_qty) AS INTEGER) AS total_path_qty
+                    FROM bom
+                    JOIN part p ON p.id = bom.child_id
+                    GROUP BY bom.root_id, p.id, p.drawing_number, p.description
+                    ORDER BY bom.root_id, p.drawing_number
+                    """;
+                for (int i = 0; i < partIds.Count; i++)
+                    cmd.Parameters.AddWithValue(paramNames[i], partIds[i]);
+                using var rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                    childRows.Add((rdr.GetInt32(0), rdr.GetInt32(1),
+                        rdr.GetString(2),
+                        rdr.IsDBNull(3) ? null : rdr.GetString(3),
+                        rdr.GetInt32(4)));
+            }
+
+            if (childRows.Count == 0) return result;
+
+            var childPartIds = childRows.Select(r => r.ChildId).Distinct().ToList();
+            var memoMap      = GetLatestNotePerPart(conn, childPartIds);
+            var stepMap      = GetTemplateStepCounts(conn, childPartIds);
+
+            foreach (var (rootId, childId, drawing, desc, pathQty) in childRows)
+            {
+                var item = new ScheduleChildItemData(
+                    RootPartId:        rootId,
+                    ChildPartId:       childId,
+                    DrawingNumber:     drawing,
+                    Description:       desc,
+                    CumulativePathQty: pathQty,
+                    MemoText:          memoMap.GetValueOrDefault(childId),
+                    TemplateSteps:     stepMap.GetValueOrDefault(childId, 0));
+                if (!result.TryGetValue(rootId, out var list))
+                    result[rootId] = list = [];
+                list.Add(item);
+            }
+
+            Logger.Instance.Info(
+                $"ScheduleRepository: child items fetched for {result.Count}/{partIds.Count} parts");
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"ScheduleRepository.GetAllScheduleChildItems failed: {ex.Message}");
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Fetches step_tracker records for child BOM parts under the given order items.
+    /// Returns a lookup of (order_item_id, child_part_id) to step trackers, used to
+    /// show Gantt bars and status fractions for expanded BOM child rows.
+    /// </summary>
+    public Dictionary<(int OiId, int ChildPartId), List<ScheduleStepTracker>> GetChildStepTrackers(
+        List<int> orderItemIds, List<int> childPartIds)
+    {
+        var result = new Dictionary<(int, int), List<ScheduleStepTracker>>();
+        if (orderItemIds.Count == 0 || childPartIds.Count == 0) return result;
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd  = conn.CreateCommand();
+
+            var oiParams = string.Join(",", orderItemIds.Select((_, i) => $"@oi{i}"));
+            var cpParams = string.Join(",", childPartIds.Select((_, i) => $"@cp{i}"));
+
+            cmd.CommandText = $"""
+                SELECT pt.part_id, st.order_item_id,
+                       st.id, st.process_template_id, pt.row_number,
+                       pt.shop_code, pt.description, st.start_time, st.end_time
+                FROM step_tracker st
+                JOIN process_template pt ON pt.id = st.process_template_id
+                WHERE st.order_item_id IN ({oiParams})
+                  AND pt.part_id IN ({cpParams})
+                  AND st.start_time IS NOT NULL
+                ORDER BY st.order_item_id, pt.row_number
+                """;
+
+            for (int i = 0; i < orderItemIds.Count; i++)
+                cmd.Parameters.AddWithValue($"@oi{i}", orderItemIds[i]);
+            for (int i = 0; i < childPartIds.Count; i++)
+                cmd.Parameters.AddWithValue($"@cp{i}", childPartIds[i]);
+
+            using var rdr = cmd.ExecuteReader();
+            while (rdr.Read())
+            {
+                int childPartId = rdr.GetInt32(0);
+                int oiId        = rdr.GetInt32(1);
+                var step = new ScheduleStepTracker(
+                    Id:                rdr.GetInt32(2),
+                    OrderItemId:       oiId,
+                    ProcessTemplateId: rdr.GetInt32(3),
+                    RowNumber:         rdr.GetInt32(4),
+                    ShopCode:          rdr.GetString(5),
+                    Description:       rdr.IsDBNull(6) ? null : rdr.GetString(6),
+                    StartTime:         rdr.GetString(7),
+                    EndTime:           rdr.IsDBNull(8) ? null : rdr.GetString(8));
+
+                var key = (oiId, childPartId);
+                if (!result.TryGetValue(key, out var list))
+                    result[key] = list = [];
+                list.Add(step);
+            }
+
+            Logger.Instance.Info(
+                $"ScheduleRepository: child step trackers for {result.Count} (oi,part) pairs");
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"ScheduleRepository.GetChildStepTrackers failed: {ex.Message}");
+        }
+        return result;
+    }
+
     // ── Private helpers ────────────────────────────────────────────────────
 
     private List<ScheduleRow> GetScheduleRows(Microsoft.Data.Sqlite.SqliteConnection conn)
@@ -411,6 +554,23 @@ public record ScheduleStepTracker(
 /// <param name="ShopCode">Shop code</param>
 /// <param name="Description">Step description (nullable)</param>
 public record ProcessTemplateStep(int Id, int RowNumber, string ShopCode, string? Description);
+
+/// <summary>Child BOM part data for the MP Schedule expand view.</summary>
+/// <param name="RootPartId">part.id of the top-level (order_item) part</param>
+/// <param name="ChildPartId">part.id of this child part</param>
+/// <param name="DrawingNumber">Child drawing number</param>
+/// <param name="Description">Child part description (nullable)</param>
+/// <param name="CumulativePathQty">Product of part_tree.quantity values along the path from root to child</param>
+/// <param name="MemoText">Latest part_note content (nullable)</param>
+/// <param name="TemplateSteps">Total process_template steps for this child part</param>
+public record ScheduleChildItemData(
+    int    RootPartId,
+    int    ChildPartId,
+    string DrawingNumber,
+    string? Description,
+    int    CumulativePathQty,
+    string? MemoText,
+    int    TemplateSteps);
 
 /// <summary>One row in the Manufacturing Schedule Gantt view.</summary>
 /// <param name="Row">Base order-item data</param>
