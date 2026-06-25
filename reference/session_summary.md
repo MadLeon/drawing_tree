@@ -1,17 +1,25 @@
 # Project Session Summary
 
 ## Last Updated
-2026-06-25 | 修复 MP Schedule 展开按钮尺寸、子节点最新数据查询及子节点甘特图点击响应
+2026-06-25 | 优化 MP Schedule 工具栏样式并修复搜索框输入延迟
 
 ## Current Status
-- MP Schedule（甘特图）展开按钮已缩小（18×18 / 图标 12×12）；展开时左面板先响应，画布延后重绘（Background 优先级）
-- 子节点数据查询改为取最新 revision（`ORDER BY revision DESC LIMIT 1`），与 AllPo 展开逻辑一致
-- 子节点甘特图条形图支持点击：打开 StepAssignmentDialog，保存后更新 `_childStepMap` 并重绘
-- MP Schedule 展开仍有轻微延迟属架构限制（平铺列表重建 + 整体 canvas 重绘），非代码问题
+- MP Schedule 工具栏优化完成：返回按钮缩小（28×28/图标 14×14）、搜索框加宽（360px）并改为搜索 Job/Drawing/P.O.、Filter 按钮改用 filter_list 图标、单选框垂直居中
+- 搜索框输入延迟问题通过添加 300ms DispatcherTimer debounce 解决，移除了 Description 搜索并改为 P.O. 搜索
+- MP Schedule（甘特图）展开按钮已缩小（18×18 / 图标 12×12）；展开时左面板先响应，画布延后重绘
+- 子节点甘特图条形图支持点击：打开 StepAssignmentDialog，保存后更新并重绘
 - All POs 界面（现标题"Order Entry"）支持 OE 视图与简洁视图切换；简洁视图按 PO 分组，支持展开子图纸
 - Import Drawing → Edit Parts → Build Tree 三步工作流通过 All POs PO 标题行"Input Data"入口串联
 
 ## Recent Sessions
+
+2026-06-25 - 优化 MP Schedule 工具栏样式并修复搜索框输入延迟
+- 添加 FilterListGeo 路径资源，Filter 按钮改用 filter_list 图标 + 文字，高度 24px
+- 搜索框宽度从 240 扩至 360，高度增至 28，Placeholder 改为"Job / Drawing / P.O."
+- 返回按钮缩小至 28×28，内部图标 14×14
+- Day/Week/Month 单选框加 `VerticalContentAlignment="Center"` 确保垂直居中
+- 搜索框 TextChanged 改用 300ms DispatcherTimer debounce，消除第一次输入的严重延迟
+- 搜索字段移除 Description，改为匹配 `vm.Row.PoNumber`
 
 2026-06-25 - 修复 MP Schedule 展开按钮尺寸、子节点最新数据查询及子节点甘特图点击响应
 - XAML 中展开按钮从 20×20 缩小为 18×18，内部图标从 14×14 缩小为 12×12
@@ -39,12 +47,6 @@
 - 18 个单元测试（`scripts/test_update_po_is_active.py`）全部通过，使用 in-memory SQLite + mock openpyxl
 - 修复 `apply_changes` 中 "cannot start a transaction within a transaction" 错误：连接改用 `isolation_level=None`
 - `PoRepository.GetAllPoLines()` 加 `WHERE po.is_active = 1`，All POs 界面只显示活跃 PO
-
-2026-06-24 - 修复 PartEditor revision 选取逻辑并实现 PO order_item 自动重定向
-- 发现 `GetDrawingInfo(string)` 无 ORDER BY，LIMIT 1 随机返回任一 revision，可能选中占位版本 rev="-"
-- 在查询中加 `ORDER BY p.revision DESC`，使真实 revision（ASCII 值高于 "-"）优先
-- 新增 `DrawingRepository.RedirectPoOrderItems(poNumber, drawingNumber, targetPartId)`，将 PO 下引用旧 part 的 order_item 批量更新至新 part
-- 在 `PartEditorControl.SaveRow()` 的 insert/update 两条成功路径中调用上述方法
 
 ## Key Decisions
 - WPF `UserControl.Resources` 内 DataTemplate 引用的 `StaticResource` 样式必须定义在 DataTemplate **之前**；若样式在 DataTemplate 之后，WPF 在 Dispatcher layout pass 应用模板时找不到资源，抛出 `XamlParseException`（crash）

@@ -13,6 +13,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using DrawingTree.Data;
 using DrawingTree.Dialogs;
 using DrawingTree.Logging;
@@ -225,6 +226,8 @@ public partial class ManufacturingScheduleControl : UserControl
     private double _ganttOffset = 0;
     private bool   _loaded      = false;
 
+    private readonly DispatcherTimer _debounceTimer;
+
     public event EventHandler? BackRequested;
     public event EventHandler<(int PartId, int OrderItemId)>? OpenPartRequested;
 
@@ -235,6 +238,9 @@ public partial class ManufacturingScheduleControl : UserControl
         InitializeComponent();
         _colCfg = (ColumnConfig)Resources["ColCfg"];
         _colCfg.PropertyChanged += (_, _) => UpdateColumnVisibility();
+
+        _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+        _debounceTimer.Tick += (_, _) => { _debounceTimer.Stop(); ApplySortAndFilter(); };
 
         Loaded += OnLoaded;
         TimeHeaderCanvas.SizeChanged += (_, _) => DrawTimeHeader();
@@ -339,7 +345,7 @@ public partial class ManufacturingScheduleControl : UserControl
             source = source.Where(vm =>
                 ContainsIgnoreCase(vm.Row.JobNumber,     query) ||
                 ContainsIgnoreCase(vm.Row.DrawingNumber, query) ||
-                ContainsIgnoreCase(vm.Row.Description,   query));
+                ContainsIgnoreCase(vm.Row.PoNumber,      query));
         }
 
         source = _sortColumn switch
@@ -781,7 +787,8 @@ public partial class ManufacturingScheduleControl : UserControl
     {
         SearchPlaceholder.Visibility = string.IsNullOrEmpty(SearchBox.Text)
             ? Visibility.Visible : Visibility.Collapsed;
-        ApplySortAndFilter();
+        _debounceTimer.Stop();
+        _debounceTimer.Start();
     }
 
     private void HeaderJob_Click(object sender, MouseButtonEventArgs e)
