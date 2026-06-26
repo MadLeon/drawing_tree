@@ -186,6 +186,19 @@ public partial class ManufacturingScheduleControl : UserControl
         Color.FromRgb(175, 238, 238),
     ];
 
+    // Pre-frozen brushes shared across all renders — avoids creating hundreds of
+    // short-lived SolidColorBrush objects per Render() call, which blocked the UI thread.
+    private static SolidColorBrush MkBrush(Color c) { var b = new SolidColorBrush(c); b.Freeze(); return b; }
+
+    private static readonly SolidColorBrush BandChildBrush   = MkBrush(Color.FromRgb(245, 245, 255));
+    private static readonly SolidColorBrush BandOverdueBrush = MkBrush(Color.FromArgb(60, 220, 50, 50));
+    private static readonly SolidColorBrush BandOddBrush     = MkBrush(Color.FromRgb(250, 250, 250));
+    private static readonly SolidColorBrush BandLineBrush    = MkBrush(Color.FromRgb(238, 238, 238));
+    private static readonly SolidColorBrush DueDateLineBrush = MkBrush(Color.FromArgb(180, 200, 30, 30));
+
+    private static readonly Dictionary<string, SolidColorBrush> ShopBrushCache =
+        new(StringComparer.OrdinalIgnoreCase);
+
     // ── Column widths (must match XAML DataTemplate Border widths) ─────────
 
     private const int ColWidthExpand      = 24;
@@ -269,22 +282,21 @@ public partial class ManufacturingScheduleControl : UserControl
             var models = await Task.Run(() => _repository.GetScheduleViewModels());
             _allViewModels = models;
             ApplySortAndFilter();
+            _ = PrefetchChildrenAsync();
 
+            // Hide the overlay only after layout completes so the canvas is fully
+            // painted before the spinner disappears.
             Dispatcher.InvokeAsync(() =>
             {
                 double todayX    = DateToX(DateTime.Today);
                 double viewWidth = GanttClip.ActualWidth;
                 SetGanttOffset(Math.Max(0, todayX - viewWidth / 2));
+                LoadingOverlay.Visibility = Visibility.Collapsed;
             }, System.Windows.Threading.DispatcherPriority.Loaded);
-
-            _ = PrefetchChildrenAsync();
         }
         catch (Exception ex)
         {
             Logger.Instance.Error($"ManufacturingScheduleControl.LoadDataAsync failed: {ex.Message}");
-        }
-        finally
-        {
             LoadingOverlay.Visibility = Visibility.Collapsed;
         }
     }
@@ -534,13 +546,11 @@ public partial class ManufacturingScheduleControl : UserControl
 
             SolidColorBrush fill;
             if (row.IsChild)
-                fill = new SolidColorBrush(Color.FromRgb(245, 245, 255));
+                fill = BandChildBrush;
             else if (row.IsOverdue)
-                fill = new SolidColorBrush(Color.FromArgb(60, 220, 50, 50));
+                fill = BandOverdueBrush;
             else
-                fill = i % 2 == 0
-                    ? new SolidColorBrush(Colors.White)
-                    : new SolidColorBrush(Color.FromRgb(250, 250, 250));
+                fill = i % 2 == 0 ? Brushes.White : BandOddBrush;
 
             var band = new Rectangle { Width = canvasWidth, Height = RowHeight, Fill = fill };
             Canvas.SetLeft(band, 0);
@@ -550,7 +560,7 @@ public partial class ManufacturingScheduleControl : UserControl
             GanttCanvas.Children.Add(new Line
             {
                 X1 = 0, X2 = canvasWidth, Y1 = y + RowHeight, Y2 = y + RowHeight,
-                Stroke = new SolidColorBrush(Color.FromRgb(238, 238, 238)), StrokeThickness = 1,
+                Stroke = BandLineBrush, StrokeThickness = 1,
             });
         }
     }
@@ -581,7 +591,11 @@ public partial class ManufacturingScheduleControl : UserControl
         double barTop    = rowTop + 3;
         double barHeight = RowHeight - 6;
 
-        var    color   = GetShopColor(step.ShopCode);
+        if (!ShopBrushCache.TryGetValue(step.ShopCode, out var shopBrush))
+        {
+            shopBrush = MkBrush(GetShopColor(step.ShopCode));
+            ShopBrushCache[step.ShopCode] = shopBrush;
+        }
         string tooltip = step.Description != null
             ? $"{step.ShopCode}: {step.Description}"
             : step.ShopCode;
@@ -590,7 +604,7 @@ public partial class ManufacturingScheduleControl : UserControl
         {
             Width   = barWidth,
             Height  = barHeight,
-            Fill    = new SolidColorBrush(color),
+            Fill    = shopBrush,
             RadiusX = 2, RadiusY = 2,
             ToolTip = tooltip,
         };
@@ -654,7 +668,7 @@ public partial class ManufacturingScheduleControl : UserControl
             {
                 X1 = x, X2 = x,
                 Y1 = rowTop, Y2 = rowTop + RowHeight,
-                Stroke          = new SolidColorBrush(Color.FromArgb(180, 200, 30, 30)),
+                Stroke          = DueDateLineBrush,
                 StrokeThickness = 1,
                 StrokeDashArray = [3, 2],
             };

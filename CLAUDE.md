@@ -1,4 +1,4 @@
-# CLAUDE.md
+﻿# CLAUDE.md
 
 ## 参考文件
 
@@ -22,3 +22,6 @@
 - 通过图纸名调用part时, 可能有多个同名part, 确保调用revision最新的那条
 - 在sql中使用降序排列, 并limit最上面的一个
 - 应用: Edit Parts 界面; All PO 界面的展开部分
+
+## 加载动画
+- 使用 LoadingOverlayControl（Controls/LoadingOverlayControl.xaml）；在父 Grid 中放置 <local:LoadingOverlayControl x:Name="LoadingOverlay" Visibility="Collapsed" Panel.ZIndex="10"/>，通过切换 LoadingOverlay.Visibility 显示或隐藏旋转遮罩

@@ -1,18 +1,24 @@
 # Project Session Summary
 
 ## Last Updated
-2026-06-26 | 实现 Issue #2：PartDetailControl 新增 Manufacturing Process 区域，支持创建和查看 MP 文件
+2026-06-26 | 完善 MP 文件创建流程（客户配置、禁止覆盖、DB 记录）并抽象加载动画为可复用控件
 
 ## Current Status
-- `PartDetailControl` 新增 "Manufacturing Process" 卡片：右对齐 "New MP" 按钮 + 已有文件列表
-- 点击 "New MP" 自动复制模板、通过 Excel COM Interop 填入工单信息、保存至网络路径并打开
-- MP 文件命名格式：`{DrawingNumber} {Description} (J#{JobNumber}).xlsm`，保存至 `\\rtdnas2\Manufacturing Process\{Customer}\{PO}\`
-- `orderItemId == 0`（子图纸入口）时 "New MP" 按钮自动隐藏
-- MP Schedule 工具栏优化完成：搜索框加宽（360px）、300ms debounce、Filter 按钮改用图标
+- `MpConfig` 管理 config.txt 的 `[CustomerFolderMappings]` 区域；创建 MP 前自动同步 DB 客户列表，缺失映射时提示用户填写并终止
+- MP 文件创建禁止覆盖同名文件；成功后写入 `part_attachment`（file_type='MP'）；文件列表从 DB 查询而非文件系统扫描；打开时文件缺失询问是否删除 DB 条目
+- `LoadingOverlayControl` 统一旋转圆圈遮罩；MP Schedule 和 TreeBuilder 均已接入；静态 frozen brush 优化消除渲染期间动画冻结问题
 - All POs 界面支持 OE 视图与简洁视图切换；Import Drawing → Edit Parts → Build Tree 三步工作流完整
 - MP Schedule 子节点甘特图条形图支持点击 StepAssignmentDialog
 
 ## Recent Sessions
+
+2026-06-26 - 完善 MP 文件创建流程并抽象加载动画为可复用控件
+- `MpConfig.cs` 新增 `[CustomerFolderMappings]` 区域读写；`GetFolderName` 查映射，`SyncCustomerKeys` 将 DB 客户同步到 config 并返回未配置列表；定义 `MpFolderNotConfiguredException`
+- `MpContext` record 新增 `PartId`/`OrderItemId`；`MpFileService.CreateAndOpen` 改为配置驱动路径、禁止覆盖（文件已存在抛异常）、成功后调用 `PartRepository.AddMpAttachment`
+- `PartRepository` 新增 `GetMpAttachments`/`AddMpAttachment`/`RemoveMpAttachment` 和 `MpAttachmentRow` record；MP 文件列表从文件系统扫描切换为 DB 查询
+- `PartDetailControl` MP 打开按钮：文件不存在时弹窗询问是否删除 DB 条目，确认后调用 `RemoveMpAttachment` 并刷新
+- MP Schedule 加载动画冻结修复：`DrawRowBands`/`DrawStepBar`/`DrawDueDateLines` 改用静态 frozen brush + shop brush 缓存；`LoadDataAsync` 遮罩折叠移至 `DispatcherPriority.Loaded` 保证 canvas 渲染完毕后再消失
+- 新建 `LoadingOverlayControl`（旋转弧形 + Storyboard 自包含）；`ManufacturingScheduleControl` 和 `TreeBuilderControl` 均改用此控件；CLAUDE.md 新增加载动画使用说明
 
 2026-06-26 - 实现 Issue #2：PartDetailControl 新增 Manufacturing Process 区域
 - `PoRepository` 新增 `GetMpContext(orderItemId)` 方法，JOIN order_item→job→purchase_order→customer→part 返回 MP 所需全部字段；新增 `MpContext` record
@@ -34,7 +40,6 @@
 - `ExpandToggle_Click` 将 `Render()` 推迟到 `DispatcherPriority.Background`，让左面板行更新先完成后再重绘甘特画布
 - `GetAllScheduleChildItems` SQL 改为 JOIN 最新 revision（`UPPER(drawing_number) ORDER BY revision DESC LIMIT 1`），`ChildPartId` 指向最新 part 记录
 - `GanttCanvas_MouseLeftButtonDown` 重构：新增 `IsChild` 分支，用 `ChildPartId`/`ParentOiId` 查模板、保存步骤、刷新 `_childStepMap`
-- 分析 AllPo 展开无延迟（bool 翻转 + WPF binding hidden 元素）与 MP Schedule 不可避免延迟（平铺列表重建 + canvas 整体重绘）的架构差异
 
 2026-06-25 - 实现 MP Schedule 展开功能并修复 WPF 资源前向引用崩溃
 - `ScheduleRepository` 新增 `GetChildStepTrackers(orderItemIds, childPartIds)`：JOIN step_tracker 与 process_template，返回 `(OiId, ChildPartId) → List<StepTracker>` 字典
@@ -43,13 +48,6 @@
 - `DrawBars` 重构为 `DrawStepBar` 辅助方法，父子行均可渲染 Gantt 条形图
 - 修复崩溃（`XamlParseException: Cannot find resource 'LeftRowBorder'`）：将四个样式定义从 DataTemplate 之后移至之前
 
-2026-06-24 - 重构 All POs 界面：简洁视图、CRUD 菜单、Import 工作流链
-- 删除主工具栏三个按钮（Import Drawing / Edit Part / Build Drawing Tree），入口改由 All POs 的"Input Data"驱动
-- `AllPosControl` 新增简洁视图：按 PO 分组，展开图标懒加载子图纸，PO 标题行含 Tree/Package Tracker 按钮及三点菜单
-- `DrawingEditorControl` 新增 `ImportCompleted` 事件和 `PrefilledPoNumber`，`PartEditorControl` 新增 `SaveAllCompleted` 事件，`MainWindow` 串联三步自动导航
-- 新建 `NewJobDialog`（含批量创建模式）和 `EditItemDialog`（级联更新 customer/part/order_item）
-- `PoRepository` 新增 `MarkAsShipped`、`GetChildDrawings`（递归 CTE）、`CreateOrderItemCascade`、`UpdateOrderItemCascade` 等方法
-
 ## Key Decisions
 - WPF `UserControl.Resources` 内 DataTemplate 引用的 `StaticResource` 样式必须定义在 DataTemplate **之前**；若样式在 DataTemplate 之后，WPF 在 Dispatcher layout pass 应用模板时找不到资源，抛出 `XamlParseException`（crash）
 - Import Drawing / Edit Parts / Build Tree 的入口统一改到 All POs 界面的 PO 三点菜单"Input Data"，三个独立工具栏按钮已移除；工作流通过事件链自动跳转，无需手动切换
@@ -57,3 +55,4 @@
 - drawing_number 大小写问题修复顺序：先清理数据再改 Schema，因为 NOCASE 约束会拒绝已有重复数据的导入
 - revision 占位版本（rev="-"）与真实 revision 并存时，加载优先选最高 revision（ORDER BY revision DESC）；保存时重定向 order_item 而非批量删除占位版本
 - MP Schedule 展开延迟是架构限制：AllPo 用嵌套 hidden 元素（bool 翻转即可），MP Schedule 用平铺列表 + canvas，子行插入必须重建列表并重绘整个画布，无法用 WPF binding 直接优化
+- WPF `DoubleAnimation` 在 `RotateTransform.Angle` 上是 UI 线程依赖动画（非合成线程独立），Canvas 大量 `Children.Add` 会冻结动画；解决方案：静态 frozen brush + 遮罩在 `DispatcherPriority.Loaded` 后折叠
