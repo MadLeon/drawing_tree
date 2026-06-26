@@ -25,3 +25,19 @@
 
 ## 加载动画
 - 使用 LoadingOverlayControl（Controls/LoadingOverlayControl.xaml）；在父 Grid 中放置 <local:LoadingOverlayControl x:Name="LoadingOverlay" Visibility="Collapsed" Panel.ZIndex="10"/>，通过切换 LoadingOverlay.Visibility 显示或隐藏旋转遮罩
+
+## 工具栏返回按钮样式
+- Style Key: `IconBtn`（定义在 `App.xaml`，全局可用）
+- Icon Geometry Key: `ChevronLeftGeo`（定义在 `App.xaml`）
+- 用法：在工具栏最左侧的返回按钮上使用，Path Fill 为 `#333333`，按钮尺寸通常为 28×28，图标 14×14
+- 示例：
+  ```xaml
+  <Button x:Name="BackButton"
+          Style="{StaticResource IconBtn}"
+          Width="28" Height="28" Margin="0,0,8,0"
+          ToolTip="Back"
+          Click="BackButton_Click">
+      <Path Data="{StaticResource ChevronLeftGeo}"
+            Stretch="Uniform" Fill="#333333" Width="14" Height="14"/>
+  </Button>
+  ```
