@@ -69,8 +69,11 @@ public class ExpandableOrderItem : INotifyPropertyChanged
 
     public Geometry ExpandIconGeometry => _isExpanded ? IndeterminateBoxGeo : AddBoxGeo;
 
+    public bool HasMp { get; set; }
+
     public Visibility ExpandButtonVisibility => Row.HasChildren ? Visibility.Visible : Visibility.Hidden;
     public Visibility PartButtonVisibility   => Row.PartId.HasValue ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility MpIconVisibility       => HasMp ? Visibility.Visible : Visibility.Collapsed;
 
     public Visibility ChildrenVisibility => IsExpanded ? Visibility.Visible : Visibility.Collapsed;
 
@@ -93,10 +96,13 @@ public class ChildDrawingItem
     public string? Description   { get; set; }
     public int?    PartId        { get; set; }
 
+    public bool HasMp { get; set; }
+
     public Brush DrawingLinkForeground => PartId.HasValue ? Brushes.DodgerBlue : Brushes.Black;
     public TextDecorationCollection? DrawingLinkDecorations => PartId.HasValue ? TextDecorations.Underline : null;
     public Cursor DrawingLinkCursor => PartId.HasValue ? Cursors.Hand : Cursors.Arrow;
     public Visibility PdfButtonVisibility => PartId.HasValue ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility MpIconVisibility    => HasMp ? Visibility.Visible : Visibility.Collapsed;
 }
 
 // ── Control ───────────────────────────────────────────────────────────────────
@@ -105,7 +111,7 @@ public partial class AllPosControl : UserControl
 {
     private readonly PoRepository _repository = new();
     private List<PoListRow> _allRows = new();
-    private bool _isSimpleView;
+    private bool _isSimpleView = true;
 
     /// <summary>When true, shows is_active=0 POs and hides write buttons (History mode).</summary>
     public bool ShowHistoryOnly { get; set; }
@@ -183,11 +189,17 @@ public partial class AllPosControl : UserControl
     private void ApplySimpleView()
     {
         var groups = BuildSimpleGroups(_allRows);
+
+        var orderItemIds = groups.SelectMany(g => g.Items).Select(i => i.Row.OrderItemId).ToList();
+        var mpSet = _repository.GetOrderItemIdsWithMp(orderItemIds);
+        foreach (var item in groups.SelectMany(g => g.Items))
+            item.HasMp = mpSet.Contains(item.Row.OrderItemId);
+
         SimpleViewList.ItemsSource = groups;
 
-        ResultsGrid.Visibility     = Visibility.Collapsed;
+        ResultsGrid.Visibility      = Visibility.Collapsed;
         SimpleViewScroll.Visibility = Visibility.Visible;
-        ToggleViewButton.Content   = "OE View";
+        ToggleViewButton.Content    = "OE View";
 
         var partIds = groups
             .SelectMany(g => g.Items)
@@ -218,6 +230,16 @@ public partial class AllPosControl : UserControl
                     PartId        = r.PartId
                 });
         }
+
+        var childPartIds = groups.SelectMany(g => g.Items)
+            .SelectMany(i => i.Children)
+            .Where(c => c.PartId.HasValue)
+            .Select(c => c.PartId!.Value)
+            .Distinct()
+            .ToList();
+        var childMpSet = await Task.Run(() => _repository.GetPartIdsWithMp(childPartIds));
+        foreach (var child in groups.SelectMany(g => g.Items).SelectMany(i => i.Children))
+            if (child.PartId.HasValue) child.HasMp = childMpSet.Contains(child.PartId.Value);
 
         Logger.Instance.Info($"AllPosControl: prefetched children for {lookup.Count} part(s)");
     }

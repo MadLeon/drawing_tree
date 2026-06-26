@@ -495,6 +495,60 @@ public class PoRepository
         }
     }
 
+    /// <summary>
+    /// Returns the set of order_item IDs (from the input list) that have at least one MP attachment.
+    /// </summary>
+    public HashSet<int> GetOrderItemIdsWithMp(IEnumerable<int> orderItemIds)
+    {
+        var result = new HashSet<int>();
+        var ids = orderItemIds.ToList();
+        if (ids.Count == 0) return result;
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            var placeholders = string.Join(",", ids.Select((_, i) => $"@id{i}"));
+            cmd.CommandText = $"SELECT DISTINCT order_item_id FROM part_attachment WHERE file_type = 'MP' AND order_item_id IN ({placeholders})";
+            for (int i = 0; i < ids.Count; i++)
+                cmd.Parameters.AddWithValue($"@id{i}", ids[i]);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+                result.Add(reader.GetInt32(0));
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.GetOrderItemIdsWithMp failed: {ex.Message}");
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Returns the set of part IDs (from the input list) that have at least one MP attachment.
+    /// </summary>
+    public HashSet<int> GetPartIdsWithMp(IEnumerable<int> partIds)
+    {
+        var result = new HashSet<int>();
+        var ids = partIds.ToList();
+        if (ids.Count == 0) return result;
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            var placeholders = string.Join(",", ids.Select((_, i) => $"@id{i}"));
+            cmd.CommandText = $"SELECT DISTINCT part_id FROM part_attachment WHERE file_type = 'MP' AND part_id IN ({placeholders})";
+            for (int i = 0; i < ids.Count; i++)
+                cmd.Parameters.AddWithValue($"@id{i}", ids[i]);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+                if (!reader.IsDBNull(0)) result.Add(reader.GetInt32(0));
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.GetPartIdsWithMp failed: {ex.Message}");
+        }
+        return result;
+    }
+
     /// <summary>Returns true if the given part has any direct children in part_tree.</summary>
     public bool HasChildDrawings(int partId)
     {
