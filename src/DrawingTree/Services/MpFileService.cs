@@ -20,16 +20,15 @@ public static class MpFileService
         Path.Combine(AppContext.BaseDirectory, "Resources", "mp_template.xlsm");
 
     /// <summary>
-    /// Builds the target folder path: \\rtdnas2\Manufacturing Process\{Customer}\{PO}
+    /// Builds the target folder path: \\rtdnas2\Manufacturing Process\{folderName}\{PO}
     /// </summary>
-    public static string BuildTargetFolder(string? customerName, string? poNumber)
+    /// <param name="folderName">Already-resolved customer folder name from MpConfig.</param>
+    private static string BuildTargetFolder(string folderName, string? poNumber)
     {
-        var customer = SanitizeFolderName(customerName) ?? "Unknown";
-        var po       = SanitizeFolderName(poNumber);
-
+        var po = SanitizeFolderName(poNumber);
         return string.IsNullOrEmpty(po)
-            ? Path.Combine(NetworkBase, customer)
-            : Path.Combine(NetworkBase, customer, po);
+            ? Path.Combine(NetworkBase, folderName)
+            : Path.Combine(NetworkBase, folderName, po);
     }
 
     /// <summary>
@@ -60,8 +59,11 @@ public static class MpFileService
     }
 
     /// <summary>
-    /// Creates a new MP file from the template, pre-fills cells, saves it, and opens it in Excel.
-    /// Throws if the template is missing or Excel is not installed.
+    /// Creates a new MP file from the template, pre-fills cells, records it in the database,
+    /// and opens it in Excel.
+    /// Throws <see cref="MpFolderNotConfiguredException"/> when the customer has no configured folder.
+    /// Throws <see cref="InvalidOperationException"/> when an MP file with the same name already exists.
+    /// Throws <see cref="FileNotFoundException"/> when the template is missing.
     /// </summary>
     /// <param name="ctx">Order item context used to populate the cells.</param>
     /// <returns>Full path of the created file.</returns>
@@ -70,14 +72,31 @@ public static class MpFileService
         if (!File.Exists(TemplatePath))
             throw new FileNotFoundException($"MP template not found: {TemplatePath}");
 
-        var folder   = BuildTargetFolder(ctx.CustomerName, ctx.PoNumber);
+        // Resolve customer folder from config
+        var customerName = ctx.CustomerName ?? "Unknown";
+        var folderName   = MpConfig.GetFolderName(customerName);
+        if (folderName == null)
+        {
+            var allCustomers = new PoRepository().GetAllCustomers().Select(c => c.Name);
+            var unconfigured = MpConfig.SyncCustomerKeys(allCustomers);
+            throw new MpFolderNotConfiguredException(customerName, MpConfig.ConfigFilePath, unconfigured);
+        }
+
+        var folder   = BuildTargetFolder(folderName, ctx.PoNumber);
         var fileName = BuildFileName(ctx.DrawingNumber, ctx.Description, ctx.JobNumber);
         var target   = Path.Combine(folder, fileName);
 
+        // Never overwrite an existing MP file
+        if (File.Exists(target))
+            throw new InvalidOperationException($"MP file already exists:\n{target}");
+
         Directory.CreateDirectory(folder);
-        File.Copy(TemplatePath, target, overwrite: true);
+        File.Copy(TemplatePath, target);
 
         FillCells(target, ctx);
+
+        // Record in database
+        new PartRepository().AddMpAttachment(ctx.PartId, ctx.OrderItemId, fileName, target);
 
         Process.Start(new ProcessStartInfo { FileName = target, UseShellExecute = true });
         Logger.Instance.Info($"MpFileService: created and opened '{target}'");

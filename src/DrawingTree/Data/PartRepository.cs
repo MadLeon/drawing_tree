@@ -190,6 +190,88 @@ public class PartRepository
             Logger.Instance.Error($"PartRepository.AddPartNote failed for partId={partId}: {ex.Message}");
         }
     }
+
+    // ── MP Attachments ────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Returns all MP file attachments recorded for the given order item.
+    /// </summary>
+    /// <param name="orderItemId">order_item.id</param>
+    public List<MpAttachmentRow> GetMpAttachments(int orderItemId)
+    {
+        var results = new List<MpAttachmentRow>();
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT id, file_name, file_path
+                FROM part_attachment
+                WHERE order_item_id = @oid AND file_type = 'MP'
+                ORDER BY created_at DESC
+                """;
+            cmd.Parameters.AddWithValue("@oid", orderItemId);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+                results.Add(new MpAttachmentRow(reader.GetInt32(0), reader.GetString(1), reader.GetString(2)));
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.GetMpAttachments failed for orderItemId={orderItemId}: {ex.Message}");
+        }
+        return results;
+    }
+
+    /// <summary>
+    /// Inserts a new MP file attachment record.
+    /// </summary>
+    /// <param name="partId">part.id (0 if no part linked)</param>
+    /// <param name="orderItemId">order_item.id</param>
+    /// <param name="fileName">File name (without path)</param>
+    /// <param name="filePath">Full file path</param>
+    public void AddMpAttachment(int partId, int orderItemId, string fileName, string filePath)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                INSERT INTO part_attachment (part_id, order_item_id, file_type, file_name, file_path, is_active)
+                VALUES (@partId, @oid, 'MP', @name, @path, 1)
+                """;
+            cmd.Parameters.AddWithValue("@partId", partId > 0 ? partId : DBNull.Value);
+            cmd.Parameters.AddWithValue("@oid",    orderItemId);
+            cmd.Parameters.AddWithValue("@name",   fileName);
+            cmd.Parameters.AddWithValue("@path",   filePath);
+            cmd.ExecuteNonQuery();
+            Logger.Instance.Info($"PartRepository.AddMpAttachment: recorded '{filePath}'");
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.AddMpAttachment failed for '{filePath}': {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Deletes a MP attachment record from the database.
+    /// </summary>
+    /// <param name="attachmentId">part_attachment.id</param>
+    public void RemoveMpAttachment(int attachmentId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "DELETE FROM part_attachment WHERE id = @id";
+            cmd.Parameters.AddWithValue("@id", attachmentId);
+            cmd.ExecuteNonQuery();
+            Logger.Instance.Info($"PartRepository.RemoveMpAttachment: removed attachment id={attachmentId}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.RemoveMpAttachment failed for id={attachmentId}: {ex.Message}");
+        }
+    }
 }
 
 /// <param name="PartId">part.id</param>
@@ -224,3 +306,8 @@ public record ProcessStepRow(
 /// <param name="Author">Note author (Windows username)</param>
 /// <param name="CreatedAt">Creation timestamp</param>
 public record PartNoteRow(int Id, string Content, string? Author, string CreatedAt);
+
+/// <param name="AttachmentId">part_attachment.id</param>
+/// <param name="FileName">File name (without path)</param>
+/// <param name="FilePath">Full file path</param>
+public record MpAttachmentRow(int AttachmentId, string FileName, string FilePath);

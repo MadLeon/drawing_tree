@@ -307,7 +307,9 @@ public class PoRepository
                        j.job_number, oi.line_number,
                        p.drawing_number, p.revision, p.description,
                        oi.drawing_release_date, oi.delivery_required_date,
-                       oi.quantity, cust.customer_name
+                       oi.quantity, cust.customer_name,
+                       COALESCE(p.id, 0) AS part_id,
+                       oi.id AS order_item_id
                 FROM order_item oi
                 JOIN job j              ON j.id   = oi.job_id
                 JOIN purchase_order po  ON po.id  = j.po_id
@@ -323,17 +325,19 @@ public class PoRepository
             if (!reader.Read()) return null;
 
             return new MpContext(
-                PoNumber:    reader.GetString(0),
-                OeNumber:    reader.IsDBNull(1)  ? null : reader.GetString(1),
-                JobNumber:   reader.GetString(2),
-                LineNumber:  reader.GetInt32(3),
-                DrawingNumber: reader.IsDBNull(4) ? null : reader.GetString(4),
-                Revision:    reader.IsDBNull(5)  ? null : reader.GetString(5),
-                Description: reader.IsDBNull(6)  ? null : reader.GetString(6),
-                ReleaseDate: reader.IsDBNull(7)  ? null : reader.GetString(7),
-                DueDate:     reader.IsDBNull(8)  ? null : reader.GetString(8),
-                Quantity:    reader.GetInt32(9),
-                CustomerName: reader.IsDBNull(10) ? null : reader.GetString(10)
+                PoNumber:      reader.GetString(0),
+                OeNumber:      reader.IsDBNull(1)  ? null : reader.GetString(1),
+                JobNumber:     reader.GetString(2),
+                LineNumber:    reader.GetInt32(3),
+                DrawingNumber: reader.IsDBNull(4)  ? null : reader.GetString(4),
+                Revision:      reader.IsDBNull(5)  ? null : reader.GetString(5),
+                Description:   reader.IsDBNull(6)  ? null : reader.GetString(6),
+                ReleaseDate:   reader.IsDBNull(7)  ? null : reader.GetString(7),
+                DueDate:       reader.IsDBNull(8)  ? null : reader.GetString(8),
+                Quantity:      reader.GetInt32(9),
+                CustomerName:  reader.IsDBNull(10) ? null : reader.GetString(10),
+                PartId:        reader.GetInt32(11),
+                OrderItemId:   reader.GetInt32(12)
             );
         }
         catch (Exception ex)
@@ -959,12 +963,15 @@ public record CustomerRow(int Id, string Name);
 /// <param name="DueDate">order_item.delivery_required_date</param>
 /// <param name="Quantity">order_item.quantity</param>
 /// <param name="CustomerName">customer.customer_name</param>
+/// <param name="PartId">part.id (0 if no part linked)</param>
+/// <param name="OrderItemId">order_item.id</param>
 public record MpContext(
     string PoNumber, string? OeNumber,
     string JobNumber, int LineNumber,
     string? DrawingNumber, string? Revision, string? Description,
     string? ReleaseDate, string? DueDate,
-    int Quantity, string? CustomerName);
+    int Quantity, string? CustomerName,
+    int PartId, int OrderItemId);
 
 /// <summary>Contact lookup row.</summary>
 public record ContactRow(int Id, string Name);

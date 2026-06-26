@@ -102,10 +102,9 @@ public partial class PartDetailControl : UserControl
             return;
         }
 
-        var folder = MpFileService.BuildTargetFolder(_mpContext.CustomerName, _mpContext.PoNumber);
-        var files  = MpFileService.GetExistingFiles(folder, _mpContext.DrawingNumber);
+        var attachments = _partRepository.GetMpAttachments(_orderItemId);
 
-        if (files.Count == 0)
+        if (attachments.Count == 0)
         {
             MpFilesPanel.Children.Add(new TextBlock
             {
@@ -114,11 +113,11 @@ public partial class PartDetailControl : UserControl
             return;
         }
 
-        foreach (var filePath in files)
-            MpFilesPanel.Children.Add(BuildMpFileRow(filePath));
+        foreach (var attachment in attachments)
+            MpFilesPanel.Children.Add(BuildMpFileRow(attachment));
     }
 
-    private Grid BuildMpFileRow(string filePath)
+    private Grid BuildMpFileRow(MpAttachmentRow attachment)
     {
         var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -126,9 +125,9 @@ public partial class PartDetailControl : UserControl
 
         var nameText = new TextBlock
         {
-            Text = System.IO.Path.GetFileName(filePath), FontSize = 12,
+            Text = attachment.FileName, FontSize = 12,
             VerticalAlignment = VerticalAlignment.Center,
-            TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = filePath
+            TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = attachment.FilePath
         };
         Grid.SetColumn(nameText, 0);
         grid.Children.Add(nameText);
@@ -142,11 +141,33 @@ public partial class PartDetailControl : UserControl
                 Fill = Brushes.DodgerBlue, Width = 13, Height = 13
             }
         };
-        openBtn.Click += (_, _) => OpenFileExternal(filePath);
+        openBtn.Click += (_, _) => OpenMpFile(attachment);
         Grid.SetColumn(openBtn, 1);
         grid.Children.Add(openBtn);
 
         return grid;
+    }
+
+    private void OpenMpFile(MpAttachmentRow attachment)
+    {
+        if (!File.Exists(attachment.FilePath))
+        {
+            var choice = MessageBox.Show(
+                $"File not found:\n{attachment.FilePath}\n\nRemove this entry from the database?",
+                "File Not Found", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (choice == MessageBoxResult.Yes)
+            {
+                _partRepository.RemoveMpAttachment(attachment.AttachmentId);
+                LoadMpSection();
+            }
+            return;
+        }
+        try { Process.Start(new ProcessStartInfo { FileName = attachment.FilePath, UseShellExecute = true }); }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Failed to open file: {ex.Message}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void NewMpButton_Click(object sender, RoutedEventArgs e)
@@ -158,26 +179,26 @@ public partial class PartDetailControl : UserControl
             MpFileService.CreateAndOpen(_mpContext);
             LoadMpSection();
         }
+        catch (MpFolderNotConfiguredException ex)
+        {
+            Logger.Instance.Warning($"PartDetailControl: MP folder not configured for '{ex.CustomerName}'");
+            MessageBox.Show(
+                $"No MP folder configured for customer '{ex.CustomerName}'.\n\n" +
+                $"Please open config.txt and set the folder name under [CustomerFolderMappings]:\n" +
+                $"  {ex.CustomerName}=\n\n" +
+                $"Config file:\n{ex.ConfigFilePath}",
+                "MP Folder Not Configured", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        catch (InvalidOperationException ex)
+        {
+            Logger.Instance.Warning($"PartDetailControl: MP file already exists: {ex.Message}");
+            MessageBox.Show(ex.Message, "File Already Exists",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
         catch (Exception ex)
         {
             Logger.Instance.Error($"PartDetailControl: failed to create MP file: {ex.Message}");
             MessageBox.Show($"Failed to create MP file:\n{ex.Message}", "Error",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    private static void OpenFileExternal(string path)
-    {
-        if (!File.Exists(path))
-        {
-            MessageBox.Show("File not found.", "File Not Found",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-        try { Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true }); }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Failed to open file: {ex.Message}", "Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
