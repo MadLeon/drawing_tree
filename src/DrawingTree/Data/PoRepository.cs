@@ -292,6 +292,58 @@ public class PoRepository
     }
 
     /// <summary>
+    /// Loads the PO/job/part context needed to populate a Manufacturing Process Excel file.
+    /// </summary>
+    /// <param name="orderItemId">order_item.id</param>
+    /// <returns>MpContext, or null if the order item is not found.</returns>
+    public MpContext? GetMpContext(int orderItemId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT po.po_number, po.oe_number,
+                       j.job_number, oi.line_number,
+                       p.drawing_number, p.revision, p.description,
+                       oi.drawing_release_date, oi.delivery_required_date,
+                       oi.quantity, cust.customer_name
+                FROM order_item oi
+                JOIN job j              ON j.id   = oi.job_id
+                JOIN purchase_order po  ON po.id  = j.po_id
+                LEFT JOIN customer_contact cc ON cc.id   = po.contact_id
+                LEFT JOIN customer cust       ON cust.id = cc.customer_id
+                LEFT JOIN part p              ON p.id    = oi.part_id
+                WHERE oi.id = @id
+                LIMIT 1
+                """;
+            cmd.Parameters.AddWithValue("@id", orderItemId);
+
+            using var reader = cmd.ExecuteReader();
+            if (!reader.Read()) return null;
+
+            return new MpContext(
+                PoNumber:    reader.GetString(0),
+                OeNumber:    reader.IsDBNull(1)  ? null : reader.GetString(1),
+                JobNumber:   reader.GetString(2),
+                LineNumber:  reader.GetInt32(3),
+                DrawingNumber: reader.IsDBNull(4) ? null : reader.GetString(4),
+                Revision:    reader.IsDBNull(5)  ? null : reader.GetString(5),
+                Description: reader.IsDBNull(6)  ? null : reader.GetString(6),
+                ReleaseDate: reader.IsDBNull(7)  ? null : reader.GetString(7),
+                DueDate:     reader.IsDBNull(8)  ? null : reader.GetString(8),
+                Quantity:    reader.GetInt32(9),
+                CustomerName: reader.IsDBNull(10) ? null : reader.GetString(10)
+            );
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.GetMpContext failed for orderItemId={orderItemId}: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Sets purchase_order.is_active = 0 ("shipped / archived") for the given PO.
     /// </summary>
     public bool MarkAsShipped(int poId)
@@ -419,6 +471,24 @@ public class PoRepository
             Logger.Instance.Error($"PoRepository.GetAllChildDrawings failed: {ex.Message}");
         }
         return result;
+    }
+
+    /// <summary>Returns the active PDF file path for the given part, or null if not found.</summary>
+    public string? GetPdfPath(int partId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT file_path FROM drawing_file WHERE part_id = @id AND is_active = 1 ORDER BY id DESC LIMIT 1";
+            cmd.Parameters.AddWithValue("@id", partId);
+            return cmd.ExecuteScalar() as string;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.GetPdfPath failed for partId={partId}: {ex.Message}");
+            return null;
+        }
     }
 
     /// <summary>Returns true if the given part has any direct children in part_tree.</summary>
@@ -876,6 +946,25 @@ public record ChildDrawingRow(int PartId, string DrawingNumber, string? Revision
 
 /// <summary>Customer lookup row.</summary>
 public record CustomerRow(int Id, string Name);
+
+/// <summary>All fields needed to populate a Manufacturing Process Excel file.</summary>
+/// <param name="PoNumber">purchase_order.po_number</param>
+/// <param name="OeNumber">purchase_order.oe_number</param>
+/// <param name="JobNumber">job.job_number</param>
+/// <param name="LineNumber">order_item.line_number</param>
+/// <param name="DrawingNumber">part.drawing_number</param>
+/// <param name="Revision">part.revision</param>
+/// <param name="Description">part.description</param>
+/// <param name="ReleaseDate">order_item.drawing_release_date</param>
+/// <param name="DueDate">order_item.delivery_required_date</param>
+/// <param name="Quantity">order_item.quantity</param>
+/// <param name="CustomerName">customer.customer_name</param>
+public record MpContext(
+    string PoNumber, string? OeNumber,
+    string JobNumber, int LineNumber,
+    string? DrawingNumber, string? Revision, string? Description,
+    string? ReleaseDate, string? DueDate,
+    int Quantity, string? CustomerName);
 
 /// <summary>Contact lookup row.</summary>
 public record ContactRow(int Id, string Name);

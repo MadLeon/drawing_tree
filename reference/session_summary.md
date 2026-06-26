@@ -1,17 +1,25 @@
 # Project Session Summary
 
 ## Last Updated
-2026-06-25 | 优化 MP Schedule 工具栏样式并修复搜索框输入延迟
+2026-06-26 | 实现 Issue #2：PartDetailControl 新增 Manufacturing Process 区域，支持创建和查看 MP 文件
 
 ## Current Status
-- MP Schedule 工具栏优化完成：返回按钮缩小（28×28/图标 14×14）、搜索框加宽（360px）并改为搜索 Job/Drawing/P.O.、Filter 按钮改用 filter_list 图标、单选框垂直居中
-- 搜索框输入延迟问题通过添加 300ms DispatcherTimer debounce 解决，移除了 Description 搜索并改为 P.O. 搜索
-- MP Schedule（甘特图）展开按钮已缩小（18×18 / 图标 12×12）；展开时左面板先响应，画布延后重绘
-- 子节点甘特图条形图支持点击：打开 StepAssignmentDialog，保存后更新并重绘
-- All POs 界面（现标题"Order Entry"）支持 OE 视图与简洁视图切换；简洁视图按 PO 分组，支持展开子图纸
-- Import Drawing → Edit Parts → Build Tree 三步工作流通过 All POs PO 标题行"Input Data"入口串联
+- `PartDetailControl` 新增 "Manufacturing Process" 卡片：右对齐 "New MP" 按钮 + 已有文件列表
+- 点击 "New MP" 自动复制模板、通过 Excel COM Interop 填入工单信息、保存至网络路径并打开
+- MP 文件命名格式：`{DrawingNumber} {Description} (J#{JobNumber}).xlsm`，保存至 `\\rtdnas2\Manufacturing Process\{Customer}\{PO}\`
+- `orderItemId == 0`（子图纸入口）时 "New MP" 按钮自动隐藏
+- MP Schedule 工具栏优化完成：搜索框加宽（360px）、300ms debounce、Filter 按钮改用图标
+- All POs 界面支持 OE 视图与简洁视图切换；Import Drawing → Edit Parts → Build Tree 三步工作流完整
+- MP Schedule 子节点甘特图条形图支持点击 StepAssignmentDialog
 
 ## Recent Sessions
+
+2026-06-26 - 实现 Issue #2：PartDetailControl 新增 Manufacturing Process 区域
+- `PoRepository` 新增 `GetMpContext(orderItemId)` 方法，JOIN order_item→job→purchase_order→customer→part 返回 MP 所需全部字段；新增 `MpContext` record
+- 新建 `Services/MpFileService.cs`：路径生成（`BuildTargetFolder`/`BuildFileName`）、已有文件扫描（`GetExistingFiles`）、模板复制+COM填单元格+打开（`CreateAndOpen`）
+- `DrawingTree.csproj` 新增 Content 引用，将 `reference/mp_template/Manufacturing Process with Tool.xlsm` 复制到构建输出 `Resources/mp_template.xlsm`
+- `PartDetailControl.xaml` 在 "Drawing PDF" 之后插入 "Manufacturing Process" Border 卡片（含 `NewMpButton` 和 `MpFilesPanel`）
+- `PartDetailControl.xaml.cs` 新增 `LoadMpSection()`、`NewMpButton_Click`、`BuildMpFileRow` 等方法；COM Interop 通过 `dynamic` 无需额外 NuGet 包
 
 2026-06-25 - 优化 MP Schedule 工具栏样式并修复搜索框输入延迟
 - 添加 FilterListGeo 路径资源，Filter 按钮改用 filter_list 图标 + 文字，高度 24px
@@ -41,12 +49,6 @@
 - `DrawingEditorControl` 新增 `ImportCompleted` 事件和 `PrefilledPoNumber`，`PartEditorControl` 新增 `SaveAllCompleted` 事件，`MainWindow` 串联三步自动导航
 - 新建 `NewJobDialog`（含批量创建模式）和 `EditItemDialog`（级联更新 customer/part/order_item）
 - `PoRepository` 新增 `MarkAsShipped`、`GetChildDrawings`（递归 CTE）、`CreateOrderItemCascade`、`UpdateOrderItemCascade` 等方法
-
-2026-06-24 - 新增 purchase_order.is_active 全量同步脚本并修复 All POs 界面过滤
-- 新建 `scripts/update_po_is_active.py`：`openpyxl` 只读读取 Excel AA 列，temp table JOIN 解析 PO，事务写入 `is_active`；默认 dry-run，`--apply` 才执行
-- 18 个单元测试（`scripts/test_update_po_is_active.py`）全部通过，使用 in-memory SQLite + mock openpyxl
-- 修复 `apply_changes` 中 "cannot start a transaction within a transaction" 错误：连接改用 `isolation_level=None`
-- `PoRepository.GetAllPoLines()` 加 `WHERE po.is_active = 1`，All POs 界面只显示活跃 PO
 
 ## Key Decisions
 - WPF `UserControl.Resources` 内 DataTemplate 引用的 `StaticResource` 样式必须定义在 DataTemplate **之前**；若样式在 DataTemplate 之后，WPF 在 Dispatcher layout pass 应用模板时找不到资源，抛出 `XamlParseException`（crash）

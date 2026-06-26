@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using DrawingTree.Data;
 using DrawingTree.Logging;
+using DrawingTree.Services;
 
 using UserControl      = System.Windows.Controls.UserControl;
 using Button           = System.Windows.Controls.Button;
@@ -26,9 +27,11 @@ namespace DrawingTree.Controls;
 public partial class PartDetailControl : UserControl
 {
     private readonly PartRepository _partRepository = new();
+    private readonly PoRepository   _poRepository   = new();
 
-    private int _partId;
-    private int _orderItemId;
+    private int       _partId;
+    private int       _orderItemId;
+    private MpContext? _mpContext;
 
     public event EventHandler? BackRequested;
     public event EventHandler<int>? ViewTreeRequested;
@@ -64,10 +67,119 @@ public partial class PartDetailControl : UserControl
         };
 
         LoadPdfFiles();
+        LoadMpSection();
         LoadProcessSteps();
         LoadNotes();
 
         Logger.Instance.Info($"PartDetailControl: loaded partId={partId}, orderItemId={orderItemId}");
+    }
+
+    // ── Manufacturing Process ────────────────────────────────────────────
+
+    private void LoadMpSection()
+    {
+        MpFilesPanel.Children.Clear();
+
+        if (_orderItemId == 0)
+        {
+            NewMpButton.Visibility = Visibility.Collapsed;
+            MpFilesPanel.Children.Add(new TextBlock
+            {
+                Text = "(no order item context)", FontSize = 12, Foreground = Brushes.Gray
+            });
+            return;
+        }
+
+        NewMpButton.Visibility = Visibility.Visible;
+        _mpContext = _poRepository.GetMpContext(_orderItemId);
+
+        if (_mpContext == null)
+        {
+            MpFilesPanel.Children.Add(new TextBlock
+            {
+                Text = "(order item context not found)", FontSize = 12, Foreground = Brushes.Gray
+            });
+            return;
+        }
+
+        var folder = MpFileService.BuildTargetFolder(_mpContext.CustomerName, _mpContext.PoNumber);
+        var files  = MpFileService.GetExistingFiles(folder, _mpContext.DrawingNumber);
+
+        if (files.Count == 0)
+        {
+            MpFilesPanel.Children.Add(new TextBlock
+            {
+                Text = "(no MP files yet)", FontSize = 12, Foreground = Brushes.Gray
+            });
+            return;
+        }
+
+        foreach (var filePath in files)
+            MpFilesPanel.Children.Add(BuildMpFileRow(filePath));
+    }
+
+    private Grid BuildMpFileRow(string filePath)
+    {
+        var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
+
+        var nameText = new TextBlock
+        {
+            Text = System.IO.Path.GetFileName(filePath), FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center,
+            TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = filePath
+        };
+        Grid.SetColumn(nameText, 0);
+        grid.Children.Add(nameText);
+
+        var openBtn = new Button
+        {
+            Style = (Style)Resources["IconBtn"], Width = 24, Height = 24, ToolTip = "Open",
+            Content = new Path
+            {
+                Data = (Geometry)Resources["OpenInNewGeo"], Stretch = Stretch.Uniform,
+                Fill = Brushes.DodgerBlue, Width = 13, Height = 13
+            }
+        };
+        openBtn.Click += (_, _) => OpenFileExternal(filePath);
+        Grid.SetColumn(openBtn, 1);
+        grid.Children.Add(openBtn);
+
+        return grid;
+    }
+
+    private void NewMpButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_mpContext == null) return;
+
+        try
+        {
+            MpFileService.CreateAndOpen(_mpContext);
+            LoadMpSection();
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartDetailControl: failed to create MP file: {ex.Message}");
+            MessageBox.Show($"Failed to create MP file:\n{ex.Message}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private static void OpenFileExternal(string path)
+    {
+        if (!File.Exists(path))
+        {
+            MessageBox.Show("File not found.", "File Not Found",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        try { Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true }); }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Failed to open file: {ex.Message}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     // ── Drawing PDF ──────────────────────────────────────────────────────

@@ -6,9 +6,17 @@
 
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
+using System.Windows.Media;
+using Brush  = System.Windows.Media.Brush;
+using Brushes = System.Windows.Media.Brushes;
+using Cursor = System.Windows.Input.Cursor;
+using Cursors = System.Windows.Input.Cursors;
 using DrawingTree.Data;
 using DrawingTree.Dialogs;
 using DrawingTree.Logging;
@@ -40,6 +48,9 @@ public class PoSimpleGroup
 
 public class ExpandableOrderItem : INotifyPropertyChanged
 {
+    private static readonly Geometry AddBoxGeo = Geometry.Parse("M440-280h80v-160h160v-80H520v-160h-80v160H280v80h160v160ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z");
+    private static readonly Geometry IndeterminateBoxGeo = Geometry.Parse("M280-440h400v-80H280v80ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z");
+
     private bool _isExpanded;
 
     public PoListRow Row { get; set; } = null!;
@@ -51,17 +62,21 @@ public class ExpandableOrderItem : INotifyPropertyChanged
         {
             _isExpanded = value;
             OnPropertyChanged(nameof(IsExpanded));
-            OnPropertyChanged(nameof(ExpandIcon));
+            OnPropertyChanged(nameof(ExpandIconGeometry));
             OnPropertyChanged(nameof(ChildrenVisibility));
         }
     }
 
-    public string ExpandIcon => IsExpanded ? "▾" : "▸";
+    public Geometry ExpandIconGeometry => _isExpanded ? IndeterminateBoxGeo : AddBoxGeo;
 
     public Visibility ExpandButtonVisibility => Row.HasChildren ? Visibility.Visible : Visibility.Hidden;
     public Visibility PartButtonVisibility   => Row.PartId.HasValue ? Visibility.Visible : Visibility.Collapsed;
 
     public Visibility ChildrenVisibility => IsExpanded ? Visibility.Visible : Visibility.Collapsed;
+
+    public Brush DrawingLinkForeground => Row.PartId.HasValue ? Brushes.DodgerBlue : Brushes.Black;
+    public TextDecorationCollection? DrawingLinkDecorations => Row.PartId.HasValue ? TextDecorations.Underline : null;
+    public Cursor DrawingLinkCursor => Row.PartId.HasValue ? Cursors.Hand : Cursors.Arrow;
 
     public ObservableCollection<ChildDrawingItem> Children { get; } = new();
 
@@ -76,6 +91,12 @@ public class ChildDrawingItem
     public string  DrawingNumber { get; set; } = string.Empty;
     public string? Revision      { get; set; }
     public string? Description   { get; set; }
+    public int?    PartId        { get; set; }
+
+    public Brush DrawingLinkForeground => PartId.HasValue ? Brushes.DodgerBlue : Brushes.Black;
+    public TextDecorationCollection? DrawingLinkDecorations => PartId.HasValue ? TextDecorations.Underline : null;
+    public Cursor DrawingLinkCursor => PartId.HasValue ? Cursors.Hand : Cursors.Arrow;
+    public Visibility PdfButtonVisibility => PartId.HasValue ? Visibility.Visible : Visibility.Collapsed;
 }
 
 // ── Control ───────────────────────────────────────────────────────────────────
@@ -189,7 +210,8 @@ public partial class AllPosControl : UserControl
                 {
                     DrawingNumber = r.DrawingNumber,
                     Revision      = r.Revision,
-                    Description   = r.Description
+                    Description   = r.Description,
+                    PartId        = r.PartId
                 });
         }
 
@@ -328,7 +350,48 @@ public partial class AllPosControl : UserControl
     {
         if (sender is not Button btn || btn.Tag is not ExpandableOrderItem item) return;
         if (!item.Row.PartId.HasValue) return;
-        NavigateToPartRequested?.Invoke(this, (item.Row.PartId.Value, item.Row.OrderItemId));
+        OpenPdfExternal(_repository.GetPdfPath(item.Row.PartId.Value));
+    }
+
+    private void OpenChildPdfButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not ChildDrawingItem child) return;
+        if (!child.PartId.HasValue) return;
+        OpenPdfExternal(_repository.GetPdfPath(child.PartId.Value));
+    }
+
+    private void DrawingNumberMain_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is ExpandableOrderItem item && item.Row.PartId.HasValue)
+        {
+            NavigateToPartRequested?.Invoke(this, (item.Row.PartId.Value, item.Row.OrderItemId));
+            e.Handled = true;
+        }
+    }
+
+    private void DrawingNumberChild_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is ChildDrawingItem child && child.PartId.HasValue)
+        {
+            NavigateToPartRequested?.Invoke(this, (child.PartId.Value, 0));
+            e.Handled = true;
+        }
+    }
+
+    private static void OpenPdfExternal(string? path)
+    {
+        if (string.IsNullOrEmpty(path) || !File.Exists(path))
+        {
+            MessageBox.Show("PDF file not found.", "File Not Found",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        try { Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true }); }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Failed to open PDF: {ex.Message}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void ItemRowMenu_Click(object sender, RoutedEventArgs e)
@@ -360,7 +423,8 @@ public partial class AllPosControl : UserControl
                 {
                     DrawingNumber = c.DrawingNumber,
                     Revision      = c.Revision,
-                    Description   = c.Description
+                    Description   = c.Description,
+                    PartId        = c.PartId
                 });
         }
 

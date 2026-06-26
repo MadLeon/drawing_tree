@@ -17,4 +17,11 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\..\reference\mp_template\Manufacturing Process with Tool.xlsm">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>Resources\mp_template.xlsm</Link>
+    </Content>
+  </ItemGroup>
+
 </Project>

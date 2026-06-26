@@ -288,16 +288,25 @@
                                                             </Grid.ColumnDefinitions>
                                                             <!-- Expand icon -->
                                                             <Button Grid.Column="0"
-                                                                    Content="{Binding ExpandIcon}"
+                                                                    Width="18" Height="18"
                                                                     Style="{StaticResource ThreeDotBtn}"
-                                                                    FontSize="12"
+                                                                    Padding="0"
                                                                     Visibility="{Binding ExpandButtonVisibility}"
                                                                     Tag="{Binding}"
-                                                                    Click="ExpandItem_Click"/>
+                                                                    Click="ExpandItem_Click">
+                                                                <Path Stretch="Uniform" Fill="#555555" Width="12" Height="12"
+                                                                      Data="{Binding ExpandIconGeometry}"/>
+                                                            </Button>
                                                             <TextBlock Grid.Column="1" Text="{Binding Row.JobNumber}"     FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
                                                             <TextBlock Grid.Column="2" Text="{Binding Row.LineNumber}"    FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
                                                             <TextBlock Grid.Column="3" Text="{Binding Row.Quantity}"      FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
-                                                            <TextBlock Grid.Column="4" Text="{Binding Row.DrawingNumber}" FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
+                                                            <TextBlock Grid.Column="4" FontSize="12" VerticalAlignment="Center" Margin="4,0"
+                                                                       Text="{Binding Row.DrawingNumber}"
+                                                                       Foreground="{Binding DrawingLinkForeground}"
+                                                                       TextDecorations="{Binding DrawingLinkDecorations}"
+                                                                       Cursor="{Binding DrawingLinkCursor}"
+                                                                       Tag="{Binding}"
+                                                                       MouseLeftButtonDown="DrawingNumberMain_Click"/>
                                                             <Grid Grid.Column="5" VerticalAlignment="Center" Margin="4,0">
                                                                 <Grid.ColumnDefinitions>
                                                                     <ColumnDefinition Width="*"/>
@@ -311,7 +320,7 @@
                                                                         Style="{StaticResource ThreeDotBtn}" Padding="2,0" Margin="4,0,0,0"
                                                                         ToolTip="Open Part">
                                                                     <Viewbox Width="13" Height="13">
-                                                                        <Path Data="{StaticResource OpenInNewGeo}" Stretch="Uniform" Fill="#555555"/>
+                                                                        <Path Data="{StaticResource OpenInNewGeo}" Stretch="Uniform" Fill="DodgerBlue"/>
                                                                     </Viewbox>
                                                                 </Button>
                                                             </Grid>
@@ -351,17 +360,30 @@
                                                                             <ColumnDefinition Width="100"/>
                                                                             <ColumnDefinition Width="30"/>
                                                                         </Grid.ColumnDefinitions>
-                                                                        <TextBlock Grid.Column="4"
+                                                                        <TextBlock Grid.Column="4" FontSize="11" VerticalAlignment="Center" Margin="4,0"
                                                                                    Text="{Binding DrawingNumber}"
-                                                                                   FontSize="11" Foreground="#555"
-                                                                                   VerticalAlignment="Center"
-                                                                                   Margin="4,0"/>
-                                                                        <TextBlock Grid.Column="5"
-                                                                                   Text="{Binding Description}"
-                                                                                   FontSize="11" Foreground="#888"
-                                                                                   VerticalAlignment="Center"
-                                                                                   TextTrimming="CharacterEllipsis"
-                                                                                   Margin="4,0"/>
+                                                                                   Foreground="{Binding DrawingLinkForeground}"
+                                                                                   TextDecorations="{Binding DrawingLinkDecorations}"
+                                                                                   Cursor="{Binding DrawingLinkCursor}"
+                                                                                   Tag="{Binding}"
+                                                                                   MouseLeftButtonDown="DrawingNumberChild_Click"/>
+                                                                        <Grid Grid.Column="5" VerticalAlignment="Center" Margin="4,0">
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="*"/>
+                                                                                <ColumnDefinition Width="Auto"/>
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <TextBlock Grid.Column="0" Text="{Binding Description}" FontSize="11" Foreground="#888"
+                                                                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                                            <Button Grid.Column="1"
+                                                                                    Visibility="{Binding PdfButtonVisibility}"
+                                                                                    Tag="{Binding}" Click="OpenChildPdfButton_Click"
+                                                                                    Style="{StaticResource ThreeDotBtn}" Padding="2,0" Margin="4,0,0,0"
+                                                                                    ToolTip="Open PDF">
+                                                                                <Viewbox Width="13" Height="13">
+                                                                                    <Path Data="{StaticResource OpenInNewGeo}" Stretch="Uniform" Fill="DodgerBlue"/>
+                                                                                </Viewbox>
+                                                                            </Button>
+                                                                        </Grid>
                                                                     </Grid>
                                                                 </Border>
                                                             </DataTemplate>

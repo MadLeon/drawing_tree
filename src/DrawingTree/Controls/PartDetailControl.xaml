@@ -108,6 +108,21 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Manufacturing Process -->
+                <Border BorderBrush="#CCCCCC" BorderThickness="1" Margin="0,0,0,12" Padding="10" Background="White">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,8">
+                            <TextBlock Text="Manufacturing Process" FontWeight="Bold" FontSize="13"
+                                       VerticalAlignment="Center"/>
+                            <Button x:Name="NewMpButton" Content="New MP"
+                                    Height="24" FontSize="11" Padding="8,0"
+                                    HorizontalAlignment="Right"
+                                    Click="NewMpButton_Click"/>
+                        </Grid>
+                        <StackPanel x:Name="MpFilesPanel"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- DIR (placeholder) -->
                 <Border BorderBrush="#CCCCCC" BorderThickness="1" Margin="0,0,0,12" Padding="10" Background="#FAFAFA">
                     <StackPanel>
