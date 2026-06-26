@@ -523,29 +523,45 @@ public partial class MainWindow : Window
         Logger.Instance.Info("Returned to All POs from drawing viewer");
     }
 
+    // ── Settings menu ─────────────────────────────────────────────────────────
+
     /// <summary>
-    /// Handle View Drawings button click.
-    /// Dev: hardcoded to part.id=3490.
+    /// Opens the settings ContextMenu when the gear button is clicked.
     /// </summary>
-    private void ViewDrawingsButton_Click(object sender, RoutedEventArgs e)
+    private void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
-        Logger.Instance.Info("View Drawings button clicked");
-        ShowDrawingViewerByPartId(3490);
+        if (sender is System.Windows.Controls.Button btn && btn.ContextMenu != null)
+        {
+            btn.ContextMenu.PlacementTarget = btn;
+            btn.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Custom;
+            btn.ContextMenu.CustomPopupPlacementCallback = (popupSize, targetSize, offset) =>
+                new[] { new System.Windows.Controls.Primitives.CustomPopupPlacement(
+                    new System.Windows.Point(targetSize.Width - popupSize.Width, targetSize.Height),
+                    System.Windows.Controls.Primitives.PopupPrimaryAxis.None) };
+            btn.ContextMenu.IsOpen = true;
+        }
     }
 
     /// <summary>
-    /// Show drawing viewer and load the full tree rooted above the given part ID.
+    /// Opens config.txt from the application directory in the default text editor.
     /// </summary>
-    private void ShowDrawingViewerByPartId(int partId)
+    private void ConfigMenu_Click(object sender, RoutedEventArgs e)
     {
-        MainDisplayArea.Children.Clear();
+        string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.txt");
+        if (!File.Exists(configPath))
+            File.WriteAllText(configPath, "# Application Configuration\n");
 
-        _drawingViewerControl = new DrawingViewerControl();
-        _drawingViewerControl.LoadFromPartId(partId);
-        _drawingViewerControl.ReturnRequested += OnDrawingViewerReturn;
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(configPath) { UseShellExecute = true });
+        Logger.Instance.Info($"Opened config.txt at {configPath}");
+    }
 
-        MainDisplayArea.Children.Add(_drawingViewerControl);
-        Logger.Instance.Info($"Drawing viewer displayed for partId={partId}");
+    /// <summary>
+    /// Opens the Run Script dialog.
+    /// </summary>
+    private void RunScriptMenu_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new Dialogs.RunScriptDialog { Owner = this };
+        dlg.ShowDialog();
     }
 
     /// <summary>

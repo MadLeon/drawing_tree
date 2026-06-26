@@ -135,18 +135,21 @@ public partial class AllPosControl : UserControl
     {
         if (ShowHistoryOnly)
         {
-            TitleLabel.Text      = "PO History";
+            TitleLabel.Text          = "PO History";
             NewJobButton.Visibility  = Visibility.Collapsed;
             HistoryButton.Visibility = Visibility.Collapsed;
         }
-        LoadData();
+        _ = LoadDataAsync();
     }
 
-    public void Reload() => LoadData();
+    public void Reload() => _ = LoadDataAsync();
 
-    private void LoadData()
+    private async Task LoadDataAsync()
     {
-        _allRows = _repository.GetAllPoLines(activeOnly: !ShowHistoryOnly);
+        LoadingOverlay.Visibility = Visibility.Visible;
+        bool activeOnly = !ShowHistoryOnly;
+
+        _allRows = await Task.Run(() => _repository.GetAllPoLines(activeOnly: activeOnly));
 
         int poCount = _allRows.Select(r => r.PoId).Distinct().Count();
         PoCountLabel.Text = $"({poCount})";
@@ -156,6 +159,7 @@ public partial class AllPosControl : UserControl
         else
             ApplyOeView();
 
+        LoadingOverlay.Visibility = Visibility.Collapsed;
         Logger.Instance.Info($"AllPosControl: loaded {_allRows.Count} PO line(s) (historyMode={ShowHistoryOnly})");
     }
 
