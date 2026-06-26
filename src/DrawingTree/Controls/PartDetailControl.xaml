@@ -77,26 +77,56 @@
                 <!-- Basic info -->
                 <Border BorderBrush="#CCCCCC" BorderThickness="1" Margin="0,0,0,12" Padding="10" Background="White">
                     <StackPanel>
-                        <TextBlock Text="Basic Info" FontWeight="Bold" FontSize="13" Margin="0,0,0,8"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Basic Info" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                            <Button Content="Tree View" Height="24" FontSize="11" Padding="8,0"
+                                    Margin="8,0,0,0" VerticalAlignment="Center"
+                                    Click="TreeViewButton_Click"/>
+                        </StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Revision" FontSize="12" Foreground="Gray"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" x:Name="RevisionText" FontSize="12"/>
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Description" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" x:Name="DescriptionText" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Is Assembly" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" x:Name="IsAssemblyText" FontSize="12" Margin="0,4,0,0"/>
+                            <!-- Left: part info -->
+                            <Grid Grid.Column="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Revision" FontSize="12" Foreground="Gray"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="RevisionText" FontSize="12"/>
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Description" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="DescriptionText" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Is Assembly" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="IsAssemblyText" FontSize="12" Margin="0,4,0,0"/>
+                            </Grid>
+                            <!-- Right: PO / Job / Line (only when context is available) -->
+                            <StackPanel Grid.Column="1" x:Name="PoInfoPanel" Visibility="Collapsed" Margin="8,0,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="PO Number" FontSize="12" Foreground="Gray"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="PoNumberText" FontSize="12"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Job Number" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="JobNumberText" FontSize="12" Margin="0,4,0,0"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Line" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="LineText" FontSize="12" Margin="0,4,0,0"/>
+                                </Grid>
+                            </StackPanel>
                         </Grid>
-                        <Button Content="Tree View" Width="100" Height="26" Margin="0,10,0,0"
-                                HorizontalAlignment="Left" Click="TreeViewButton_Click"/>
                     </StackPanel>
                 </Border>
 
@@ -111,14 +141,14 @@
                 <!-- Manufacturing Process -->
                 <Border BorderBrush="#CCCCCC" BorderThickness="1" Margin="0,0,0,12" Padding="10" Background="White">
                     <StackPanel>
-                        <Grid Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <TextBlock Text="Manufacturing Process" FontWeight="Bold" FontSize="13"
                                        VerticalAlignment="Center"/>
                             <Button x:Name="NewMpButton" Content="New MP"
                                     Height="24" FontSize="11" Padding="8,0"
-                                    HorizontalAlignment="Right"
+                                    Margin="8,0,0,0" VerticalAlignment="Center"
                                     Click="NewMpButton_Click"/>
-                        </Grid>
+                        </StackPanel>
                         <StackPanel x:Name="MpFilesPanel"/>
                     </StackPanel>
                 </Border>

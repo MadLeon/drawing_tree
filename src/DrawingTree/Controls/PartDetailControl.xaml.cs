@@ -52,6 +52,9 @@ public partial class PartDetailControl : UserControl
         _partId = partId;
         _orderItemId = orderItemId;
 
+        if (_orderItemId > 0)
+            _mpContext = _poRepository.GetMpContext(_orderItemId);
+
         var header = _partRepository.GetPartHeader(partId);
         TitleLabel.Text = header == null
             ? $"Drawing Number: (part #{partId} not found)"
@@ -65,6 +68,14 @@ public partial class PartDetailControl : UserControl
             false => "No",
             null => "Unknown"
         };
+
+        if (_mpContext != null)
+        {
+            PoInfoPanel.Visibility = Visibility.Visible;
+            PoNumberText.Text = _mpContext.PoNumber;
+            JobNumberText.Text = _mpContext.JobNumber;
+            LineText.Text = _mpContext.LineNumber.ToString();
+        }
 
         LoadPdfFiles();
         LoadMpSection();
@@ -91,7 +102,6 @@ public partial class PartDetailControl : UserControl
         }
 
         NewMpButton.Visibility = Visibility.Visible;
-        _mpContext = _poRepository.GetMpContext(_orderItemId);
 
         if (_mpContext == null)
         {
@@ -113,15 +123,34 @@ public partial class PartDetailControl : UserControl
             return;
         }
 
+        MpFilesPanel.Children.Add(BuildMpFilesHeader());
         foreach (var attachment in attachments)
             MpFilesPanel.Children.Add(BuildMpFileRow(attachment));
+    }
+
+    private static Grid BuildMpFilesHeader()
+    {
+        var grid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.5, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+        var header = new TextBlock
+        {
+            Text = "File Name", FontWeight = FontWeights.SemiBold, FontSize = 11, Foreground = Brushes.Gray
+        };
+        Grid.SetColumn(header, 0);
+        grid.Children.Add(header);
+
+        return grid;
     }
 
     private Grid BuildMpFileRow(MpAttachmentRow attachment)
     {
         var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.5, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
         var nameText = new TextBlock
         {
@@ -218,15 +247,37 @@ public partial class PartDetailControl : UserControl
             return;
         }
 
+        PdfListPanel.Children.Add(BuildPdfHeader());
         foreach (var file in files)
             PdfListPanel.Children.Add(BuildPdfRow(file));
+    }
+
+    private static readonly int[] PdfColumnWidths = { 260, 60, 70, 140, 28 };
+
+    private static Grid BuildPdfHeader()
+    {
+        var grid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
+        foreach (var w in PdfColumnWidths)
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(w) });
+
+        var headers = new[] { "File Name", "Rev", "Active", "Last Modified", "PDF" };
+        for (int i = 0; i < headers.Length; i++)
+        {
+            var block = new TextBlock
+            {
+                Text = headers[i], FontWeight = FontWeights.SemiBold, FontSize = 11, Foreground = Brushes.Gray
+            };
+            Grid.SetColumn(block, i);
+            grid.Children.Add(block);
+        }
+        return grid;
     }
 
     private Grid BuildPdfRow(PartDrawingFile file)
     {
         var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
-        foreach (var width in new[] { 260, 60, 70, 140, 28 })
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(width) });
+        foreach (var w in PdfColumnWidths)
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(w) });
 
         var nameText = new TextBlock
         {
@@ -300,7 +351,7 @@ public partial class PartDetailControl : UserControl
     {
         var grid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
         foreach (var width in StepColumnWidths)
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(width) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = width });
 
         void AddHeader(int col, string text)
         {
@@ -319,13 +370,24 @@ public partial class PartDetailControl : UserControl
         return grid;
     }
 
-    private static readonly int[] StepColumnWidths = { 40, 80, 180, 140, 90, 90, 90, 110, 110 };
+    private static readonly GridLength[] StepColumnWidths =
+    {
+        new GridLength(40),
+        new GridLength(80),
+        new GridLength(1, GridUnitType.Star), // Description fills remaining width (~65% of section)
+        new GridLength(140),
+        new GridLength(90),
+        new GridLength(90),
+        new GridLength(90),
+        new GridLength(110),
+        new GridLength(110)
+    };
 
     private static Grid BuildProcessStepRow(ProcessStepRow step)
     {
         var grid = new Grid { Margin = new Thickness(0, 1, 0, 1) };
         foreach (var width in StepColumnWidths)
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(width) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = width });
 
         var values = new[]
         {
