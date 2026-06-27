@@ -23,11 +23,11 @@
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <Button x:Name="BackButton"
                         Style="{StaticResource IconBtn}"
-                        Width="32" Height="32" Margin="0,0,8,0"
+                        Width="28" Height="28" Margin="0,0,8,0"
                         ToolTip="Back to PO detail"
                         Click="BackButton_Click">
                     <Path Data="{StaticResource ChevronLeftGeo}"
-                          Stretch="Uniform" Fill="#333333" Width="20" Height="20"/>
+                          Stretch="Uniform" Fill="#333333" Width="14" Height="14"/>
                 </Button>
                 <TextBlock x:Name="TitleLabel" FontWeight="Bold" FontSize="14"
                            VerticalAlignment="Center" Foreground="#333"/>

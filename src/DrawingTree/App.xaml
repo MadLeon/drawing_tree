@@ -6,7 +6,7 @@
     <Application.Resources>
         <Geometry x:Key="ChevronLeftGeo">M560-240 320-480l240-240 57 57-184 183 184 184-57 57Z</Geometry>
 
-        <!-- Transparent icon button with subtle hover — used for toolbar icon buttons across the app -->
+        <!-- Transparent icon button with subtle hover — used for back buttons and toolbar action buttons -->
         <Style x:Key="IconBtn" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -23,6 +23,31 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="BtnBd" Property="Background" Value="#15000000"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Transparent icon link button — used for inline icon actions (open PDF, open file, etc.) -->
+        <Style x:Key="IconLinkBtn" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="2"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#20000000"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

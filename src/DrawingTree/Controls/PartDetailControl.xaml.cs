@@ -163,13 +163,14 @@ public partial class PartDetailControl : UserControl
 
         var openBtn = new Button
         {
-            Style = (Style)Resources["IconBtn"], Width = 24, Height = 24, ToolTip = "Open",
+            Style = (Style)FindResource("IconLinkBtn"), Padding = new Thickness(2, 0, 2, 0), ToolTip = "Open",
             Content = new Path
             {
                 Data = (Geometry)Resources["OpenInNewGeo"], Stretch = Stretch.Uniform,
                 Fill = Brushes.DodgerBlue, Width = 13, Height = 13
             }
         };
+        openBtn.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
         openBtn.Click += (_, _) => OpenMpFile(attachment);
         Grid.SetColumn(openBtn, 1);
         grid.Children.Add(openBtn);
@@ -313,13 +314,14 @@ public partial class PartDetailControl : UserControl
 
         var openBtn = new Button
         {
-            Style = (Style)Resources["IconBtn"], Width = 24, Height = 24, ToolTip = "Open PDF",
+            Style = (Style)FindResource("IconLinkBtn"), Padding = new Thickness(2, 0, 2, 0), ToolTip = "Open PDF",
             Content = new Path
             {
                 Data = (Geometry)Resources["OpenInNewGeo"], Stretch = Stretch.Uniform,
                 Fill = Brushes.DodgerBlue, Width = 13, Height = 13
             }
         };
+        openBtn.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
         openBtn.Click += (_, _) => OpenPdfExternal(file.FilePath);
         Grid.SetColumn(openBtn, 4);
         grid.Children.Add(openBtn);
