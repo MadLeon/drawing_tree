@@ -154,15 +154,21 @@ public class PoRepository
                 )
                 SELECT t.part_tree_id,
                        t.part_id,
-                       t.drawing_number,
-                       t.revision,
-                       t.description,
-                       t.is_assembly,
+                       latest.drawing_number,
+                       latest.revision,
+                       latest.description,
+                       latest.is_assembly,
                        t.parent_part_id,
                        t.quantity,
                        df.file_path
                 FROM tree t
-                LEFT JOIN drawing_file df ON df.part_id = t.part_id AND df.is_active = 1
+                JOIN part latest ON latest.id = (
+                    SELECT id FROM part
+                    WHERE UPPER(drawing_number) = UPPER(t.drawing_number)
+                    ORDER BY revision DESC
+                    LIMIT 1
+                )
+                LEFT JOIN drawing_file df ON df.part_id = latest.id AND df.is_active = 1
                 WHERE t.parent_part_id IS NOT NULL
                 ORDER BY t.drawing_number
                 """;

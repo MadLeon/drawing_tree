@@ -68,13 +68,34 @@ public partial class PoDetailControl : UserControl
     private Border BuildJobSection(string jobNumber, List<PoOrderItemRow> rows)
     {
         var content = new StackPanel();
-        content.Children.Add(new TextBlock
+
+        var jobHeader = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 8) };
+        jobHeader.Children.Add(new TextBlock
         {
             Text = $"Job No: {jobNumber}",
             FontWeight = FontWeights.Bold,
             FontSize = 13,
-            Margin = new Thickness(0, 0, 0, 8)
+            VerticalAlignment = VerticalAlignment.Center
         });
+
+        var firstPartId = rows.FirstOrDefault(r => r.PartId.HasValue)?.PartId;
+        if (firstPartId.HasValue)
+        {
+            var viewTreeBtn = new Button
+            {
+                Content = "Tree", FontSize = 11, Height = 24,
+                Padding = new Thickness(6, 0, 6, 0),
+                Margin = new Thickness(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center
+            };
+            viewTreeBtn.Click += (_, _) =>
+            {
+                Logger.Instance.Info($"PoDetailControl: view tree requested for partId={firstPartId.Value}");
+                ViewTreeRequested?.Invoke(this, firstPartId.Value);
+            };
+            jobHeader.Children.Add(viewTreeBtn);
+        }
+
+        content.Children.Add(jobHeader);
 
         foreach (var row in rows)
             content.Children.Add(BuildOrderItemBlock(row));
@@ -131,8 +152,11 @@ public partial class PoDetailControl : UserControl
     private static Grid BuildPartTableHeader()
     {
         var grid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
-        foreach (var width in new[] { 180, 60, 260, 28, 28, 80 })
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(width) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
 
         void AddHeader(int col, string text)
         {
@@ -148,14 +172,19 @@ public partial class PoDetailControl : UserControl
         AddHeader(0, "Drawing Number");
         AddHeader(1, "Rev.");
         AddHeader(2, "Description");
+        AddHeader(3, "PDF");
+        AddHeader(4, "Part");
         return grid;
     }
 
     private Grid BuildPartRow(DrawingNode node, int orderItemId)
     {
         var grid = new Grid { Margin = new Thickness(0, 1, 0, 1) };
-        foreach (var width in new[] { 180, 60, 260, 28, 28, 80 })
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(width) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
 
         var drawingNumber = new TextBlock
         {
@@ -181,7 +210,7 @@ public partial class PoDetailControl : UserControl
 
         var openPdfBtn = new Button
         {
-            Style = (Style)Resources["IconBtn"], Width = 24, Height = 24, ToolTip = "Open PDF",
+            Style = (Style)FindResource("IconLinkBtn"), Padding = new Thickness(3), ToolTip = "Open PDF",
             Content = new Path
             {
                 Data = (Geometry)Resources["OpenInNewGeo"], Stretch = Stretch.Uniform,
@@ -196,7 +225,7 @@ public partial class PoDetailControl : UserControl
         {
             var openPartBtn = new Button
             {
-                Style = (Style)Resources["IconBtn"], Width = 24, Height = 24, ToolTip = "Open part (coming soon)",
+                Style = (Style)FindResource("IconLinkBtn"), Padding = new Thickness(3), ToolTip = "Open part (coming soon)",
                 Content = new Path
                 {
                     Data = (Geometry)Resources["BuildGeo"], Stretch = Stretch.Uniform,
@@ -210,18 +239,6 @@ public partial class PoDetailControl : UserControl
             };
             Grid.SetColumn(openPartBtn, 4);
             grid.Children.Add(openPartBtn);
-
-            if (node.IsRootNode)
-            {
-                var viewTreeBtn = new Button { Content = "View Tree", FontSize = 11, Height = 24 };
-                viewTreeBtn.Click += (_, _) =>
-                {
-                    Logger.Instance.Info($"PoDetailControl: view tree requested for partId={partId}");
-                    ViewTreeRequested?.Invoke(this, partId);
-                };
-                Grid.SetColumn(viewTreeBtn, 5);
-                grid.Children.Add(viewTreeBtn);
-            }
         }
 
         return grid;
@@ -230,14 +247,19 @@ public partial class PoDetailControl : UserControl
     private DrawingNode BuildRootNode(int partId)
     {
         var info = _drawingRepository.GetDrawingInfo(partId);
+        // Resolve to latest revision for display; keep original partId for tree lookup
+        var display = info != null
+            ? (_drawingRepository.GetDrawingInfo(info.DrawingNumber) ?? info)
+            : null;
+
         var drawing = new DrawingInfo
         {
             PartId        = partId,
-            DrawingNumber = info?.DrawingNumber ?? partId.ToString(),
-            Revision      = info?.Revision      ?? string.Empty,
-            Description   = info?.Description   ?? string.Empty,
-            IsAssembly    = info?.IsAssembly     ?? false,
-            PdfPath       = info?.PdfPath        ?? string.Empty
+            DrawingNumber = display?.DrawingNumber ?? partId.ToString(),
+            Revision      = display?.Revision      ?? string.Empty,
+            Description   = display?.Description   ?? string.Empty,
+            IsAssembly    = display?.IsAssembly     ?? false,
+            PdfPath       = display?.PdfPath        ?? string.Empty
         };
         var node = new DrawingNode(drawing) { IsRootNode = true };
 
