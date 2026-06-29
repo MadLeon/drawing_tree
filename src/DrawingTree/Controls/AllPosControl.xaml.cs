@@ -109,6 +109,31 @@ public class ChildDrawingItem
     public Visibility MpIconVisibility    => HasMp ? Visibility.Visible : Visibility.Collapsed;
 }
 
+public class OeRowItem
+{
+    public PoListRow Row { get; }
+    public string SearchTerm { get; }
+
+    public string  PoNumber     => Row.PoNumber;
+    public string? OeNumber     => Row.OeNumber;
+    public string  JobNumber    => Row.JobNumber;
+    public int     LineNumber   => Row.LineNumber;
+    public string? CustomerName => Row.CustomerName;
+    public string? ContactName  => Row.ContactName;
+    public int     Quantity     => Row.Quantity;
+    public string? DrawingNumber => Row.DrawingNumber;
+    public string? Revision     => Row.Revision;
+    public string? Description  => Row.Description;
+    public string? ReleaseDate  => Row.ReleaseDate;
+    public string? DueDate      => Row.DueDate;
+
+    public OeRowItem(PoListRow row, string searchTerm)
+    {
+        Row = row;
+        SearchTerm = searchTerm;
+    }
+}
+
 // ── Control ───────────────────────────────────────────────────────────────────
 
 public partial class AllPosControl : UserControl
@@ -239,10 +264,14 @@ public partial class AllPosControl : UserControl
 
     private void ApplyOeView(List<PoListRow>? rows = null)
     {
-        var view = new ListCollectionView(rows ?? _allRows);
-        view.SortDescriptions.Add(new SortDescription(nameof(PoListRow.OeNumber),  ListSortDirection.Ascending));
-        view.SortDescriptions.Add(new SortDescription(nameof(PoListRow.LineNumber), ListSortDirection.Ascending));
-        view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(PoListRow.PoNumber)));
+        var items = (rows ?? _allRows)
+            .Select(r => new OeRowItem(r, SearchTerm))
+            .ToList();
+
+        var view = new ListCollectionView(items);
+        view.SortDescriptions.Add(new SortDescription(nameof(OeRowItem.OeNumber),   ListSortDirection.Ascending));
+        view.SortDescriptions.Add(new SortDescription(nameof(OeRowItem.LineNumber),  ListSortDirection.Ascending));
+        view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(OeRowItem.PoNumber)));
         ResultsGrid.ItemsSource = view;
 
         ResultsGrid.Visibility     = Visibility.Visible;
@@ -570,8 +599,9 @@ public partial class AllPosControl : UserControl
         if (sender is not MenuItem mi) return null;
         if (mi.Parent is ContextMenu cm && cm.PlacementTarget is Button btn)
         {
-            // Three-dot button in simple view: Tag = ExpandableOrderItem or PoListRow
+            // Three-dot button in simple view: Tag = ExpandableOrderItem or PoListRow or OeRowItem
             if (btn.Tag is ExpandableOrderItem eoi) return eoi.Row;
+            if (btn.Tag is OeRowItem oe) return oe.Row;
             if (btn.Tag is PoListRow r) return r;
         }
         // OE DataGrid right-click: MenuItem built in code with Tag = PoListRow

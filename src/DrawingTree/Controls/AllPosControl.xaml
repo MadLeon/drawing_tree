@@ -140,7 +140,7 @@
 
             <!-- ── OE View ─────────────────────────────────────────────────── -->
             <DataGrid x:Name="ResultsGrid"
-                      VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                      VirtualizingPanel.IsVirtualizing="False"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       SelectionMode="Single"
@@ -195,7 +195,7 @@
                                             <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                    <DataTrigger Binding="{Binding SearchTerm}" Value="">
                                                         <Setter Property="Visibility" Value="Visible"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -203,13 +203,13 @@
                                         </TextBox.Style>
                                     </TextBox>
                                     <TextBlock local:HighlightBehavior.FullText="{Binding PoNumber}"
-                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}"
+                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm}"
                                                VerticalAlignment="Center" Margin="8,0" FontSize="12">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                    <DataTrigger Binding="{Binding SearchTerm}" Value="">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -231,7 +231,7 @@
                                             <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                    <DataTrigger Binding="{Binding SearchTerm}" Value="">
                                                         <Setter Property="Visibility" Value="Visible"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -239,13 +239,13 @@
                                         </TextBox.Style>
                                     </TextBox>
                                     <TextBlock local:HighlightBehavior.FullText="{Binding OeNumber}"
-                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}"
+                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm}"
                                                VerticalAlignment="Center" Margin="8,0" FontSize="12">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                    <DataTrigger Binding="{Binding SearchTerm}" Value="">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -267,7 +267,7 @@
                                             <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                    <DataTrigger Binding="{Binding SearchTerm}" Value="">
                                                         <Setter Property="Visibility" Value="Visible"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -275,13 +275,13 @@
                                         </TextBox.Style>
                                     </TextBox>
                                     <TextBlock local:HighlightBehavior.FullText="{Binding JobNumber}"
-                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}"
+                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm}"
                                                VerticalAlignment="Center" Margin="8,0" FontSize="12">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                    <DataTrigger Binding="{Binding SearchTerm}" Value="">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -312,7 +312,7 @@
                                             <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                    <DataTrigger Binding="{Binding SearchTerm}" Value="">
                                                         <Setter Property="Visibility" Value="Visible"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -320,13 +320,13 @@
                                         </TextBox.Style>
                                     </TextBox>
                                     <TextBlock local:HighlightBehavior.FullText="{Binding CustomerName}"
-                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}"
+                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm}"
                                                VerticalAlignment="Center" Margin="8,0" FontSize="12">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                    <DataTrigger Binding="{Binding SearchTerm}" Value="">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -366,7 +366,7 @@
                                             <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                    <DataTrigger Binding="{Binding SearchTerm}" Value="">
                                                         <Setter Property="Visibility" Value="Visible"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -374,13 +374,13 @@
                                         </TextBox.Style>
                                     </TextBox>
                                     <TextBlock local:HighlightBehavior.FullText="{Binding DrawingNumber}"
-                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}"
+                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm}"
                                                VerticalAlignment="Center" Margin="8,0" FontSize="12">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                    <DataTrigger Binding="{Binding SearchTerm}" Value="">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -412,7 +412,7 @@
                                             <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                    <DataTrigger Binding="{Binding SearchTerm}" Value="">
                                                         <Setter Property="Visibility" Value="Visible"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -420,7 +420,7 @@
                                         </TextBox.Style>
                                     </TextBox>
                                     <TextBlock local:HighlightBehavior.FullText="{Binding Description}"
-                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}"
+                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm}"
                                                TextTrimming="CharacterEllipsis"
                                                ToolTip="{Binding Description}"
                                                VerticalAlignment="Center" Margin="8,0" FontSize="12">
@@ -428,7 +428,7 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Visibility" Value="Visible"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                    <DataTrigger Binding="{Binding SearchTerm}" Value="">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
