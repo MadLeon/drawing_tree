@@ -116,6 +116,7 @@ public partial class AllPosControl : UserControl
     private readonly PoRepository _repository = new();
     private List<PoListRow> _allRows = new();
     private bool _isSimpleView = true;
+    private bool _isDataLoaded;
     private readonly DispatcherTimer _debounceTimer;
 
     // ── SearchTerm dependency property ───────────────────────────────────────
@@ -173,7 +174,8 @@ public partial class AllPosControl : UserControl
             NewJobButton.Visibility  = Visibility.Collapsed;
             HistoryButton.Visibility = Visibility.Collapsed;
         }
-        _ = LoadDataAsync();
+        if (!_isDataLoaded)
+            _ = LoadDataAsync();
     }
 
     public void Reload() => _ = LoadDataAsync();
@@ -190,6 +192,7 @@ public partial class AllPosControl : UserControl
 
         ApplySearch(SearchTerm);
 
+        _isDataLoaded = true;
         LoadingOverlay.Visibility = Visibility.Collapsed;
         Logger.Instance.Info($"AllPosControl: loaded {_allRows.Count} PO line(s) (historyMode={ShowHistoryOnly})");
     }
