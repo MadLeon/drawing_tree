@@ -10,6 +10,7 @@
     <UserControl.Resources>
         <Geometry x:Key="OpenInNewGeo">M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z</Geometry>
         <Geometry x:Key="CheckCircleGeo">M382-240 154-468l57-57 171 171 367-367 57 57-424 424Zm98 160q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z</Geometry>
+
         <Style x:Key="HeaderCell" TargetType="DataGridColumnHeader">
             <Setter Property="Background" Value="#F5F5F5"/>
             <Setter Property="Foreground" Value="#555555"/>
@@ -20,7 +21,7 @@
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
         </Style>
         <Style x:Key="BodyCell" TargetType="DataGridCell">
-            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="Padding" Value="0"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
@@ -29,25 +30,44 @@
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                Padding="{TemplateBinding Padding}"
                                 SnapsToDevicePixels="True">
                             <ContentPresenter VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="{x:Static SystemColors.HighlightBrush}"/>
-                    <Setter Property="Foreground" Value="{x:Static SystemColors.HighlightTextBrush}"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
         <Style x:Key="ToolbarBtn" TargetType="Button">
             <Setter Property="Height" Value="26"/>
             <Setter Property="Padding" Value="10,0"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Margin" Value="0,0,6,0"/>
+        </Style>
+
+        <!-- Read-only TextBox styled as plain text — for OE DataGrid cells -->
+        <Style x:Key="SelectableCell" TargetType="TextBox">
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="8,0"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <!-- Read-only TextBox styled as plain text — for Simple View fields -->
+        <Style x:Key="SelectableText" TargetType="TextBox">
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="4,0"/>
+            <Setter Property="FontSize" Value="12"/>
         </Style>
     </UserControl.Resources>
 
@@ -57,23 +77,42 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Top toolbar -->
+        <!-- Top toolbar: [Title | Search | Buttons] -->
         <Border Grid.Row="0" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1"
                 Background="#F0F0F0" Padding="8,6">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="240"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
+
+                <!-- Left: title + count -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock x:Name="TitleLabel" Text="All Purchase Orders"
                                FontSize="13" FontWeight="SemiBold" Foreground="#555555"
                                VerticalAlignment="Center" Margin="0,0,6,0"/>
                     <TextBlock x:Name="PoCountLabel" Text=""
                                FontSize="12" Foreground="#888888"
-                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+                               VerticalAlignment="Center"/>
                 </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+
+                <!-- Center: search bar (same style as SearchControl) -->
+                <Grid Grid.Column="1" VerticalAlignment="Center">
+                    <TextBox x:Name="PoSearchBox"
+                             Height="28" Padding="5,4" FontSize="13"
+                             VerticalContentAlignment="Center"
+                             TextChanged="PoSearchBox_TextChanged"/>
+                    <TextBlock x:Name="PoPlaceholderText"
+                               Text="Search PO / Job / Drawing"
+                               IsHitTestVisible="False"
+                               Foreground="#AAAAAA" FontSize="13"
+                               Margin="7,0,0,0" VerticalAlignment="Center"/>
+                </Grid>
+
+                <!-- Right: buttons -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal"
+                            VerticalAlignment="Center" HorizontalAlignment="Right">
                     <Button x:Name="NewJobButton" Content="New Job"
                             Style="{StaticResource ToolbarBtn}"
                             Click="NewJobButton_Click"/>
@@ -87,7 +126,7 @@
             </Grid>
         </Border>
 
-        <!-- Content area: OE View (DataGrid) and Simple View toggle -->
+        <!-- Content area -->
         <Grid Grid.Row="1" x:Name="ContentGrid">
 
             <local:LoadingOverlayControl x:Name="LoadingOverlay"
@@ -130,26 +169,281 @@
                     </GroupStyle>
                 </DataGrid.GroupStyle>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="P.O."          Binding="{Binding PoNumber}"      Width="200"/>
-                    <DataGridTextColumn Header="O.E."          Binding="{Binding OeNumber}"      Width="80"/>
-                    <DataGridTextColumn Header="Job No"        Binding="{Binding JobNumber}"     Width="80"/>
-                    <DataGridTextColumn Header="Line No"       Binding="{Binding LineNumber}"    Width="70"/>
-                    <DataGridTextColumn Header="Customer"      Binding="{Binding CustomerName}"  Width="140"/>
-                    <DataGridTextColumn Header="Contact"       Binding="{Binding ContactName}"   Width="160"/>
-                    <DataGridTextColumn Header="Qty"           Binding="{Binding Quantity}"      Width="60"/>
-                    <DataGridTextColumn Header="Drawing Number" Binding="{Binding DrawingNumber}" Width="220"/>
-                    <DataGridTextColumn Header="Rev."          Binding="{Binding Revision}"      Width="60"/>
-                    <DataGridTextColumn Header="Description"   Binding="{Binding Description}"  Width="*">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                                <Setter Property="ToolTip" Value="{Binding Description}"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                    <DataGridTextColumn Header="Rls Date"      Binding="{Binding ReleaseDate}"   Width="100"/>
-                    <DataGridTextColumn Header="Due Date"      Binding="{Binding DueDate}"       Width="100"/>
+
+                    <!-- P.O. — searchable, toggle TextBox/TextBlock -->
+                    <DataGridTemplateColumn Header="P.O." Width="200">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBox Text="{Binding PoNumber, Mode=OneWay}">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                    <TextBlock local:HighlightBehavior.FullText="{Binding PoNumber}"
+                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}"
+                                               VerticalAlignment="Center" Margin="8,0" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- O.E. — searchable -->
+                    <DataGridTemplateColumn Header="O.E." Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBox Text="{Binding OeNumber, Mode=OneWay}">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                    <TextBlock local:HighlightBehavior.FullText="{Binding OeNumber}"
+                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}"
+                                               VerticalAlignment="Center" Margin="8,0" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Job No — searchable -->
+                    <DataGridTemplateColumn Header="Job No" Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBox Text="{Binding JobNumber, Mode=OneWay}">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                    <TextBlock local:HighlightBehavior.FullText="{Binding JobNumber}"
+                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}"
+                                               VerticalAlignment="Center" Margin="8,0" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Line No — not searchable, plain TextBox -->
+                    <DataGridTemplateColumn Header="Line No" Width="70">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding LineNumber, Mode=OneWay}" Style="{StaticResource SelectableCell}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Customer — searchable -->
+                    <DataGridTemplateColumn Header="Customer" Width="140">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBox Text="{Binding CustomerName, Mode=OneWay}">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                    <TextBlock local:HighlightBehavior.FullText="{Binding CustomerName}"
+                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}"
+                                               VerticalAlignment="Center" Margin="8,0" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Contact — plain TextBox -->
+                    <DataGridTemplateColumn Header="Contact" Width="160">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding ContactName, Mode=OneWay}" Style="{StaticResource SelectableCell}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Qty — plain TextBox -->
+                    <DataGridTemplateColumn Header="Qty" Width="60">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Quantity, Mode=OneWay}" Style="{StaticResource SelectableCell}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Drawing Number — searchable -->
+                    <DataGridTemplateColumn Header="Drawing Number" Width="220">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBox Text="{Binding DrawingNumber, Mode=OneWay}">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                    <TextBlock local:HighlightBehavior.FullText="{Binding DrawingNumber}"
+                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}"
+                                               VerticalAlignment="Center" Margin="8,0" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Rev. — plain TextBox -->
+                    <DataGridTemplateColumn Header="Rev." Width="60">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Revision, Mode=OneWay}" Style="{StaticResource SelectableCell}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Description — searchable, with trimming/tooltip -->
+                    <DataGridTemplateColumn Header="Description" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBox Text="{Binding Description, Mode=OneWay}"
+                                             ToolTip="{Binding Description}">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                    <TextBlock local:HighlightBehavior.FullText="{Binding Description}"
+                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding Description}"
+                                               VerticalAlignment="Center" Margin="8,0" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Rls Date — plain TextBox -->
+                    <DataGridTemplateColumn Header="Rls Date" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding ReleaseDate, Mode=OneWay}" Style="{StaticResource SelectableCell}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Due Date — plain TextBox -->
+                    <DataGridTemplateColumn Header="Due Date" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding DueDate, Mode=OneWay}" Style="{StaticResource SelectableCell}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Row menu -->
                     <DataGridTemplateColumn Header="" Width="50">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -164,6 +458,7 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
+
                 </DataGrid.Columns>
             </DataGrid>
 
@@ -284,19 +579,69 @@
                                                                 <Path Stretch="Uniform" Fill="#555555" Width="12" Height="12"
                                                                       Data="{Binding ExpandIconGeometry}"/>
                                                             </Button>
-                                                            <TextBlock Grid.Column="1" Text="{Binding Row.JobNumber}"     FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
-                                                            <TextBlock Grid.Column="2" Text="{Binding Row.LineNumber}"    FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
-                                                            <TextBlock Grid.Column="3" Text="{Binding Row.Quantity}"      FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
+                                                            <!-- Job number — selectable -->
+                                                            <TextBox Grid.Column="1" Text="{Binding Row.JobNumber, Mode=OneWay}"
+                                                                     Style="{StaticResource SelectableText}"/>
+                                                            <!-- Line number — selectable -->
+                                                            <TextBox Grid.Column="2" Text="{Binding Row.LineNumber, Mode=OneWay}"
+                                                                     Style="{StaticResource SelectableText}"/>
+                                                            <!-- Qty — selectable -->
+                                                            <TextBox Grid.Column="3" Text="{Binding Row.Quantity, Mode=OneWay}"
+                                                                     Style="{StaticResource SelectableText}"/>
+                                                            <!-- Drawing Number — link TextBlock with HorizontalAlignment=Left to fix click area -->
                                                             <TextBlock Grid.Column="4" FontSize="12" VerticalAlignment="Center" Margin="4,0"
-                                                                       Text="{Binding Row.DrawingNumber}"
+                                                                       HorizontalAlignment="Left"
                                                                        Foreground="{Binding DrawingLinkForeground}"
                                                                        TextDecorations="{Binding DrawingLinkDecorations}"
                                                                        Cursor="{Binding DrawingLinkCursor}"
                                                                        Tag="{Binding}"
-                                                                       MouseLeftButtonDown="DrawingNumberMain_Click"/>
-                                                            <TextBlock Grid.Column="5" Text="{Binding Row.Description}" FontSize="12"
-                                                                       VerticalAlignment="Center" Margin="4,0"
-                                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding Row.Description}"/>
+                                                                       MouseLeftButtonDown="DrawingNumberMain_Click"
+                                                                       local:HighlightBehavior.FullText="{Binding Row.DrawingNumber}"
+                                                                       local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}">
+                                                                <TextBlock.ContextMenu>
+                                                                    <ContextMenu>
+                                                                        <MenuItem Header="Copy" Click="CopyText_Click"/>
+                                                                    </ContextMenu>
+                                                                </TextBlock.ContextMenu>
+                                                            </TextBlock>
+                                                            <!-- Description — toggle TextBox/TextBlock for selection + highlight -->
+                                                            <Grid Grid.Column="5">
+                                                                <TextBox Text="{Binding Row.Description, Mode=OneWay}"
+                                                                         ToolTip="{Binding Row.Description}">
+                                                                    <TextBox.Style>
+                                                                        <Style TargetType="TextBox" BasedOn="{StaticResource SelectableText}">
+                                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBox.Style>
+                                                                </TextBox>
+                                                                <TextBlock local:HighlightBehavior.FullText="{Binding Row.Description}"
+                                                                           local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           ToolTip="{Binding Row.Description}"
+                                                                           VerticalAlignment="Center" Margin="4,0" FontSize="12">
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                    <TextBlock.ContextMenu>
+                                                                        <ContextMenu>
+                                                                            <MenuItem Header="Copy" Click="CopyText_Click"/>
+                                                                        </ContextMenu>
+                                                                    </TextBlock.ContextMenu>
+                                                                </TextBlock>
+                                                            </Grid>
+                                                            <!-- PDF button -->
                                                             <Button Grid.Column="6"
                                                                     Visibility="{Binding PartButtonVisibility}"
                                                                     Tag="{Binding}" Click="OpenPartButton_Click"
@@ -307,13 +652,19 @@
                                                                     <Path Data="{StaticResource OpenInNewGeo}" Stretch="Uniform" Fill="DodgerBlue"/>
                                                                 </Viewbox>
                                                             </Button>
+                                                            <!-- MP icon -->
                                                             <Viewbox Grid.Column="7" Width="14" Height="14"
                                                                      Visibility="{Binding MpIconVisibility}"
                                                                      HorizontalAlignment="Center" VerticalAlignment="Center">
                                                                 <Path Data="{StaticResource CheckCircleGeo}" Stretch="Uniform" Fill="#2E7D32"/>
                                                             </Viewbox>
-                                                            <TextBlock Grid.Column="8" Text="{Binding Row.ReleaseDate}"   FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
-                                                            <TextBlock Grid.Column="9" Text="{Binding Row.DueDate}"       FontSize="12" VerticalAlignment="Center" Margin="4,0"/>
+                                                            <!-- Rls Date — selectable -->
+                                                            <TextBox Grid.Column="8" Text="{Binding Row.ReleaseDate, Mode=OneWay}"
+                                                                     Style="{StaticResource SelectableText}"/>
+                                                            <!-- Due Date — selectable -->
+                                                            <TextBox Grid.Column="9" Text="{Binding Row.DueDate, Mode=OneWay}"
+                                                                     Style="{StaticResource SelectableText}"/>
+                                                            <!-- Row menu -->
                                                             <Button Grid.Column="10" Content="⋮" FontSize="14"
                                                                     Style="{StaticResource IconLinkBtn}"
                                                                     Tag="{Binding}" Click="ItemRowMenu_Click">
@@ -350,16 +701,26 @@
                                                                             <ColumnDefinition Width="100"/>
                                                                             <ColumnDefinition Width="30"/>
                                                                         </Grid.ColumnDefinitions>
+                                                                        <!-- Drawing Number — link TextBlock with HorizontalAlignment=Left -->
                                                                         <TextBlock Grid.Column="4" FontSize="12" VerticalAlignment="Center" Margin="4,0"
-                                                                                   Text="{Binding DrawingNumber}"
+                                                                                   HorizontalAlignment="Left"
                                                                                    Foreground="{Binding DrawingLinkForeground}"
                                                                                    TextDecorations="{Binding DrawingLinkDecorations}"
                                                                                    Cursor="{Binding DrawingLinkCursor}"
                                                                                    Tag="{Binding}"
-                                                                                   MouseLeftButtonDown="DrawingNumberChild_Click"/>
-                                                                        <TextBlock Grid.Column="5" Text="{Binding Description}" FontSize="12"
-                                                                                   VerticalAlignment="Center" Margin="4,0"
-                                                                                   TextTrimming="CharacterEllipsis"/>
+                                                                                   MouseLeftButtonDown="DrawingNumberChild_Click"
+                                                                                   local:HighlightBehavior.FullText="{Binding DrawingNumber}"
+                                                                                   local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}">
+                                                                            <TextBlock.ContextMenu>
+                                                                                <ContextMenu>
+                                                                                    <MenuItem Header="Copy" Click="CopyText_Click"/>
+                                                                                </ContextMenu>
+                                                                            </TextBlock.ContextMenu>
+                                                                        </TextBlock>
+                                                                        <!-- Description — selectable TextBox -->
+                                                                        <TextBox Grid.Column="5" Text="{Binding Description, Mode=OneWay}"
+                                                                                 Style="{StaticResource SelectableText}"/>
+                                                                        <!-- PDF button -->
                                                                         <Button Grid.Column="6"
                                                                                 Visibility="{Binding PdfButtonVisibility}"
                                                                                 Tag="{Binding}" Click="OpenChildPdfButton_Click"
@@ -370,6 +731,7 @@
                                                                                 <Path Data="{StaticResource OpenInNewGeo}" Stretch="Uniform" Fill="DodgerBlue"/>
                                                                             </Viewbox>
                                                                         </Button>
+                                                                        <!-- MP icon -->
                                                                         <Viewbox Grid.Column="7" Width="14" Height="14"
                                                                                  Visibility="{Binding MpIconVisibility}"
                                                                                  HorizontalAlignment="Center" VerticalAlignment="Center">

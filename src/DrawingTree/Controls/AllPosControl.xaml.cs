@@ -13,6 +13,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Brush  = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
 using Cursor = System.Windows.Input.Cursor;
@@ -31,6 +32,7 @@ using MessageBox       = System.Windows.MessageBox;
 using MessageBoxButton = System.Windows.MessageBoxButton;
 using MessageBoxImage  = System.Windows.MessageBoxImage;
 using MessageBoxResult = System.Windows.MessageBoxResult;
+using TextBlock        = System.Windows.Controls.TextBlock;
 
 namespace DrawingTree.Controls;
 
@@ -112,6 +114,20 @@ public partial class AllPosControl : UserControl
     private readonly PoRepository _repository = new();
     private List<PoListRow> _allRows = new();
     private bool _isSimpleView = true;
+    private readonly DispatcherTimer _debounceTimer;
+
+    // ── SearchTerm dependency property ───────────────────────────────────────
+
+    public static readonly DependencyProperty SearchTermProperty =
+        DependencyProperty.Register(nameof(SearchTerm), typeof(string),
+            typeof(AllPosControl), new PropertyMetadata(string.Empty));
+
+    /// <summary>Current search keyword; bound from DataTemplate elements via RelativeSource.</summary>
+    public string SearchTerm
+    {
+        get => (string)GetValue(SearchTermProperty);
+        set => SetValue(SearchTermProperty, value);
+    }
 
     /// <summary>When true, shows is_active=0 POs and hides write buttons (History mode).</summary>
     public bool ShowHistoryOnly { get; set; }
@@ -134,6 +150,16 @@ public partial class AllPosControl : UserControl
     public AllPosControl()
     {
         InitializeComponent();
+
+        _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+        _debounceTimer.Tick += (_, _) =>
+        {
+            _debounceTimer.Stop();
+            var term = PoSearchBox.Text.Trim();
+            SearchTerm = term;
+            ApplySearch(term);
+        };
+
         Loaded += OnLoaded;
     }
 
@@ -160,20 +186,55 @@ public partial class AllPosControl : UserControl
         int poCount = _allRows.Select(r => r.PoId).Distinct().Count();
         PoCountLabel.Text = $"({poCount})";
 
-        if (_isSimpleView)
-            ApplySimpleView();
-        else
-            ApplyOeView();
+        ApplySearch(SearchTerm);
 
         LoadingOverlay.Visibility = Visibility.Collapsed;
         Logger.Instance.Info($"AllPosControl: loaded {_allRows.Count} PO line(s) (historyMode={ShowHistoryOnly})");
     }
 
+    // ── Search / filter ───────────────────────────────────────────────────────
+
+    private void ApplySearch(string term)
+    {
+        List<PoListRow> filtered;
+        if (string.IsNullOrEmpty(term))
+        {
+            filtered = _allRows;
+        }
+        else
+        {
+            var matchingPoIds = _allRows
+                .Where(r => RowMatchesTerm(r, term))
+                .Select(r => r.PoId)
+                .ToHashSet();
+            filtered = _allRows.Where(r => matchingPoIds.Contains(r.PoId)).ToList();
+        }
+
+        if (_isSimpleView) ApplySimpleView(filtered);
+        else               ApplyOeView(filtered);
+    }
+
+    private static bool RowMatchesTerm(PoListRow r, string term) =>
+        Contains(r.PoNumber,     term) || Contains(r.OeNumber,    term) ||
+        Contains(r.JobNumber,    term) || Contains(r.DrawingNumber, term) ||
+        Contains(r.Description,  term) || Contains(r.CustomerName, term);
+
+    private static bool Contains(string? text, string term) =>
+        text != null && text.Contains(term, StringComparison.OrdinalIgnoreCase);
+
+    private void PoSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        PoPlaceholderText.Visibility = PoSearchBox.Text.Length == 0
+            ? Visibility.Visible : Visibility.Collapsed;
+        _debounceTimer.Stop();
+        _debounceTimer.Start();
+    }
+
     // ── OE View ──────────────────────────────────────────────────────────────
 
-    private void ApplyOeView()
+    private void ApplyOeView(List<PoListRow>? rows = null)
     {
-        var view = new ListCollectionView(_allRows);
+        var view = new ListCollectionView(rows ?? _allRows);
         view.SortDescriptions.Add(new SortDescription(nameof(PoListRow.OeNumber),  ListSortDirection.Ascending));
         view.SortDescriptions.Add(new SortDescription(nameof(PoListRow.LineNumber), ListSortDirection.Ascending));
         view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(PoListRow.PoNumber)));
@@ -186,9 +247,9 @@ public partial class AllPosControl : UserControl
 
     // ── Simple View ───────────────────────────────────────────────────────────
 
-    private void ApplySimpleView()
+    private void ApplySimpleView(List<PoListRow>? rows = null)
     {
-        var groups = BuildSimpleGroups(_allRows);
+        var groups = BuildSimpleGroups(rows ?? _allRows);
 
         var orderItemIds = groups.SelectMany(g => g.Items).Select(i => i.Row.OrderItemId).ToList();
         var mpSet = _repository.GetOrderItemIdsWithMp(orderItemIds);
@@ -270,8 +331,7 @@ public partial class AllPosControl : UserControl
     private void ToggleViewButton_Click(object sender, RoutedEventArgs e)
     {
         _isSimpleView = !_isSimpleView;
-        if (_isSimpleView) ApplySimpleView();
-        else               ApplyOeView();
+        ApplySearch(SearchTerm);
     }
 
     private void NewJobButton_Click(object sender, RoutedEventArgs e)
@@ -457,6 +517,14 @@ public partial class AllPosControl : UserControl
         item.IsExpanded = item.Children.Count > 0;
         if (!item.IsExpanded)
             Logger.Instance.Info($"AllPosControl: no children found for partId={item.Row.PartId}");
+    }
+
+    // ── Copy text (right-click menu on highlight-mode TextBlocks) ────────────
+
+    private void CopyText_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem mi && mi.Parent is ContextMenu cm && cm.PlacementTarget is TextBlock tb)
+            System.Windows.Clipboard.SetText(tb.Text);
     }
 
     // ── OE DataGrid right-click ───────────────────────────────────────────────
