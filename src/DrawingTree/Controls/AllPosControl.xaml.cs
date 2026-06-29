@@ -56,6 +56,7 @@ public class ExpandableOrderItem : INotifyPropertyChanged
     private bool _isExpanded;
 
     public PoListRow Row { get; set; } = null!;
+    public string SearchTerm { get; set; } = string.Empty;
 
     public bool IsExpanded
     {
@@ -97,6 +98,7 @@ public class ChildDrawingItem
     public string? Revision      { get; set; }
     public string? Description   { get; set; }
     public int?    PartId        { get; set; }
+    public string  SearchTerm    { get; set; } = string.Empty;
 
     public bool HasMp { get; set; }
 
@@ -249,7 +251,7 @@ public partial class AllPosControl : UserControl
 
     private void ApplySimpleView(List<PoListRow>? rows = null)
     {
-        var groups = BuildSimpleGroups(rows ?? _allRows);
+        var groups = BuildSimpleGroups(rows ?? _allRows, SearchTerm);
 
         var orderItemIds = groups.SelectMany(g => g.Items).Select(i => i.Row.OrderItemId).ToList();
         var mpSet = _repository.GetOrderItemIdsWithMp(orderItemIds);
@@ -288,7 +290,8 @@ public partial class AllPosControl : UserControl
                     DrawingNumber = r.DrawingNumber,
                     Revision      = r.Revision,
                     Description   = r.Description,
-                    PartId        = r.PartId
+                    PartId        = r.PartId,
+                    SearchTerm    = SearchTerm
                 });
         }
 
@@ -305,7 +308,7 @@ public partial class AllPosControl : UserControl
         Logger.Instance.Info($"AllPosControl: prefetched children for {lookup.Count} part(s)");
     }
 
-    private static List<PoSimpleGroup> BuildSimpleGroups(List<PoListRow> rows)
+    private static List<PoSimpleGroup> BuildSimpleGroups(List<PoListRow> rows, string term = "")
     {
         var groups = new List<PoSimpleGroup>();
         foreach (var g in rows.GroupBy(r => r.PoId).OrderBy(g => g.First().OeNumber ?? g.First().PoNumber))
@@ -320,7 +323,7 @@ public partial class AllPosControl : UserControl
                 ContactName  = first.ContactName
             };
             foreach (var row in g.OrderBy(r => r.JobNumber).ThenBy(r => r.LineNumber))
-                group.Items.Add(new ExpandableOrderItem { Row = row });
+                group.Items.Add(new ExpandableOrderItem { Row = row, SearchTerm = term });
             groups.Add(group);
         }
         return groups;
@@ -510,7 +513,8 @@ public partial class AllPosControl : UserControl
                     DrawingNumber = c.DrawingNumber,
                     Revision      = c.Revision,
                     Description   = c.Description,
-                    PartId        = c.PartId
+                    PartId        = c.PartId,
+                    SearchTerm    = SearchTerm
                 });
         }
 
@@ -525,23 +529,6 @@ public partial class AllPosControl : UserControl
     {
         if (sender is MenuItem mi && mi.Parent is ContextMenu cm && cm.PlacementTarget is TextBlock tb)
             System.Windows.Clipboard.SetText(tb.Text);
-    }
-
-    // ── OE DataGrid right-click ───────────────────────────────────────────────
-
-    private void ResultsGrid_MouseRightButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
-    {
-        if (sender is not DataGrid grid) return;
-        var hit = grid.InputHitTest(e.GetPosition(grid)) as FrameworkElement;
-        var row = FindParent<DataGridRow>(hit);
-        if (row?.DataContext is not PoListRow poRow) return;
-
-        var menu = new System.Windows.Controls.ContextMenu();
-        var editItem = new System.Windows.Controls.MenuItem { Header = "Edit Item", Tag = poRow };
-        editItem.Click += EditItem_ContextMenu_Click;
-        menu.Items.Add(editItem);
-        menu.IsOpen = true;
-        e.Handled = true;
     }
 
     private static T? FindParent<T>(DependencyObject? child) where T : DependencyObject

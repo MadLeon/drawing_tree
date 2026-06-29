@@ -24,6 +24,7 @@
             <Setter Property="Padding" Value="0"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DataGridCell">
@@ -36,6 +37,11 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
         <Style x:Key="ToolbarBtn" TargetType="Button">
             <Setter Property="Height" Value="26"/>
@@ -148,8 +154,17 @@
                       RowBackground="White"
                       AlternatingRowBackground="White"
                       ColumnHeaderStyle="{StaticResource HeaderCell}"
-                      CellStyle="{StaticResource BodyCell}"
-                      PreviewMouseRightButtonUp="ResultsGrid_MouseRightButtonUp">
+                      CellStyle="{StaticResource BodyCell}">
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="White"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
                 <DataGrid.GroupStyle>
                     <GroupStyle>
                         <GroupStyle.ContainerStyle>
@@ -597,7 +612,7 @@
                                                                        Tag="{Binding}"
                                                                        MouseLeftButtonDown="DrawingNumberMain_Click"
                                                                        local:HighlightBehavior.FullText="{Binding Row.DrawingNumber}"
-                                                                       local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}">
+                                                                       local:HighlightBehavior.SearchTerm="{Binding SearchTerm}">
                                                                 <TextBlock.ContextMenu>
                                                                     <ContextMenu>
                                                                         <MenuItem Header="Copy" Click="CopyText_Click"/>
@@ -612,7 +627,7 @@
                                                                         <Style TargetType="TextBox" BasedOn="{StaticResource SelectableText}">
                                                                             <Setter Property="Visibility" Value="Collapsed"/>
                                                                             <Style.Triggers>
-                                                                                <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                                                <DataTrigger Binding="{Binding SearchTerm}" Value="">
                                                                                     <Setter Property="Visibility" Value="Visible"/>
                                                                                 </DataTrigger>
                                                                             </Style.Triggers>
@@ -620,7 +635,7 @@
                                                                     </TextBox.Style>
                                                                 </TextBox>
                                                                 <TextBlock local:HighlightBehavior.FullText="{Binding Row.Description}"
-                                                                           local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}"
+                                                                           local:HighlightBehavior.SearchTerm="{Binding SearchTerm}"
                                                                            TextTrimming="CharacterEllipsis"
                                                                            ToolTip="{Binding Row.Description}"
                                                                            VerticalAlignment="Center" Margin="4,0" FontSize="12">
@@ -628,7 +643,7 @@
                                                                         <Style TargetType="TextBlock">
                                                                             <Setter Property="Visibility" Value="Visible"/>
                                                                             <Style.Triggers>
-                                                                                <DataTrigger Binding="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}" Value="">
+                                                                                <DataTrigger Binding="{Binding SearchTerm}" Value="">
                                                                                     <Setter Property="Visibility" Value="Collapsed"/>
                                                                                 </DataTrigger>
                                                                             </Style.Triggers>
@@ -710,7 +725,7 @@
                                                                                    Tag="{Binding}"
                                                                                    MouseLeftButtonDown="DrawingNumberChild_Click"
                                                                                    local:HighlightBehavior.FullText="{Binding DrawingNumber}"
-                                                                                   local:HighlightBehavior.SearchTerm="{Binding SearchTerm, RelativeSource={RelativeSource AncestorType=local:AllPosControl}}">
+                                                                                   local:HighlightBehavior.SearchTerm="{Binding SearchTerm}">
                                                                             <TextBlock.ContextMenu>
                                                                                 <ContextMenu>
                                                                                     <MenuItem Header="Copy" Click="CopyText_Click"/>
