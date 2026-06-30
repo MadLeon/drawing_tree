@@ -91,28 +91,9 @@ public partial class PartDetailControl : UserControl
     {
         MpFilesPanel.Children.Clear();
 
-        if (_orderItemId == 0)
-        {
-            NewMpButton.Visibility = Visibility.Collapsed;
-            MpFilesPanel.Children.Add(new TextBlock
-            {
-                Text = "(no order item context)", FontSize = 12, Foreground = Brushes.Gray
-            });
-            return;
-        }
+        NewMpButton.Visibility = _mpContext != null ? Visibility.Visible : Visibility.Collapsed;
 
-        NewMpButton.Visibility = Visibility.Visible;
-
-        if (_mpContext == null)
-        {
-            MpFilesPanel.Children.Add(new TextBlock
-            {
-                Text = "(order item context not found)", FontSize = 12, Foreground = Brushes.Gray
-            });
-            return;
-        }
-
-        var attachments = _partRepository.GetMpAttachments(_orderItemId);
+        var attachments = _partRepository.GetMpAttachments(_partId);
 
         if (attachments.Count == 0)
         {

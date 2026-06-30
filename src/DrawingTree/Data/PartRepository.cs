@@ -194,10 +194,10 @@ public class PartRepository
     // ── MP Attachments ────────────────────────────────────────────────────
 
     /// <summary>
-    /// Returns all MP file attachments recorded for the given order item.
+    /// Returns all MP file attachments recorded for the given part.
     /// </summary>
-    /// <param name="orderItemId">order_item.id</param>
-    public List<MpAttachmentRow> GetMpAttachments(int orderItemId)
+    /// <param name="partId">part.id</param>
+    public List<MpAttachmentRow> GetMpAttachments(int partId)
     {
         var results = new List<MpAttachmentRow>();
         try
@@ -207,17 +207,17 @@ public class PartRepository
             cmd.CommandText = """
                 SELECT id, file_name, file_path
                 FROM part_attachment
-                WHERE order_item_id = @oid AND file_type = 'MP' COLLATE NOCASE
+                WHERE part_id = @pid AND file_type = 'MP' COLLATE NOCASE
                 ORDER BY created_at DESC
                 """;
-            cmd.Parameters.AddWithValue("@oid", orderItemId);
+            cmd.Parameters.AddWithValue("@pid", partId);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
                 results.Add(new MpAttachmentRow(reader.GetInt32(0), reader.GetString(1), reader.GetString(2)));
         }
         catch (Exception ex)
         {
-            Logger.Instance.Error($"PartRepository.GetMpAttachments failed for orderItemId={orderItemId}: {ex.Message}");
+            Logger.Instance.Error($"PartRepository.GetMpAttachments failed for partId={partId}: {ex.Message}");
         }
         return results;
     }
