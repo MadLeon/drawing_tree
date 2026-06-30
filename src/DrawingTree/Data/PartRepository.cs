@@ -207,7 +207,7 @@ public class PartRepository
             cmd.CommandText = """
                 SELECT id, file_name, file_path
                 FROM part_attachment
-                WHERE order_item_id = @oid AND file_type = 'MP'
+                WHERE order_item_id = @oid AND file_type = 'MP' COLLATE NOCASE
                 ORDER BY created_at DESC
                 """;
             cmd.Parameters.AddWithValue("@oid", orderItemId);

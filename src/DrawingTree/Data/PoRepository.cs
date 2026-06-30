@@ -514,7 +514,7 @@ public class PoRepository
             using var conn = DatabaseConnectionFactory.OpenDevConnection();
             using var cmd = conn.CreateCommand();
             var placeholders = string.Join(",", ids.Select((_, i) => $"@id{i}"));
-            cmd.CommandText = $"SELECT DISTINCT order_item_id FROM part_attachment WHERE file_type = 'MP' AND order_item_id IN ({placeholders})";
+            cmd.CommandText = $"SELECT DISTINCT order_item_id FROM part_attachment WHERE file_type = 'MP' COLLATE NOCASE AND order_item_id IN ({placeholders})";
             for (int i = 0; i < ids.Count; i++)
                 cmd.Parameters.AddWithValue($"@id{i}", ids[i]);
             using var reader = cmd.ExecuteReader();
@@ -541,7 +541,7 @@ public class PoRepository
             using var conn = DatabaseConnectionFactory.OpenDevConnection();
             using var cmd = conn.CreateCommand();
             var placeholders = string.Join(",", ids.Select((_, i) => $"@id{i}"));
-            cmd.CommandText = $"SELECT DISTINCT part_id FROM part_attachment WHERE file_type = 'MP' AND part_id IN ({placeholders})";
+            cmd.CommandText = $"SELECT DISTINCT part_id FROM part_attachment WHERE file_type = 'MP' COLLATE NOCASE AND part_id IN ({placeholders})";
             for (int i = 0; i < ids.Count; i++)
                 cmd.Parameters.AddWithValue($"@id{i}", ids[i]);
             using var reader = cmd.ExecuteReader();
