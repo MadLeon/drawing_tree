@@ -73,10 +73,12 @@ public class ExpandableOrderItem : INotifyPropertyChanged
     public Geometry ExpandIconGeometry => _isExpanded ? IndeterminateBoxGeo : AddBoxGeo;
 
     public bool HasMp { get; set; }
+    public bool HasDir { get; set; }
 
     public Visibility ExpandButtonVisibility => Row.HasChildren ? Visibility.Visible : Visibility.Hidden;
     public Visibility PartButtonVisibility   => Row.PartId.HasValue ? Visibility.Visible : Visibility.Collapsed;
     public Visibility MpIconVisibility       => HasMp ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility DirIconVisibility      => HasDir ? Visibility.Visible : Visibility.Collapsed;
 
     public Visibility ChildrenVisibility => IsExpanded ? Visibility.Visible : Visibility.Collapsed;
 
@@ -101,12 +103,14 @@ public class ChildDrawingItem
     public string  SearchTerm    { get; set; } = string.Empty;
 
     public bool HasMp { get; set; }
+    public bool HasDir { get; set; }
 
     public Brush DrawingLinkForeground => PartId.HasValue ? Brushes.DodgerBlue : Brushes.Black;
     public TextDecorationCollection? DrawingLinkDecorations => PartId.HasValue ? TextDecorations.Underline : null;
     public Cursor DrawingLinkCursor => PartId.HasValue ? Cursors.Hand : Cursors.Arrow;
     public Visibility PdfButtonVisibility => PartId.HasValue ? Visibility.Visible : Visibility.Collapsed;
     public Visibility MpIconVisibility    => HasMp ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility DirIconVisibility   => HasDir ? Visibility.Visible : Visibility.Collapsed;
 }
 
 public class OeRowItem
@@ -285,10 +289,18 @@ public partial class AllPosControl : UserControl
     {
         var groups = BuildSimpleGroups(rows ?? _allRows, SearchTerm);
 
-        var orderItemIds = groups.SelectMany(g => g.Items).Select(i => i.Row.OrderItemId).ToList();
-        var mpSet = _repository.GetOrderItemIdsWithMp(orderItemIds);
+        var topPartIds = groups.SelectMany(g => g.Items)
+            .Where(i => i.Row.PartId.HasValue)
+            .Select(i => i.Row.PartId!.Value)
+            .Distinct()
+            .ToList();
+        var mpSet  = _repository.GetPartIdsWithMp(topPartIds);
+        var dirSet = _repository.GetPartIdsWithDir(topPartIds);
         foreach (var item in groups.SelectMany(g => g.Items))
-            item.HasMp = mpSet.Contains(item.Row.OrderItemId);
+        {
+            item.HasMp  = item.Row.PartId.HasValue && mpSet.Contains(item.Row.PartId.Value);
+            item.HasDir = item.Row.PartId.HasValue && dirSet.Contains(item.Row.PartId.Value);
+        }
 
         SimpleViewList.ItemsSource = groups;
 
@@ -333,9 +345,14 @@ public partial class AllPosControl : UserControl
             .Select(c => c.PartId!.Value)
             .Distinct()
             .ToList();
-        var childMpSet = await Task.Run(() => _repository.GetPartIdsWithMp(childPartIds));
+        var childMpSet  = await Task.Run(() => _repository.GetPartIdsWithMp(childPartIds));
+        var childDirSet = await Task.Run(() => _repository.GetPartIdsWithDir(childPartIds));
         foreach (var child in groups.SelectMany(g => g.Items).SelectMany(i => i.Children))
-            if (child.PartId.HasValue) child.HasMp = childMpSet.Contains(child.PartId.Value);
+            if (child.PartId.HasValue)
+            {
+                child.HasMp  = childMpSet.Contains(child.PartId.Value);
+                child.HasDir = childDirSet.Contains(child.PartId.Value);
+            }
 
         Logger.Instance.Info($"AllPosControl: prefetched children for {lookup.Count} part(s)");
     }
