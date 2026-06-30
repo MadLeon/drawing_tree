@@ -272,6 +272,56 @@ public class PartRepository
             Logger.Instance.Error($"PartRepository.RemoveMpAttachment failed for id={attachmentId}: {ex.Message}");
         }
     }
+
+    /// <summary>
+    /// Returns all DIR file attachments recorded for the given part.
+    /// </summary>
+    /// <param name="partId">part.id</param>
+    public List<DirAttachmentRow> GetDirAttachments(int partId)
+    {
+        var results = new List<DirAttachmentRow>();
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT id, file_name, file_path
+                FROM part_attachment
+                WHERE part_id = @pid AND file_type = 'DIR' COLLATE NOCASE
+                ORDER BY created_at DESC
+                """;
+            cmd.Parameters.AddWithValue("@pid", partId);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+                results.Add(new DirAttachmentRow(reader.GetInt32(0), reader.GetString(1), reader.GetString(2)));
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.GetDirAttachments failed for partId={partId}: {ex.Message}");
+        }
+        return results;
+    }
+
+    /// <summary>
+    /// Deletes a DIR attachment record from the database.
+    /// </summary>
+    /// <param name="attachmentId">part_attachment.id</param>
+    public void RemoveDirAttachment(int attachmentId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "DELETE FROM part_attachment WHERE id = @id";
+            cmd.Parameters.AddWithValue("@id", attachmentId);
+            cmd.ExecuteNonQuery();
+            Logger.Instance.Info($"PartRepository.RemoveDirAttachment: removed attachment id={attachmentId}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.RemoveDirAttachment failed for id={attachmentId}: {ex.Message}");
+        }
+    }
 }
 
 /// <param name="PartId">part.id</param>
@@ -311,3 +361,8 @@ public record PartNoteRow(int Id, string Content, string? Author, string Created
 /// <param name="FileName">File name (without path)</param>
 /// <param name="FilePath">Full file path</param>
 public record MpAttachmentRow(int AttachmentId, string FileName, string FilePath);
+
+/// <param name="AttachmentId">part_attachment.id</param>
+/// <param name="FileName">File name (without path)</param>
+/// <param name="FilePath">Full file path</param>
+public record DirAttachmentRow(int AttachmentId, string FileName, string FilePath);

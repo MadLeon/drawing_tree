@@ -245,13 +245,15 @@ public class DrawingRepository
     public TreeChangeSummary ComputeTreeChanges(IEnumerable<DrawingNode> rootNodes)
     {
         int added = 0, deleted = 0, modified = 0;
-        var deletedItems = new List<DeletedRelationship>();
+        var deletedItems  = new List<DeletedRelationship>();
+        var addedItems    = new List<AddedRelationship>();
+        var modifiedItems = new List<ModifiedRelationship>();
 
         try
         {
             using var conn = DatabaseConnectionFactory.OpenDevConnection();
             foreach (var root in rootNodes)
-                CollectNodeChanges(conn, root, ref added, ref deleted, ref modified, deletedItems);
+                CollectNodeChanges(conn, root, ref added, ref deleted, ref modified, deletedItems, addedItems, modifiedItems);
         }
         catch (Exception ex)
         {
@@ -259,11 +261,12 @@ public class DrawingRepository
             throw;
         }
 
-        return new TreeChangeSummary(added, deleted, modified, deletedItems);
+        return new TreeChangeSummary(added, deleted, modified, deletedItems, addedItems, modifiedItems);
     }
 
     private static void CollectNodeChanges(SqliteConnection conn, DrawingNode parent,
-        ref int added, ref int deleted, ref int modified, List<DeletedRelationship> deletedItems)
+        ref int added, ref int deleted, ref int modified,
+        List<DeletedRelationship> deletedItems, List<AddedRelationship> addedItems, List<ModifiedRelationship> modifiedItems)
     {
         if (parent.Drawing.PartId == null) return;
         int parentPartId = parent.Drawing.PartId.Value;
@@ -310,14 +313,28 @@ public class DrawingRepository
                 qCmd.CommandText = "SELECT quantity FROM part_tree WHERE id = @id";
                 qCmd.Parameters.AddWithValue("@id", child.PartTreeId.Value);
                 var dbQty = Convert.ToInt32(qCmd.ExecuteScalar());
-                if (dbQty != quantity) modified++;
+                if (dbQty != quantity)
+                {
+                    modified++;
+                    modifiedItems.Add(new ModifiedRelationship(
+                        parent.Drawing.DrawingNumber,
+                        child.Drawing.DrawingNumber,
+                        child.Drawing.Revision,
+                        dbQty,
+                        quantity));
+                }
             }
             else
             {
                 added++;
+                addedItems.Add(new AddedRelationship(
+                    parent.Drawing.DrawingNumber,
+                    child.Drawing.DrawingNumber,
+                    child.Drawing.Revision,
+                    quantity));
             }
 
-            CollectNodeChanges(conn, child, ref added, ref deleted, ref modified, deletedItems);
+            CollectNodeChanges(conn, child, ref added, ref deleted, ref modified, deletedItems, addedItems, modifiedItems);
         }
     }
 
@@ -725,6 +742,19 @@ public class DrawingRepository
 /// <param name="ChildRevision">Revision of the removed child part</param>
 public record DeletedRelationship(string ParentDrawingNumber, string ChildDrawingNumber, string ChildRevision);
 
+/// <param name="ParentDrawingNumber">Drawing number of the parent part</param>
+/// <param name="ChildDrawingNumber">Drawing number of the new child part</param>
+/// <param name="ChildRevision">Revision of the new child part</param>
+/// <param name="Quantity">Quantity in assembly</param>
+public record AddedRelationship(string ParentDrawingNumber, string ChildDrawingNumber, string ChildRevision, int Quantity);
+
+/// <param name="ParentDrawingNumber">Drawing number of the parent part</param>
+/// <param name="ChildDrawingNumber">Drawing number of the child part</param>
+/// <param name="ChildRevision">Revision of the child part</param>
+/// <param name="OldQuantity">Current quantity stored in the database</param>
+/// <param name="NewQuantity">New quantity from the current tree</param>
+public record ModifiedRelationship(string ParentDrawingNumber, string ChildDrawingNumber, string ChildRevision, int OldQuantity, int NewQuantity);
+
 /// <summary>Indicates which field caused a search result to appear.</summary>
 public enum SearchMatchSource { Drawing = 1, Po = 2, Job = 3 }
 
@@ -745,4 +775,12 @@ public record SearchResultRow(
 /// <param name="Deleted">Number of existing relationships to be removed</param>
 /// <param name="Modified">Number of relationships whose quantity has changed</param>
 /// <param name="DeletedItems">Detail of each relationship to be removed</param>
-public record TreeChangeSummary(int Added, int Deleted, int Modified, IReadOnlyList<DeletedRelationship> DeletedItems);
+/// <param name="AddedItems">Detail of each relationship to be added</param>
+/// <param name="ModifiedItems">Detail of each relationship whose quantity changed</param>
+public record TreeChangeSummary(
+    int Added,
+    int Deleted,
+    int Modified,
+    IReadOnlyList<DeletedRelationship>  DeletedItems,
+    IReadOnlyList<AddedRelationship>    AddedItems,
+    IReadOnlyList<ModifiedRelationship> ModifiedItems);

@@ -13,8 +13,7 @@ public partial class ConfirmOverwriteDialog : Window
 {
     /// <param name="current">Current (UI) values from the row being saved</param>
     /// <param name="db">Values currently stored in the database</param>
-    /// <param name="dbQuantity">Quantity currently stored in part_tree for this part</param>
-    public ConfirmOverwriteDialog(PartEditorRow current, DrawingInfo db, string dbQuantity)
+    public ConfirmOverwriteDialog(PartEditorRow current, DrawingInfo db)
     {
         InitializeComponent();
 
@@ -33,9 +32,6 @@ public partial class ConfirmOverwriteDialog : Window
 
         if (current.PdfPath != db.PdfPath)
             diffs.Add(new DiffItem("File Path", current.PdfPath, db.PdfPath));
-
-        if (current.QuantityInAssembly != dbQuantity)
-            diffs.Add(new DiffItem("Qty in Assembly", current.QuantityInAssembly, dbQuantity));
 
         DiffList.ItemsSource = diffs;
     }

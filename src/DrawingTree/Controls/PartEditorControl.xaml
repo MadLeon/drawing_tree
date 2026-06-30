@@ -61,7 +61,6 @@
                         <ColumnDefinition Width="80"/>
                         <ColumnDefinition Width="440"/>
                         <ColumnDefinition Width="80"/>
-                        <ColumnDefinition Width="80"/>
                         <ColumnDefinition Width="150"/>
                         <ColumnDefinition Width="70"/>
                         <ColumnDefinition Width="36"/>
@@ -71,9 +70,8 @@
                     <TextBlock Grid.Column="1"  Text="Drawing Number"  FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
                     <TextBlock Grid.Column="2"  Text="Revision"        FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
                     <TextBlock Grid.Column="3"  Text="Description"     FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
-                    <TextBlock Grid.Column="4"  Text="Qty in Assembly" FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
-                    <TextBlock Grid.Column="5"  Text="Is Assembly"     FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
-                    <TextBlock Grid.Column="6"  Text="File Path"       FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    <TextBlock Grid.Column="4"  Text="Is Assembly"     FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    <TextBlock Grid.Column="5"  Text="File Path"       FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
                 </Grid>
             </Border>
 
@@ -88,13 +86,12 @@
                                     BorderBrush="#EEEEEE"
                                     BorderThickness="0,0,0,1"
                                     Padding="4,2">
-                                <Grid MinWidth="1300">
+                                <Grid MinWidth="1220">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="40"/>
                                         <ColumnDefinition Width="240"/>
                                         <ColumnDefinition Width="80"/>
                                         <ColumnDefinition Width="440"/>
-                                        <ColumnDefinition Width="80"/>
                                         <ColumnDefinition Width="80"/>
                                         <ColumnDefinition Width="150"/>
                                         <ColumnDefinition Width="70"/>
@@ -124,29 +121,24 @@
                                              Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
                                              Height="26" Padding="4,3" FontSize="12" Margin="2,1"/>
 
-                                    <!-- Col 4: Qty in Assembly -->
-                                    <TextBox Grid.Column="4"
-                                             Text="{Binding QuantityInAssembly, UpdateSourceTrigger=PropertyChanged}"
-                                             Height="26" Padding="4,3" FontSize="12" Margin="2,1"/>
-
-                                    <!-- Col 5: Is Assembly -->
-                                    <CheckBox Grid.Column="5"
+                                    <!-- Col 4: Is Assembly -->
+                                    <CheckBox Grid.Column="4"
                                               IsChecked="{Binding IsAssembly}"
                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                    <!-- Col 6: File Path -->
-                                    <TextBox Grid.Column="6"
+                                    <!-- Col 5: File Path -->
+                                    <TextBox Grid.Column="5"
                                              Text="{Binding PdfPath, UpdateSourceTrigger=PropertyChanged}"
                                              Height="26" Padding="4,3" FontSize="11" Margin="2,1"
                                              ToolTip="{Binding PdfPath}"/>
 
-                                    <!-- Col 7: Browse -->
-                                    <Button Grid.Column="7" Content="Browse"
+                                    <!-- Col 6: Browse -->
+                                    <Button Grid.Column="6" Content="Browse"
                                             Height="26" FontSize="11" Margin="2,1"
                                             Click="RowBrowseButton_Click"/>
 
-                                    <!-- Col 8: Open PDF -->
-                                    <Button Grid.Column="8" Style="{StaticResource IconBtn}"
+                                    <!-- Col 7: Open PDF -->
+                                    <Button Grid.Column="7" Style="{StaticResource IconBtn}"
                                             Width="28" Height="26" ToolTip="Open PDF"
                                             Click="RowOpenPdfButton_Click">
                                         <Path Data="{StaticResource OpenInNewGeo}"
@@ -154,13 +146,13 @@
                                               Width="14" Height="14"/>
                                     </Button>
 
-                                    <!-- Col 9: Save -->
-                                    <Button Grid.Column="9" Content="Save"
+                                    <!-- Col 8: Save -->
+                                    <Button Grid.Column="8" Content="Save"
                                             Height="26" FontSize="11" Margin="2,1"
                                             Click="RowSaveButton_Click"/>
 
-                                    <!-- Col 10: Status icon -->
-                                    <Grid Grid.Column="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <!-- Col 9: Status icon -->
+                                    <Grid Grid.Column="9" HorizontalAlignment="Center" VerticalAlignment="Center">
                                         <Path x:Name="CheckCirclePath"
                                               Data="{StaticResource CheckCircleGeo}"
                                               Stretch="Uniform"

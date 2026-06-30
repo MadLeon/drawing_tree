@@ -4,6 +4,7 @@
 /// and asks the user to confirm before writing to the database.
 /// </summary>
 
+using System.Text;
 using System.Windows;
 using DrawingTree.Data;
 
@@ -16,18 +17,22 @@ public partial class ConfirmSaveDialog : Window
     {
         InitializeComponent();
 
-        AddedCount.Text   = summary.Added.ToString();
-        DeletedCount.Text = summary.Deleted.ToString();
+        AddedCount.Text    = summary.Added.ToString();
+        DeletedCount.Text  = summary.Deleted.ToString();
         ModifiedCount.Text = summary.Modified.ToString();
 
-        if (summary.DeletedItems.Count > 0)
-        {
-            DeletedList.ItemsSource = summary.DeletedItems;
-        }
-        else
-        {
-            DeletedSection.Visibility = Visibility.Collapsed;
-        }
+        var sb = new StringBuilder();
+
+        foreach (var item in summary.AddedItems)
+            sb.AppendLine($"+ {item.ParentDrawingNumber} → {item.ChildDrawingNumber} rev {item.ChildRevision}  [added, qty: {item.Quantity}]");
+
+        foreach (var item in summary.DeletedItems)
+            sb.AppendLine($"- {item.ParentDrawingNumber} → {item.ChildDrawingNumber} rev {item.ChildRevision}  [deleted]");
+
+        foreach (var item in summary.ModifiedItems)
+            sb.AppendLine($"~ {item.ParentDrawingNumber} → {item.ChildDrawingNumber} rev {item.ChildRevision}  [qty: {item.OldQuantity} → {item.NewQuantity}]");
+
+        ChangeDetail.Text = sb.ToString().TrimEnd();
     }
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)   => DialogResult = true;

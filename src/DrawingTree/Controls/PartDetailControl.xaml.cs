@@ -79,6 +79,7 @@ public partial class PartDetailControl : UserControl
 
         LoadPdfFiles();
         LoadMpSection();
+        LoadDirSection();
         LoadProcessSteps();
         LoadNotes();
 
@@ -210,6 +211,83 @@ public partial class PartDetailControl : UserControl
         {
             Logger.Instance.Error($"PartDetailControl: failed to create MP file: {ex.Message}");
             MessageBox.Show($"Failed to create MP file:\n{ex.Message}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    // ── DIR ─────────────────────────────────────────────────────────────
+
+    private void LoadDirSection()
+    {
+        DirFilesPanel.Children.Clear();
+
+        var attachments = _partRepository.GetDirAttachments(_partId);
+
+        if (attachments.Count == 0)
+        {
+            DirFilesPanel.Children.Add(new TextBlock
+            {
+                Text = "(no DIR files yet)", FontSize = 12, Foreground = Brushes.Gray
+            });
+            return;
+        }
+
+        DirFilesPanel.Children.Add(BuildMpFilesHeader());
+        foreach (var attachment in attachments)
+            DirFilesPanel.Children.Add(BuildDirFileRow(attachment));
+    }
+
+    private Grid BuildDirFileRow(DirAttachmentRow attachment)
+    {
+        var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.5, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+        var nameText = new TextBlock
+        {
+            Text = attachment.FileName, FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center,
+            TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = attachment.FilePath
+        };
+        Grid.SetColumn(nameText, 0);
+        grid.Children.Add(nameText);
+
+        var openBtn = new Button
+        {
+            Style = (Style)FindResource("IconLinkBtn"), Padding = new Thickness(2, 0, 2, 0), ToolTip = "Open",
+            Content = new Path
+            {
+                Data = (Geometry)FindResource("OpenInNewGeo"), Stretch = Stretch.Uniform,
+                Fill = Brushes.DodgerBlue, Width = 13, Height = 13
+            }
+        };
+        openBtn.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+        openBtn.Click += (_, _) => OpenDirFile(attachment);
+        Grid.SetColumn(openBtn, 1);
+        grid.Children.Add(openBtn);
+
+        return grid;
+    }
+
+    private void OpenDirFile(DirAttachmentRow attachment)
+    {
+        if (!File.Exists(attachment.FilePath))
+        {
+            var choice = MessageBox.Show(
+                $"File not found:\n{attachment.FilePath}\n\nRemove this entry from the database?",
+                "File Not Found", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (choice == MessageBoxResult.Yes)
+            {
+                _partRepository.RemoveDirAttachment(attachment.AttachmentId);
+                LoadDirSection();
+            }
+            return;
+        }
+        try { Process.Start(new ProcessStartInfo { FileName = attachment.FilePath, UseShellExecute = true }); }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Failed to open file: {ex.Message}", "Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }

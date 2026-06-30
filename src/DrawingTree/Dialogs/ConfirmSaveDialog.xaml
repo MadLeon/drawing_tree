@@ -43,41 +43,21 @@
             </Border>
         </StackPanel>
 
-        <!-- Deleted items list (hidden when empty) -->
-        <StackPanel Grid.Row="4" x:Name="DeletedSection">
-            <TextBlock Text="Relationships to be deleted:" FontSize="12"
-                       FontWeight="SemiBold" Foreground="#555" Margin="0,0,0,6"/>
-            <Border BorderBrush="#FFCDD2" BorderThickness="1" CornerRadius="4">
-                <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto">
-                    <ItemsControl x:Name="DeletedList" Margin="8,6">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Margin="0,3">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="16"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0"
-                                               Text="{Binding ParentDrawingNumber}"
-                                               FontSize="12" Foreground="#444"/>
-                                    <TextBlock Grid.Column="1" Text="→"
-                                               FontSize="12" Foreground="#999"
-                                               HorizontalAlignment="Center"/>
-                                    <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                        <TextBlock Text="{Binding ChildDrawingNumber}"
-                                                   FontSize="12" Foreground="#C62828"/>
-                                        <TextBlock Text=" rev " FontSize="12" Foreground="#999"/>
-                                        <TextBlock Text="{Binding ChildRevision}"
-                                                   FontSize="12" Foreground="#999"/>
-                                    </StackPanel>
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </Border>
-        </StackPanel>
+        <!-- Change detail text area -->
+        <TextBox x:Name="ChangeDetail"
+                 Grid.Row="4"
+                 IsReadOnly="True"
+                 AcceptsReturn="True"
+                 TextWrapping="NoWrap"
+                 VerticalScrollBarVisibility="Auto"
+                 HorizontalScrollBarVisibility="Auto"
+                 MaxHeight="200"
+                 FontFamily="Consolas"
+                 FontSize="12"
+                 BorderThickness="1"
+                 BorderBrush="#DDD"
+                 Padding="8,6"
+                 Background="#FAFAFA"/>
 
         <!-- Buttons -->
         <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right">

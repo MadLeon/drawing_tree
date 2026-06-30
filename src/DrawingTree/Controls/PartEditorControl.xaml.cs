@@ -71,10 +71,6 @@ public partial class PartEditorControl : UserControl
 
                 DrawingInfo? dbInfo = _drawingRepository.GetDrawingInfo(drawingNumber);
 
-                string qty = dbInfo?.PartId.HasValue == true
-                    ? _drawingRepository.GetPartQuantity(dbInfo.PartId.Value)
-                    : string.Empty;
-
                 _rows.Add(new PartEditorRow
                 {
                     Index                   = index++,
@@ -85,7 +81,6 @@ public partial class PartEditorControl : UserControl
                     Description        = dbInfo?.Description ?? string.Empty,
                     IsAssembly         = dbInfo?.IsAssembly  ?? false,
                     PdfPath            = dbInfo?.PdfPath.Length > 0 ? dbInfo.PdfPath : pdfPath,
-                    QuantityInAssembly = qty
                 });
             }
 
@@ -135,13 +130,10 @@ public partial class PartEditorControl : UserControl
             return;
         }
 
-        string dbQty = _drawingRepository.GetPartQuantity(row.PartId.Value);
-
-        bool same = row.Revision           == dbInfo.Revision    &&
-                    row.Description        == dbInfo.Description  &&
-                    row.IsAssembly         == dbInfo.IsAssembly   &&
-                    row.PdfPath            == dbInfo.PdfPath      &&
-                    row.QuantityInAssembly == dbQty;
+        bool same = row.Revision    == dbInfo.Revision   &&
+                    row.Description == dbInfo.Description &&
+                    row.IsAssembly  == dbInfo.IsAssembly  &&
+                    row.PdfPath     == dbInfo.PdfPath;
 
         if (same)
         {
@@ -149,7 +141,7 @@ public partial class PartEditorControl : UserControl
             return;
         }
 
-        var dialog = new ConfirmOverwriteDialog(row, dbInfo, dbQty) { Owner = Window.GetWindow(this) };
+        var dialog = new ConfirmOverwriteDialog(row, dbInfo) { Owner = Window.GetWindow(this) };
         if (dialog.ShowDialog() != true) return;
 
         bool ok = _drawingRepository.UpdatePart(
@@ -163,9 +155,6 @@ public partial class PartEditorControl : UserControl
                 row.PdfPath,
                 row.Revision);
         }
-
-        if (ok && !string.IsNullOrEmpty(row.QuantityInAssembly))
-            ok = _drawingRepository.UpdatePartTreeQuantity(row.PartId.Value, row.QuantityInAssembly);
 
         if (ok && !string.IsNullOrEmpty(_poName))
         {

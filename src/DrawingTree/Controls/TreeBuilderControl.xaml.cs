@@ -228,10 +228,11 @@ public partial class TreeBuilderControl : UserControl
                 continue;
             }
 
-            leftMatch.PartId      = dbChild.Drawing.PartId;
-            leftMatch.Revision    = dbChild.Drawing.Revision;
-            leftMatch.Description = dbChild.Drawing.Description;
-            leftMatch.IsAssembly  = dbChild.Drawing.IsAssembly;
+            leftMatch.PartId               = dbChild.Drawing.PartId;
+            leftMatch.Revision             = dbChild.Drawing.Revision;
+            leftMatch.Description          = dbChild.Drawing.Description;
+            leftMatch.IsAssembly           = dbChild.Drawing.IsAssembly;
+            leftMatch.QuantityInAssembly   = dbChild.Drawing.QuantityInAssembly;
             if (string.IsNullOrEmpty(leftMatch.PdfPath))
                 leftMatch.PdfPath = dbChild.Drawing.PdfPath;
 

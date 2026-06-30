@@ -535,7 +535,7 @@
 
                                     <!-- Column header row -->
                                     <Border Background="#E8EAF0" Padding="0,3">
-                                        <Grid MinWidth="900">
+                                        <Grid MinWidth="940">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="24"/>
                                                 <ColumnDefinition Width="100"/>
@@ -543,6 +543,7 @@
                                                 <ColumnDefinition Width="50"/>
                                                 <ColumnDefinition Width="200"/>
                                                 <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="40"/>
                                                 <ColumnDefinition Width="40"/>
                                                 <ColumnDefinition Width="40"/>
                                                 <ColumnDefinition Width="100"/>
@@ -556,8 +557,9 @@
                                             <TextBlock Grid.Column="5" Text="Description"    FontSize="11" FontWeight="SemiBold" Foreground="#555" VerticalAlignment="Center" Margin="4,0"/>
                                             <TextBlock Grid.Column="6" Text="PDF"            FontSize="11" FontWeight="SemiBold" Foreground="#555" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4,0"/>
                                             <TextBlock Grid.Column="7" Text="MP"             FontSize="11" FontWeight="SemiBold" Foreground="#555" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4,0"/>
-                                            <TextBlock Grid.Column="8" Text="Rls Date"       FontSize="11" FontWeight="SemiBold" Foreground="#555" VerticalAlignment="Center" Margin="4,0"/>
-                                            <TextBlock Grid.Column="9" Text="Due Date"       FontSize="11" FontWeight="SemiBold" Foreground="#555" VerticalAlignment="Center" Margin="4,0"/>
+                                            <TextBlock Grid.Column="8" Text="DIR"            FontSize="11" FontWeight="SemiBold" Foreground="#555" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4,0"/>
+                                            <TextBlock Grid.Column="9" Text="Rls Date"       FontSize="11" FontWeight="SemiBold" Foreground="#555" VerticalAlignment="Center" Margin="4,0"/>
+                                            <TextBlock Grid.Column="10" Text="Due Date"      FontSize="11" FontWeight="SemiBold" Foreground="#555" VerticalAlignment="Center" Margin="4,0"/>
                                         </Grid>
                                     </Border>
 
@@ -569,7 +571,7 @@
                                                     <!-- Main row -->
                                                     <Border BorderBrush="#EEEEEE" BorderThickness="0,0,0,1"
                                                             Padding="0,3">
-                                                        <Grid MinWidth="900">
+                                                        <Grid MinWidth="940">
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="24"/>
                                                                 <ColumnDefinition Width="100"/>
@@ -577,6 +579,7 @@
                                                                 <ColumnDefinition Width="50"/>
                                                                 <ColumnDefinition Width="200"/>
                                                                 <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="40"/>
                                                                 <ColumnDefinition Width="40"/>
                                                                 <ColumnDefinition Width="40"/>
                                                                 <ColumnDefinition Width="100"/>
@@ -673,14 +676,20 @@
                                                                      HorizontalAlignment="Center" VerticalAlignment="Center">
                                                                 <Path Data="{StaticResource CheckCircleGeo}" Stretch="Uniform" Fill="#2E7D32"/>
                                                             </Viewbox>
+                                                            <!-- DIR icon -->
+                                                            <Viewbox Grid.Column="8" Width="14" Height="14"
+                                                                     Visibility="{Binding DirIconVisibility}"
+                                                                     HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                <Path Data="{StaticResource CheckCircleGeo}" Stretch="Uniform" Fill="#2E7D32"/>
+                                                            </Viewbox>
                                                             <!-- Rls Date — selectable -->
-                                                            <TextBox Grid.Column="8" Text="{Binding Row.ReleaseDate, Mode=OneWay}"
+                                                            <TextBox Grid.Column="9" Text="{Binding Row.ReleaseDate, Mode=OneWay}"
                                                                      Style="{StaticResource SelectableText}"/>
                                                             <!-- Due Date — selectable -->
-                                                            <TextBox Grid.Column="9" Text="{Binding Row.DueDate, Mode=OneWay}"
+                                                            <TextBox Grid.Column="10" Text="{Binding Row.DueDate, Mode=OneWay}"
                                                                      Style="{StaticResource SelectableText}"/>
                                                             <!-- Row menu -->
-                                                            <Button Grid.Column="10" Content="⋮" FontSize="14"
+                                                            <Button Grid.Column="11" Content="⋮" FontSize="14"
                                                                     Style="{StaticResource IconLinkBtn}"
                                                                     Tag="{Binding}" Click="ItemRowMenu_Click">
                                                                 <Button.ContextMenu>
@@ -702,7 +711,7 @@
                                                                         BorderBrush="#EEEEEE"
                                                                         BorderThickness="0,0,0,1"
                                                                         Padding="0,3">
-                                                                    <Grid MinWidth="900">
+                                                                    <Grid MinWidth="940">
                                                                         <Grid.ColumnDefinitions>
                                                                             <ColumnDefinition Width="24"/>
                                                                             <ColumnDefinition Width="100"/>
@@ -710,6 +719,7 @@
                                                                             <ColumnDefinition Width="50"/>
                                                                             <ColumnDefinition Width="200"/>
                                                                             <ColumnDefinition Width="*"/>
+                                                                            <ColumnDefinition Width="40"/>
                                                                             <ColumnDefinition Width="40"/>
                                                                             <ColumnDefinition Width="40"/>
                                                                             <ColumnDefinition Width="100"/>
@@ -749,6 +759,12 @@
                                                                         <!-- MP icon -->
                                                                         <Viewbox Grid.Column="7" Width="14" Height="14"
                                                                                  Visibility="{Binding MpIconVisibility}"
+                                                                                 HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                            <Path Data="{StaticResource CheckCircleGeo}" Stretch="Uniform" Fill="#2E7D32"/>
+                                                                        </Viewbox>
+                                                                        <!-- DIR icon -->
+                                                                        <Viewbox Grid.Column="8" Width="14" Height="14"
+                                                                                 Visibility="{Binding DirIconVisibility}"
                                                                                  HorizontalAlignment="Center" VerticalAlignment="Center">
                                                                             <Path Data="{StaticResource CheckCircleGeo}" Stretch="Uniform" Fill="#2E7D32"/>
                                                                         </Viewbox>
