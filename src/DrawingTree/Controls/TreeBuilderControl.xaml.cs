@@ -190,10 +190,19 @@ public partial class TreeBuilderControl : UserControl
         var existing = _leftDrawings.FirstOrDefault(
             d => string.Equals(d.DrawingNumber, group.DrawingNumber, StringComparison.OrdinalIgnoreCase));
 
-        DrawingInfo rootInfo = existing ?? new DrawingInfo { DrawingNumber = group.DrawingNumber };
-        rootInfo.PartId = group.PartId;
+        DrawingInfo rootInfo;
         if (existing != null)
+        {
+            rootInfo = existing;
             _leftDrawings.Remove(existing);
+        }
+        else
+        {
+            // Drawing already consumed (as a child of another root) — reload from DB
+            var dbInfo = _drawingRepository.GetDrawingInfo(group.PartId);
+            rootInfo = dbInfo ?? new DrawingInfo { DrawingNumber = group.DrawingNumber };
+        }
+        rootInfo.PartId = group.PartId;
 
         var rootNode = new DrawingNode(rootInfo)
         {
@@ -221,10 +230,22 @@ public partial class TreeBuilderControl : UserControl
 
             if (leftMatch == null)
             {
-                Logger.Instance.Warning(
-                    $"Drawing '{dbChild.Drawing.DrawingNumber}' exists in DB tree under " +
-                    $"'{parent.Drawing.DrawingNumber}' but is absent from the import list — " +
-                    $"skipped to maintain data consistency.");
+                // Drawing already placed elsewhere in the tree — use DB data from dbChild directly
+                var copy = new DrawingInfo
+                {
+                    DrawingNumber      = dbChild.Drawing.DrawingNumber,
+                    PartId             = dbChild.Drawing.PartId,
+                    Revision           = dbChild.Drawing.Revision,
+                    Description        = dbChild.Drawing.Description,
+                    IsAssembly         = dbChild.Drawing.IsAssembly,
+                    PdfPath            = dbChild.Drawing.PdfPath,
+                    QuantityInAssembly = dbChild.Drawing.QuantityInAssembly
+                };
+                var dupeNode = new DrawingNode(copy) { PartTreeId = dbChild.PartTreeId };
+                if (dbChild.Children.Count > 0)
+                    AttachDbChildren(dupeNode, dbChild.Children);
+                parent.Children.Add(dupeNode);
+                Logger.Instance.Info($"Drawing '{dbChild.Drawing.DrawingNumber}' duplicated from DB data (already in tree)");
                 continue;
             }
 
