@@ -143,3 +143,9 @@ ALTER TABLE part_new RENAME TO part;
 CREATE INDEX IF NOT EXISTS idx_part_drawing_number ON part(drawing_number);
 
 COMMIT;
+
+-- 2026-07-03: Add status column to part_attachment (Issue #23)
+ALTER TABLE part_attachment ADD COLUMN status TEXT NOT NULL DEFAULT 'in progress';
+
+-- Backfill pre-existing rows (created before status tracking existed) as completed
+UPDATE part_attachment SET status = 'completed';
