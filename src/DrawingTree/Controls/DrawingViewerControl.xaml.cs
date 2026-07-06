@@ -223,7 +223,11 @@ public partial class DrawingViewerControl : UserControl
                     IsAssembly    = dbInfo?.IsAssembly     ?? false,
                     PdfPath       = dbInfo?.PdfPath        ?? string.Empty
                 };
-                var rootNode = new DrawingNode(rootInfo);
+                var rootNode = new DrawingNode(rootInfo)
+                {
+                    JobHeader  = "Job Number: "  + string.Join(" & ", group.JobNumbers),
+                    LineHeader = "Line Number: " + string.Join(" & ", group.LineNumbers)
+                };
                 foreach (var child in children)
                     rootNode.Children.Add(child);
 
@@ -462,9 +466,17 @@ public partial class DrawingViewerControl : UserControl
             var file    = await Windows.Storage.StorageFile.GetFileFromPathAsync(path);
             var pdfDoc  = await Windows.Data.Pdf.PdfDocument.LoadFromFileAsync(file);
 
+            double firstPageWidth = 0, firstPageHeight = 0;
+
             for (uint i = 0; i < pdfDoc.PageCount; i++)
             {
                 using var page = pdfDoc.GetPage(i);
+                if (i == 0)
+                {
+                    firstPageWidth  = page.Size.Width;
+                    firstPageHeight = page.Size.Height;
+                }
+
                 var ms = new Windows.Storage.Streams.InMemoryRandomAccessStream();
                 await page.RenderToStreamAsync(ms, new Windows.Data.Pdf.PdfPageRenderOptions
                 {
@@ -486,6 +498,9 @@ public partial class DrawingViewerControl : UserControl
                     Stretch = Stretch.None
                 });
             }
+
+            if (firstPageWidth > 0 && firstPageHeight > 0)
+                FitPdfToViewport(firstPageWidth, firstPageHeight);
         }
         catch (Exception ex)
         {
@@ -493,6 +508,30 @@ public partial class DrawingViewerControl : UserControl
             MessageBox.Show($"Failed to render PDF:\n{ex.Message}", "PDF Error",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+    }
+
+    /// <summary>
+    /// Sets the initial zoom so the page's larger dimension (width for landscape,
+    /// height for portrait) fills 100% of the corresponding scroll viewport dimension.
+    /// </summary>
+    /// <param name="pageWidth">PDF page width in points (unscaled)</param>
+    /// <param name="pageHeight">PDF page height in points (unscaled)</param>
+    private void FitPdfToViewport(double pageWidth, double pageHeight)
+    {
+        double viewportWidth  = PdfScrollViewer.ActualWidth  - PdfPagesPanel.Margin.Left - PdfPagesPanel.Margin.Right;
+        double viewportHeight = PdfScrollViewer.ActualHeight - PdfPagesPanel.Margin.Top  - PdfPagesPanel.Margin.Bottom;
+        if (viewportWidth <= 0 || viewportHeight <= 0) return;
+
+        double renderedWidth  = pageWidth  * BaseRenderScale;
+        double renderedHeight = pageHeight * BaseRenderScale;
+
+        double scale = pageWidth >= pageHeight
+            ? viewportWidth  / renderedWidth
+            : viewportHeight / renderedHeight;
+
+        _pdfZoom = Math.Clamp(scale, ZoomMin, ZoomMax);
+        PdfZoomTransform.ScaleX = _pdfZoom;
+        PdfZoomTransform.ScaleY = _pdfZoom;
     }
 
     // ── PDF zoom: instant via LayoutTransform, no re-render ───────────────

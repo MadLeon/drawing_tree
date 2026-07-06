@@ -170,8 +170,8 @@ public partial class AllPosControl : UserControl
     public event EventHandler<int>? NavigateToPoRequested;
     /// <summary>Fired when the user chooses "Input Data" on a PO. Argument is the PO number.</summary>
     public event EventHandler<string>? ImportDrawingRequested;
-    /// <summary>Fired when the user clicks the "Tree" button for a specific part.</summary>
-    public event EventHandler<int>? NavigateToTreeRequested;
+    /// <summary>Fired when the user clicks the "Tree" button for a PO. Argument is the PO number.</summary>
+    public event EventHandler<string>? NavigateToTreeRequested;
     /// <summary>Fired when the user clicks the part icon on an order item row. Args: (PartId, OrderItemId).</summary>
     public event EventHandler<(int PartId, int OrderItemId)>? NavigateToPartRequested;
     /// <summary>Fired when the user clicks the History button.</summary>
@@ -466,14 +466,7 @@ public partial class AllPosControl : UserControl
     private void SimplePoTreeButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button btn || btn.Tag is not PoSimpleGroup group) return;
-        var firstWithPart = group.Items.FirstOrDefault(i => i.Row.PartId.HasValue);
-        if (firstWithPart == null)
-        {
-            MessageBox.Show("No drawing with a linked part found for this PO.", "No Part",
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-        NavigateToTreeRequested?.Invoke(this, firstWithPart.Row.PartId!.Value);
+        NavigateToTreeRequested?.Invoke(this, group.PoNumber);
     }
 
     private void SimplePoDetailButton_Click(object sender, RoutedEventArgs e)

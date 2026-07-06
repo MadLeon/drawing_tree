@@ -500,18 +500,18 @@ public partial class MainWindow : Window
         Logger.Instance.Info("Returned to All POs from part detail");
     }
 
-    private void OnAllPosNavigateToTree(object? sender, int partId)
+    private void OnAllPosNavigateToTree(object? sender, string poNumber)
     {
         MainDisplayArea.Children.Clear();
 
         _drawingViewerControl = new DrawingViewerControl();
         _drawingViewerControl.ShowBackButton = true;
-        _drawingViewerControl.LoadFromPartId(partId);
+        _drawingViewerControl.LoadFromDatabase(poNumber);
         _drawingViewerControl.ReturnRequested += OnDrawingViewerReturn;
         _drawingViewerControl.BackRequested   += OnViewerBackToAllPos;
 
         MainDisplayArea.Children.Add(_drawingViewerControl);
-        Logger.Instance.Info($"Drawing viewer displayed for partId={partId} (from All POs tree button)");
+        Logger.Instance.Info($"Drawing viewer displayed for PO={poNumber} (from All POs tree button)");
     }
 
     private void OnViewerBackToAllPos(object? sender, EventArgs e)

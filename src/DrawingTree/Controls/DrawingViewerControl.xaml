@@ -112,40 +112,49 @@
                             <TreeView.Resources>
                                 <HierarchicalDataTemplate DataType="{x:Type models:DrawingNode}"
                                                           ItemsSource="{Binding Children}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <!--
-                                            Visibility="Collapsed" (not Hidden) so leaf nodes take no space
-                                            and the connector H-line reaches directly to the node border.
-                                        -->
-                                        <Button x:Name="ExpandBtn"
-                                                Style="{StaticResource IconBtn}"
-                                                Width="20" Height="20" Margin="0,0,2,0"
-                                                Visibility="Collapsed"
-                                                Click="ExpandButton_Click">
-                                            <Path x:Name="ExpandIcon"
-                                                  Data="{StaticResource IndeterminateCheckBoxGeo}"
-                                                  Style="{StaticResource IconPath}"
-                                                  Fill="#E53935" Width="13" Height="13"/>
-                                        </Button>
-                                        <Border x:Name="NodeBorder"
-                                                BorderThickness="1" BorderBrush="#E0E0E0"
-                                                Background="White" CornerRadius="2"
-                                                Padding="6,4" Margin="0,2"
-                                                Cursor="Hand"
-                                                MouseLeftButtonUp="ViewerNodeBorder_MouseLeftButtonUp">
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Drawing.DrawingNumber}"
-                                                           FontSize="12" VerticalAlignment="Center"
-                                                           Margin="0,0,4,0"/>
-                                                <Button Style="{StaticResource IconBtn}"
-                                                        Width="20" Height="20" ToolTip="Open PDF"
-                                                        Click="ViewerOpenPdfButton_Click">
-                                                    <Path Data="{StaticResource OpenInNewGeo}"
-                                                          Stretch="Uniform"
-                                                          Fill="#1976D2" Width="13" Height="13"/>
-                                                </Button>
-                                            </StackPanel>
-                                        </Border>
+                                    <StackPanel x:Name="RootStack">
+                                        <!-- Job/Line header: visible only for root assembly nodes (HasJobInfo=True) -->
+                                        <StackPanel x:Name="JobInfoStack" Visibility="Collapsed" Margin="2,4,0,4">
+                                            <TextBlock Text="{Binding JobHeader}"
+                                                       FontWeight="Bold" FontSize="13" Margin="0,0,0,2"/>
+                                            <TextBlock Text="{Binding LineHeader}"
+                                                       FontSize="12" Foreground="#555555"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <!--
+                                                Visibility="Collapsed" (not Hidden) so leaf nodes take no space
+                                                and the connector H-line reaches directly to the node border.
+                                            -->
+                                            <Button x:Name="ExpandBtn"
+                                                    Style="{StaticResource IconBtn}"
+                                                    Width="20" Height="20" Margin="0,0,2,0"
+                                                    Visibility="Collapsed"
+                                                    Click="ExpandButton_Click">
+                                                <Path x:Name="ExpandIcon"
+                                                      Data="{StaticResource IndeterminateCheckBoxGeo}"
+                                                      Style="{StaticResource IconPath}"
+                                                      Fill="#E53935" Width="13" Height="13"/>
+                                            </Button>
+                                            <Border x:Name="NodeBorder"
+                                                    BorderThickness="1" BorderBrush="#E0E0E0"
+                                                    Background="White" CornerRadius="2"
+                                                    Padding="6,4" Margin="0,2"
+                                                    Cursor="Hand"
+                                                    MouseLeftButtonUp="ViewerNodeBorder_MouseLeftButtonUp">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Drawing.DrawingNumber}"
+                                                               FontSize="12" VerticalAlignment="Center"
+                                                               Margin="0,0,4,0"/>
+                                                    <Button Style="{StaticResource IconBtn}"
+                                                            Width="20" Height="20" ToolTip="Open PDF"
+                                                            Click="ViewerOpenPdfButton_Click">
+                                                        <Path Data="{StaticResource OpenInNewGeo}"
+                                                              Stretch="Uniform"
+                                                              Fill="#1976D2" Width="13" Height="13"/>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
                                     </StackPanel>
                                     <HierarchicalDataTemplate.Triggers>
                                         <DataTrigger Binding="{Binding HasChildren}" Value="True">
@@ -158,6 +167,11 @@
                                         <DataTrigger Binding="{Binding IsSelected}" Value="True">
                                             <Setter TargetName="NodeBorder" Property="Background" Value="#E3F2FD"/>
                                             <Setter TargetName="NodeBorder" Property="BorderBrush" Value="#1976D2"/>
+                                        </DataTrigger>
+                                        <!-- Root assembly nodes: show job/line header, add top gap -->
+                                        <DataTrigger Binding="{Binding HasJobInfo}" Value="True">
+                                            <Setter TargetName="JobInfoStack" Property="Visibility" Value="Visible"/>
+                                            <Setter TargetName="RootStack" Property="Margin" Value="0,16,0,0"/>
                                         </DataTrigger>
                                     </HierarchicalDataTemplate.Triggers>
                                 </HierarchicalDataTemplate>
