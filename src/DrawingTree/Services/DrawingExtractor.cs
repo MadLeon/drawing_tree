@@ -16,23 +16,15 @@ public class DrawingExtractor
     /// <summary>
     /// Extract drawing number from PDF filename
     /// Drawing number is the text before the first space in the filename
-    /// Only processes filenames containing "rt-" (case-insensitive)
     /// Handles both space-separated and underscore-separated revision formats
     /// Returns the drawing number in uppercase
     /// </summary>
     /// <param name="fileName">PDF filename without extension</param>
-    /// <returns>Extracted drawing number in uppercase, or empty string if no "rt-" found</returns>
+    /// <returns>Extracted drawing number in uppercase, or empty string if extraction fails</returns>
     public string ExtractDrawingNumber(string fileName)
     {
         try
         {
-            // Check if filename contains "rt-" (case-insensitive)
-            if (!fileName.Contains("rt-", StringComparison.OrdinalIgnoreCase))
-            {
-                Logger.Instance.Debug($"Skipped file (no 'rt-' found): {fileName}");
-                return string.Empty;
-            }
-
             // Find the position of the first space
             int spacePosition = fileName.IndexOf(' ');
 
