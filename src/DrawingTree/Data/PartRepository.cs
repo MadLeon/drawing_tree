@@ -322,6 +322,103 @@ public class PartRepository
             Logger.Instance.Error($"PartRepository.RemoveDirAttachment failed for id={attachmentId}: {ex.Message}");
         }
     }
+
+    /// <summary>
+    /// Returns the most recent DIR attachment for the given part that is also linked
+    /// to the given order item, or null if none exists.
+    /// </summary>
+    /// <param name="partId">part.id</param>
+    /// <param name="orderItemId">order_item.id</param>
+    public PartAttachmentRow? GetDirAttachmentForOrderItem(int partId, int orderItemId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT id, file_name, file_path, status
+                FROM part_attachment
+                WHERE part_id = @pid AND order_item_id = @oid AND file_type = 'DIR' COLLATE NOCASE
+                ORDER BY created_at DESC
+                LIMIT 1
+                """;
+            cmd.Parameters.AddWithValue("@pid", partId);
+            cmd.Parameters.AddWithValue("@oid", orderItemId);
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return new PartAttachmentRow(
+                    reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.GetDirAttachmentForOrderItem failed for partId={partId}, orderItemId={orderItemId}: {ex.Message}");
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Returns the most recent bubble drawing attachment recorded for the given part,
+    /// or null if none exists.
+    /// </summary>
+    /// <param name="partId">part.id</param>
+    public PartAttachmentRow? GetBubbleAttachment(int partId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT id, file_name, file_path, status
+                FROM part_attachment
+                WHERE part_id = @pid AND file_type = 'BUBBLE' COLLATE NOCASE
+                ORDER BY created_at DESC
+                LIMIT 1
+                """;
+            cmd.Parameters.AddWithValue("@pid", partId);
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return new PartAttachmentRow(
+                    reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.GetBubbleAttachment failed for partId={partId}: {ex.Message}");
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Updates the status field of a part_attachment record.
+    /// </summary>
+    /// <param name="attachmentId">part_attachment.id</param>
+    /// <param name="status">New status value (e.g. "reviewed")</param>
+    public bool UpdateAttachmentStatus(int attachmentId, string status)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                UPDATE part_attachment
+                SET status = @status, updated_at = datetime('now','localtime')
+                WHERE id = @id
+                """;
+            cmd.Parameters.AddWithValue("@status", status);
+            cmd.Parameters.AddWithValue("@id", attachmentId);
+            cmd.ExecuteNonQuery();
+            Logger.Instance.Info($"PartRepository.UpdateAttachmentStatus: attachment id={attachmentId} -> '{status}'");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.UpdateAttachmentStatus failed for id={attachmentId}: {ex.Message}");
+            return false;
+        }
+    }
 }
 
 /// <param name="PartId">part.id</param>
@@ -366,3 +463,9 @@ public record MpAttachmentRow(int AttachmentId, string FileName, string FilePath
 /// <param name="FileName">File name (without path)</param>
 /// <param name="FilePath">Full file path</param>
 public record DirAttachmentRow(int AttachmentId, string FileName, string FilePath);
+
+/// <param name="AttachmentId">part_attachment.id</param>
+/// <param name="FileName">File name (without path)</param>
+/// <param name="FilePath">Full file path</param>
+/// <param name="Status">part_attachment.status</param>
+public record PartAttachmentRow(int AttachmentId, string FileName, string FilePath, string Status);

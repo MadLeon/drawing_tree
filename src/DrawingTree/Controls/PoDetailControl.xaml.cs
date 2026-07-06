@@ -13,6 +13,7 @@ using System.Windows.Shapes;
 using DrawingTree.Data;
 using DrawingTree.Logging;
 using DrawingTree.Models;
+using DrawingTree.Services;
 
 using UserControl      = System.Windows.Controls.UserControl;
 using Button           = System.Windows.Controls.Button;
@@ -27,6 +28,9 @@ public partial class PoDetailControl : UserControl
 {
     private readonly PoRepository _poRepository = new();
     private readonly DrawingRepository _drawingRepository = new();
+    private readonly PartRepository _partRepository = new();
+
+    private int _currentPoId;
 
     public event EventHandler? BackRequested;
     public event EventHandler<int>? ViewTreeRequested;
@@ -43,6 +47,8 @@ public partial class PoDetailControl : UserControl
     /// <param name="poId">purchase_order.id</param>
     public void LoadPo(int poId)
     {
+        _currentPoId = poId;
+
         var header = _poRepository.GetPoHeader(poId);
         TitleLabel.Text = header == null
             ? $"PO #{poId} (not found)"
@@ -58,14 +64,14 @@ public partial class PoDetailControl : UserControl
 
         var items = _poRepository.GetPoOrderItems(poId);
         foreach (var jobGroup in items.GroupBy(i => i.JobNumber))
-            JobsPanel.Children.Add(BuildJobSection(jobGroup.Key, jobGroup.ToList()));
+            JobsPanel.Children.Add(BuildJobSection(jobGroup.Key, jobGroup.ToList(), header.CustomerName));
 
         Logger.Instance.Info($"PoDetailControl: loaded poId={poId}, {items.Count} order item(s)");
     }
 
     // ── UI construction ─────────────────────────────────────────────────
 
-    private Border BuildJobSection(string jobNumber, List<PoOrderItemRow> rows)
+    private Border BuildJobSection(string jobNumber, List<PoOrderItemRow> rows, string? customerName)
     {
         var content = new StackPanel();
 
@@ -98,7 +104,7 @@ public partial class PoDetailControl : UserControl
         content.Children.Add(jobHeader);
 
         foreach (var row in rows)
-            content.Children.Add(BuildOrderItemBlock(row));
+            content.Children.Add(BuildOrderItemBlock(row, customerName));
 
         return new Border
         {
@@ -115,7 +121,7 @@ public partial class PoDetailControl : UserControl
     /// Builds one order_item's display block: line/date header (detached from the table)
     /// followed by a flat (non-tree) list of the part's drawing number plus all BOM descendants.
     /// </summary>
-    private StackPanel BuildOrderItemBlock(PoOrderItemRow row)
+    private StackPanel BuildOrderItemBlock(PoOrderItemRow row, string? customerName)
     {
         var panel = new StackPanel { Margin = new Thickness(0, 4, 0, 10) };
 
@@ -134,7 +140,7 @@ public partial class PoDetailControl : UserControl
             panel.Children.Add(BuildPartTableHeader());
             var rootNode = BuildRootNode(partId);
             foreach (var node in Flatten(rootNode))
-                panel.Children.Add(BuildPartRow(node, row.OrderItemId));
+                panel.Children.Add(BuildPartRow(node, row.OrderItemId, customerName));
         }
         else
         {
@@ -157,6 +163,8 @@ public partial class PoDetailControl : UserControl
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(130) });
 
         void AddHeader(int col, string text)
         {
@@ -173,11 +181,13 @@ public partial class PoDetailControl : UserControl
         AddHeader(1, "Rev.");
         AddHeader(2, "Description");
         AddHeader(3, "PDF");
-        AddHeader(4, "Part");
+        AddHeader(4, "DIR");
+        AddHeader(5, "Bub.");
+        AddHeader(6, "Status");
         return grid;
     }
 
-    private Grid BuildPartRow(DrawingNode node, int orderItemId)
+    private Grid BuildPartRow(DrawingNode node, int orderItemId, string? customerName)
     {
         var grid = new Grid { Margin = new Thickness(0, 1, 0, 1) };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
@@ -185,11 +195,25 @@ public partial class PoDetailControl : UserControl
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(130) });
 
+        var hasPart = node.Drawing.PartId.HasValue;
         var drawingNumber = new TextBlock
         {
-            Text = node.Drawing.DrawingNumber, FontSize = 12, VerticalAlignment = VerticalAlignment.Center
+            Text = node.Drawing.DrawingNumber, FontSize = 12, VerticalAlignment = VerticalAlignment.Center,
+            Foreground = hasPart ? System.Windows.Media.Brushes.DodgerBlue : System.Windows.Media.Brushes.Black,
+            TextDecorations = hasPart ? TextDecorations.Underline : null,
+            Cursor = hasPart ? System.Windows.Input.Cursors.Hand : System.Windows.Input.Cursors.Arrow
         };
+        if (node.Drawing.PartId is int linkedPartId)
+        {
+            drawingNumber.MouseLeftButtonDown += (_, _) =>
+            {
+                Logger.Instance.Info($"PoDetailControl: open part requested for partId={linkedPartId}, orderItemId={orderItemId}");
+                OpenPartRequested?.Invoke(this, (linkedPartId, orderItemId));
+            };
+        }
         Grid.SetColumn(drawingNumber, 0);
         grid.Children.Add(drawingNumber);
 
@@ -217,44 +241,124 @@ public partial class PoDetailControl : UserControl
                 Fill = System.Windows.Media.Brushes.DodgerBlue, Width = 13, Height = 13
             }
         };
-        openPdfBtn.Click += (_, _) => OpenPdfExternal(node.Drawing.PdfPath);
+        openPdfBtn.Click += (_, _) => OpenFileExternal(node.Drawing.PdfPath);
         Grid.SetColumn(openPdfBtn, 3);
         grid.Children.Add(openPdfBtn);
 
-        if (node.Drawing.PartId is int partId)
+        PartAttachmentRow? dirRow = node.Drawing.PartId is int dirPartId
+            ? _partRepository.GetDirAttachmentForOrderItem(dirPartId, orderItemId)
+            : null;
+
+        if (dirRow != null)
         {
-            var openPartBtn = new Button
+            var dirBtn = new Button
             {
-                Style = (Style)FindResource("IconLinkBtn"), Padding = new Thickness(3), ToolTip = "Open part (coming soon)",
+                Style = (Style)FindResource("IconLinkBtn"), Padding = new Thickness(3), ToolTip = "Open DIR",
                 Content = new Path
                 {
-                    Data = (Geometry)Resources["BuildGeo"], Stretch = Stretch.Uniform,
-                    Fill = System.Windows.Media.Brushes.Gray, Width = 13, Height = 13
+                    Data = (Geometry)Resources["AssignmentGeo"], Stretch = Stretch.Uniform,
+                    Fill = System.Windows.Media.Brushes.DodgerBlue, Width = 13, Height = 13
                 }
             };
-            openPartBtn.Click += (_, _) =>
-            {
-                Logger.Instance.Info($"PoDetailControl: open part requested for partId={partId}, orderItemId={orderItemId}");
-                OpenPartRequested?.Invoke(this, (partId, orderItemId));
-            };
-            Grid.SetColumn(openPartBtn, 4);
-            grid.Children.Add(openPartBtn);
+            dirBtn.Click += (_, _) => OpenFileExternal(dirRow.FilePath);
+            Grid.SetColumn(dirBtn, 4);
+            grid.Children.Add(dirBtn);
         }
 
+        string? bubblePath = ResolveBubblePath(node, dirRow, customerName);
+        if (bubblePath != null)
+        {
+            var bubBtn = new Button
+            {
+                Style = (Style)FindResource("IconLinkBtn"), Padding = new Thickness(3), ToolTip = "Open bubble drawing",
+                Content = new Path
+                {
+                    Data = (Geometry)Resources["ImageGeo"], Stretch = Stretch.Uniform,
+                    Fill = System.Windows.Media.Brushes.DodgerBlue, Width = 13, Height = 13
+                }
+            };
+            bubBtn.Click += (_, _) => OpenFileExternal(bubblePath);
+            Grid.SetColumn(bubBtn, 5);
+            grid.Children.Add(bubBtn);
+        }
+
+        var statusPanel = BuildStatusCell(dirRow);
+        Grid.SetColumn(statusPanel, 6);
+        grid.Children.Add(statusPanel);
+
         return grid;
+    }
+
+    /// <summary>
+    /// Resolves the bubble drawing PDF path for a row: prefers a recorded BUBBLE attachment,
+    /// otherwise falls back to a naming-convention lookup under the customer's bubble folder
+    /// (only when the row already has a DIR attachment).
+    /// </summary>
+    private string? ResolveBubblePath(DrawingNode node, PartAttachmentRow? dirRow, string? customerName)
+    {
+        if (node.Drawing.PartId is not int partId) return null;
+
+        var bubbleRow = _partRepository.GetBubbleAttachment(partId);
+        if (bubbleRow != null) return bubbleRow.FilePath;
+
+        if (dirRow == null || string.IsNullOrWhiteSpace(customerName)) return null;
+
+        var folder = BubbleConfig.GetBubbleFolder(customerName);
+        if (string.IsNullOrWhiteSpace(folder)) return null;
+
+        var fileName = $"{node.Drawing.DrawingNumber} Rev{node.Drawing.Revision} {node.Drawing.Description}-ballooned.pdf";
+        var candidate = System.IO.Path.Combine(folder, fileName);
+        return File.Exists(candidate) ? candidate : null;
+    }
+
+    private StackPanel BuildStatusCell(PartAttachmentRow? dirRow)
+    {
+        var statusPanel = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+
+        if (dirRow == null)
+        {
+            statusPanel.Children.Add(new TextBlock
+            {
+                Text = "N/A", FontSize = 12, Foreground = System.Windows.Media.Brushes.Gray,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            return statusPanel;
+        }
+
+        statusPanel.Children.Add(new TextBlock
+        {
+            Text = dirRow.Status, FontSize = 12, VerticalAlignment = VerticalAlignment.Center
+        });
+
+        if (string.Equals(dirRow.Status, "completed", StringComparison.OrdinalIgnoreCase))
+        {
+            var attachmentId = dirRow.AttachmentId;
+            var reviewBtn = new Button
+            {
+                Content = "Reviewed", FontSize = 11, Height = 22,
+                Margin = new Thickness(6, 0, 0, 0), Padding = new Thickness(6, 0, 6, 0)
+            };
+            reviewBtn.Click += (_, _) =>
+            {
+                _partRepository.UpdateAttachmentStatus(attachmentId, "reviewed");
+                LoadPo(_currentPoId);
+            };
+            statusPanel.Children.Add(reviewBtn);
+        }
+
+        return statusPanel;
     }
 
     private DrawingNode BuildRootNode(int partId)
     {
         var info = _drawingRepository.GetDrawingInfo(partId);
-        // Resolve to latest revision for display; keep original partId for tree lookup
         var display = info != null
             ? (_drawingRepository.GetDrawingInfo(info.DrawingNumber) ?? info)
             : null;
 
         var drawing = new DrawingInfo
         {
-            PartId        = partId,
+            PartId        = display?.PartId ?? partId,
             DrawingNumber = display?.DrawingNumber ?? partId.ToString(),
             Revision      = display?.Revision      ?? string.Empty,
             Description   = display?.Description   ?? string.Empty,
@@ -265,9 +369,28 @@ public partial class PoDetailControl : UserControl
 
         var children = _poRepository.GetPartTree(partId);
         foreach (var child in children)
+        {
+            NormalizeToLatestPartId(child);
             node.Children.Add(child);
+        }
 
         return node;
+    }
+
+    /// <summary>
+    /// Rewrites Drawing.PartId to the latest-revision part id for this node and all descendants.
+    /// GetPartTree() keeps the tree-linked (possibly stale) part_tree.child_id so
+    /// TreeBuilderControl can diff/save relationships correctly; PoDetailControl only displays
+    /// and never saves this tree, so it's safe to redirect navigation/attachment lookups here.
+    /// </summary>
+    private void NormalizeToLatestPartId(DrawingNode node)
+    {
+        var latest = _drawingRepository.GetDrawingInfo(node.Drawing.DrawingNumber);
+        if (latest != null)
+            node.Drawing.PartId = latest.PartId;
+
+        foreach (var child in node.Children)
+            NormalizeToLatestPartId(child);
     }
 
     /// <summary>Depth-first flattening of a node and all its descendants (root first).</summary>
@@ -288,11 +411,11 @@ public partial class PoDetailControl : UserControl
 
     // ── Helpers ──────────────────────────────────────────────────────────
 
-    private static void OpenPdfExternal(string path)
+    private static void OpenFileExternal(string path)
     {
         if (string.IsNullOrEmpty(path) || !File.Exists(path))
         {
-            MessageBox.Show("PDF file not found.", "File Not Found",
+            MessageBox.Show("File not found.", "File Not Found",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
@@ -302,7 +425,7 @@ public partial class PoDetailControl : UserControl
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Failed to open PDF: {ex.Message}", "Error",
+            MessageBox.Show($"Failed to open file: {ex.Message}", "Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }

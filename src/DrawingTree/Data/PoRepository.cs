@@ -904,7 +904,13 @@ public class PoRepository
         {
             using var conn = DatabaseConnectionFactory.OpenDevConnection();
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT po_number, oe_number FROM purchase_order WHERE id = @poId";
+            cmd.CommandText = """
+                SELECT po.po_number, po.oe_number, cust.customer_name
+                FROM purchase_order po
+                LEFT JOIN customer_contact cc ON cc.id = po.contact_id
+                LEFT JOIN customer cust ON cust.id = cc.customer_id
+                WHERE po.id = @poId
+                """;
             cmd.Parameters.AddWithValue("@poId", poId);
 
             using var reader = cmd.ExecuteReader();
@@ -913,7 +919,8 @@ public class PoRepository
                 return new PoHeader(
                     poId,
                     reader.GetString(0),
-                    reader.IsDBNull(1) ? null : reader.GetString(1));
+                    reader.IsDBNull(1) ? null : reader.GetString(1),
+                    reader.IsDBNull(2) ? null : reader.GetString(2));
             }
         }
         catch (Exception ex)
@@ -969,7 +976,8 @@ public class PoRepository
 /// <param name="PoId">purchase_order.id</param>
 /// <param name="PoNumber">Purchase order number</param>
 /// <param name="OeNumber">Customer OE/order number</param>
-public record PoHeader(int PoId, string PoNumber, string? OeNumber);
+/// <param name="CustomerName">customer.customer_name; null if no contact/customer linked</param>
+public record PoHeader(int PoId, string PoNumber, string? OeNumber, string? CustomerName);
 
 /// <param name="OrderItemId">order_item.id</param>
 /// <param name="JobNumber">Job number</param>
