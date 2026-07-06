@@ -1,0 +1,81 @@
+<Window x:Class="DrawingTree.Dialogs.NewCustomerDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="New Customer" Width="520"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <Style x:Key="Label" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#444"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+        </Style>
+        <Style x:Key="Field" TargetType="TextBox">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,4"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="0" Text="Create New Customer" FontSize="15" FontWeight="SemiBold" Foreground="#333"/>
+
+        <!-- Form -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="130"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Customer Name -->
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Customer Name:" Style="{StaticResource Label}"/>
+            <TextBox   Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" x:Name="NameBox" Style="{StaticResource Field}"/>
+
+            <!-- Drawing Folder -->
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Drawing Folder:" Style="{StaticResource Label}"/>
+            <TextBox   Grid.Row="1" Grid.Column="1" x:Name="DrawingFolderBox" Style="{StaticResource Field}"/>
+            <Button    Grid.Row="1" Grid.Column="2" Content="Browse" Width="70" Height="28" Margin="8,4,0,4"
+                       Click="BrowseDrawingFolder_Click"/>
+
+            <!-- MP Folder -->
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="MP Folder:" Style="{StaticResource Label}"/>
+            <TextBox   Grid.Row="2" Grid.Column="1" x:Name="MpFolderBox" Style="{StaticResource Field}"/>
+            <Button    Grid.Row="2" Grid.Column="2" Content="Browse" Width="70" Height="28" Margin="8,4,0,4"
+                       Click="BrowseMpFolder_Click"/>
+
+            <!-- Bubble Dwg Folder -->
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Bubble Dwg Folder:" Style="{StaticResource Label}"/>
+            <TextBox   Grid.Row="3" Grid.Column="1" x:Name="BubbleFolderBox" Style="{StaticResource Field}"/>
+            <Button    Grid.Row="3" Grid.Column="2" Content="Browse" Width="70" Height="28" Margin="8,4,0,4"
+                       Click="BrowseBubbleFolder_Click"/>
+        </Grid>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Save" Width="80" Height="30" Margin="0,0,8,0" IsDefault="True"
+                    Click="SaveButton_Click"/>
+            <Button Content="Cancel" Width="80" Height="30"
+                    Click="CancelButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

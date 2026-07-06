@@ -543,16 +543,12 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Opens config.txt from the application directory in the default text editor.
+    /// Opens the Config settings dialog (Customer / Contact / Order Entry Log tabs).
     /// </summary>
     private void ConfigMenu_Click(object sender, RoutedEventArgs e)
     {
-        string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.txt");
-        if (!File.Exists(configPath))
-            File.WriteAllText(configPath, "# Application Configuration\n");
-
-        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(configPath) { UseShellExecute = true });
-        Logger.Instance.Info($"Opened config.txt at {configPath}");
+        var dlg = new ConfigDialog(new DrawingTree.Data.PoRepository()) { Owner = this };
+        dlg.ShowDialog();
     }
 
     /// <summary>

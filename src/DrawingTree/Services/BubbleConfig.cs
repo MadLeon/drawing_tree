@@ -30,6 +30,42 @@ public static class BubbleConfig
             ? val : null;
     }
 
+    /// <summary>
+    /// Sets the bubble drawing folder for the given customer, adding the key if it doesn't exist yet.
+    /// </summary>
+    public static void SetBubbleFolder(string customerName, string folderPath)
+    {
+        var lines = File.Exists(ConfigFilePath)
+            ? File.ReadAllLines(ConfigFilePath).ToList()
+            : new List<string>();
+
+        EnsureSectionExists(lines);
+
+        int headerIdx = lines.FindIndex(
+            l => l.Trim().Equals(SectionHeader, StringComparison.OrdinalIgnoreCase));
+
+        int keyIdx = -1;
+        int sectionEnd = lines.Count;
+        for (int i = headerIdx + 1; i < lines.Count; i++)
+        {
+            var t = lines[i].Trim();
+            if (t.StartsWith('[')) { sectionEnd = i; break; }
+            var eq = t.IndexOf('=');
+            if (eq > 0 && t[..eq].Trim().Equals(customerName, StringComparison.OrdinalIgnoreCase))
+            {
+                keyIdx = i;
+                break;
+            }
+        }
+
+        if (keyIdx >= 0)
+            lines[keyIdx] = $"{customerName}={folderPath}";
+        else
+            lines.Insert(sectionEnd, $"{customerName}={folderPath}");
+
+        File.WriteAllLines(ConfigFilePath, lines);
+    }
+
     // ── Private helpers ──────────────────────────────────────────────────────
 
     private static Dictionary<string, string> ReadSectionKeys(IEnumerable<string> lines)
@@ -50,5 +86,16 @@ public static class BubbleConfig
             result[t[..eq].Trim()] = t[(eq + 1)..].Trim();
         }
         return result;
+    }
+
+    private static void EnsureSectionExists(List<string> lines)
+    {
+        if (lines.Any(l => l.Trim().Equals(SectionHeader, StringComparison.OrdinalIgnoreCase)))
+            return;
+        if (lines.Count > 0 && !string.IsNullOrWhiteSpace(lines[^1]))
+            lines.Add(string.Empty);
+        lines.Add("# Bubble Drawing Network Paths");
+        lines.Add("# Map each customer name to its bubble drawing network folder");
+        lines.Add(SectionHeader);
     }
 }

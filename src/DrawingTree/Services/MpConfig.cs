@@ -76,6 +76,42 @@ public static class MpConfig
             .ToList();
     }
 
+    /// <summary>
+    /// Sets the MP folder name for the given customer, adding the key if it doesn't exist yet.
+    /// </summary>
+    public static void SetFolderName(string customerName, string folderName)
+    {
+        var lines = File.Exists(ConfigFilePath)
+            ? File.ReadAllLines(ConfigFilePath).ToList()
+            : new List<string>();
+
+        EnsureSectionExists(lines);
+
+        int headerIdx = lines.FindIndex(
+            l => l.Trim().Equals(SectionHeader, StringComparison.OrdinalIgnoreCase));
+
+        int keyIdx = -1;
+        int sectionEnd = lines.Count;
+        for (int i = headerIdx + 1; i < lines.Count; i++)
+        {
+            var t = lines[i].Trim();
+            if (t.StartsWith('[')) { sectionEnd = i; break; }
+            var eq = t.IndexOf('=');
+            if (eq > 0 && t[..eq].Trim().Equals(customerName, StringComparison.OrdinalIgnoreCase))
+            {
+                keyIdx = i;
+                break;
+            }
+        }
+
+        if (keyIdx >= 0)
+            lines[keyIdx] = $"{customerName}={folderName}";
+        else
+            lines.Insert(sectionEnd, $"{customerName}={folderName}");
+
+        File.WriteAllLines(ConfigFilePath, lines);
+    }
+
     // ── Private helpers ──────────────────────────────────────────────────────
 
     private static Dictionary<string, string> ReadSectionKeys(IEnumerable<string> lines)

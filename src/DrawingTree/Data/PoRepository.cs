@@ -668,6 +668,195 @@ public class PoRepository
         return results;
     }
 
+    /// <summary>Returns contacts (with email) for the given customer, for the Config dialog.</summary>
+    public List<ContactDetailRow> GetContactDetailsByCustomer(int customerId)
+    {
+        var results = new List<ContactDetailRow>();
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT id, contact_name, contact_email FROM customer_contact WHERE customer_id = @cid ORDER BY contact_name";
+            cmd.Parameters.AddWithValue("@cid", customerId);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+                results.Add(new ContactDetailRow(reader.GetInt32(0), reader.GetString(1),
+                    reader.IsDBNull(2) ? null : reader.GetString(2)));
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.GetContactDetailsByCustomer failed for customerId={customerId}: {ex.Message}");
+        }
+        return results;
+    }
+
+    /// <summary>Creates a new customer. Returns the existing id if the name already exists, or -1 on failure.</summary>
+    public int AddCustomer(string name)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var tx = conn.BeginTransaction();
+            long id = UpsertCustomer(conn, tx, name);
+            tx.Commit();
+            return (int)id;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.AddCustomer failed for name='{name}': {ex.Message}");
+            return -1;
+        }
+    }
+
+    /// <summary>
+    /// Deletes a customer. Fails (returns false) if the customer still has purchase orders
+    /// referencing one of its contacts, since purchase_order.contact_id has no cascade delete.
+    /// </summary>
+    public bool DeleteCustomer(int customerId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "DELETE FROM customer WHERE id = @id";
+            cmd.Parameters.AddWithValue("@id", customerId);
+            cmd.ExecuteNonQuery();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.DeleteCustomer failed for customerId={customerId}: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>Creates a new contact for the given customer. Returns the new id, or -1 on failure.</summary>
+    public int AddContact(int customerId, string name, string? email)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                INSERT INTO customer_contact (customer_id, contact_name, contact_email, updated_at)
+                VALUES (@cid, @n, @e, datetime('now','localtime'))
+                """;
+            cmd.Parameters.AddWithValue("@cid", customerId);
+            cmd.Parameters.AddWithValue("@n",   name);
+            cmd.Parameters.AddWithValue("@e",   string.IsNullOrWhiteSpace(email) ? DBNull.Value : (object)email);
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = "SELECT last_insert_rowid()";
+            return (int)Convert.ToInt64(cmd.ExecuteScalar()!);
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.AddContact failed for customerId={customerId}: {ex.Message}");
+            return -1;
+        }
+    }
+
+    /// <summary>Updates an existing contact's name and email.</summary>
+    public bool UpdateContact(int contactId, string name, string? email)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                UPDATE customer_contact
+                SET contact_name = @n, contact_email = @e, updated_at = datetime('now','localtime')
+                WHERE id = @id
+                """;
+            cmd.Parameters.AddWithValue("@n",  name);
+            cmd.Parameters.AddWithValue("@e",  string.IsNullOrWhiteSpace(email) ? DBNull.Value : (object)email);
+            cmd.Parameters.AddWithValue("@id", contactId);
+            cmd.ExecuteNonQuery();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.UpdateContact failed for contactId={contactId}: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>Deletes a contact. Fails (returns false) if a purchase_order still references it.</summary>
+    public bool DeleteContact(int contactId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "DELETE FROM customer_contact WHERE id = @id";
+            cmd.Parameters.AddWithValue("@id", contactId);
+            cmd.ExecuteNonQuery();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.DeleteContact failed for contactId={contactId}: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>Returns the most recently created folder_mapping.folder_name for the given customer, or null.</summary>
+    public string? GetFolderMapping(int customerId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT folder_name FROM folder_mapping WHERE customer_id = @cid ORDER BY id DESC LIMIT 1";
+            cmd.Parameters.AddWithValue("@cid", customerId);
+            var result = cmd.ExecuteScalar();
+            return result as string;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.GetFolderMapping failed for customerId={customerId}: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>Inserts or updates the drawing folder mapping for the given customer.</summary>
+    public bool UpsertFolderMapping(int customerId, string folderName)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT id FROM folder_mapping WHERE customer_id = @cid ORDER BY id DESC LIMIT 1";
+            cmd.Parameters.AddWithValue("@cid", customerId);
+            var existingId = cmd.ExecuteScalar();
+
+            if (existingId != null)
+            {
+                cmd.CommandText = "UPDATE folder_mapping SET folder_name = @f, updated_at = datetime('now','localtime') WHERE id = @id";
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@f",  folderName);
+                cmd.Parameters.AddWithValue("@id", existingId);
+            }
+            else
+            {
+                cmd.CommandText = """
+                    INSERT INTO folder_mapping (customer_id, folder_name, updated_at)
+                    VALUES (@cid, @f, datetime('now','localtime'))
+                    """;
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("@cid", customerId);
+                cmd.Parameters.AddWithValue("@f",   folderName);
+            }
+            cmd.ExecuteNonQuery();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.UpsertFolderMapping failed for customerId={customerId}: {ex.Message}");
+            return false;
+        }
+    }
+
     /// <summary>
     /// Creates a new job cascade in a single transaction:
     /// customer → customer_contact → purchase_order → job → part → order_item.
@@ -1043,6 +1232,9 @@ public record MpContext(
 
 /// <summary>Contact lookup row.</summary>
 public record ContactRow(int Id, string Name);
+
+/// <summary>Contact row with email, for the Config dialog's Contact tab.</summary>
+public record ContactDetailRow(int Id, string Name, string? Email);
 
 /// <summary>Input DTO for creating a new job cascade.</summary>
 public class NewJobInput

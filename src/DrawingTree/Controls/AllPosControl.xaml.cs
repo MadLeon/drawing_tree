@@ -21,6 +21,7 @@ using Cursors = System.Windows.Input.Cursors;
 using DrawingTree.Data;
 using DrawingTree.Dialogs;
 using DrawingTree.Logging;
+using DrawingTree.Services;
 
 using UserControl      = System.Windows.Controls.UserControl;
 using Button           = System.Windows.Controls.Button;
@@ -144,7 +145,7 @@ public partial class AllPosControl : UserControl
 {
     private readonly PoRepository _repository = new();
     private List<PoListRow> _allRows = new();
-    private bool _isSimpleView = true;
+    private bool _isSimpleView;
     private bool _isDataLoaded;
     private readonly DispatcherTimer _debounceTimer;
 
@@ -182,6 +183,8 @@ public partial class AllPosControl : UserControl
     public AllPosControl()
     {
         InitializeComponent();
+
+        _isSimpleView = OeViewConfig.GetLandingPage() != "oe view";
 
         _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
         _debounceTimer.Tick += (_, _) =>
