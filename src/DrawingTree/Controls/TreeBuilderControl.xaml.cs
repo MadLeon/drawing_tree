@@ -847,7 +847,9 @@ public partial class TreeBuilderControl : UserControl
             if (e.Data.GetData(DragFormatNode) is not DrawingNode sourceNode) return;
             if (sourceNode == targetNode || IsAncestorOf(sourceNode, targetNode)) return;
 
-            var (parentCol, _) = FindParent(sourceNode);
+            var (parentCol, oldParent) = FindParent(sourceNode);
+            if (oldParent != targetNode)
+                sourceNode.PartTreeId = null; // moved to a different parent — treat as delete-then-add on save
             parentCol?.Remove(sourceNode);
             targetNode.Children.Add(sourceNode);
             SortCollection(targetNode.Children);
