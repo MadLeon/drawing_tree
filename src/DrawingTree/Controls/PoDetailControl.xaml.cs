@@ -383,11 +383,13 @@ public partial class PoDetailControl : UserControl
         if (dirRow == null || string.IsNullOrWhiteSpace(customerName)) return null;
 
         var folder = BubbleConfig.GetBubbleFolder(customerName);
-        if (string.IsNullOrWhiteSpace(folder)) return null;
+        if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder)) return null;
 
-        var fileName = $"{node.Drawing.DrawingNumber} Rev{node.Drawing.Revision} {node.Drawing.Description}-ballooned.pdf";
-        var candidate = System.IO.Path.Combine(folder, fileName);
-        return File.Exists(candidate) ? candidate : null;
+        // Matches by drawing number + revision only: part.description can be edited after the
+        // bubble drawing PDF was created/named, so requiring an exact description match would
+        // miss files that still carry the original (pre-edit) description text.
+        var searchPattern = $"{node.Drawing.DrawingNumber} Rev{node.Drawing.Revision} *-ballooned.pdf";
+        return Directory.GetFiles(folder, searchPattern).FirstOrDefault();
     }
 
     private StackPanel BuildStatusCell(PartAttachmentRow? dirRow)
