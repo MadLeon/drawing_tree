@@ -31,6 +31,7 @@ public partial class PoDetailControl : UserControl
     private readonly PartRepository _partRepository = new();
 
     private int _currentPoId;
+    private Dictionary<(int PartId, int OrderItemId), PartAttachmentRow?> _dirCache = new();
 
     public event EventHandler? BackRequested;
     public event EventHandler<int>? ViewTreeRequested;
@@ -48,30 +49,91 @@ public partial class PoDetailControl : UserControl
     public void LoadPo(int poId)
     {
         _currentPoId = poId;
+        _dirCache = new Dictionary<(int PartId, int OrderItemId), PartAttachmentRow?>();
 
         var header = _poRepository.GetPoHeader(poId);
-        TitleLabel.Text = header == null
-            ? $"PO #{poId} (not found)"
-            : $"P.O. {header.PoNumber}    O.E. {header.OeNumber}";
-
         JobsPanel.Children.Clear();
 
         if (header == null)
         {
+            TitleLabel.Text = $"PO #{poId} (not found)";
             Logger.Instance.Error($"PoDetailControl: no PO found for poId={poId}");
             return;
         }
 
         var items = _poRepository.GetPoOrderItems(poId);
+
+        // Build each row's part tree once; reuse for both completion tallies and BOM rendering.
+        var rowRootNodes = new Dictionary<int, DrawingNode>();
+        var jobTallies = new Dictionary<string, (int Total, int Done)>();
+        int poTotal = 0, poDone = 0;
+
+        foreach (var row in items)
+        {
+            if (row.PartId is not int partId) continue;
+
+            var rootNode = BuildRootNode(partId);
+            rowRootNodes[row.OrderItemId] = rootNode;
+
+            int total = 0, done = 0;
+            foreach (var node in Flatten(rootNode))
+            {
+                total++;
+                if (IsDirDone(node, row.OrderItemId)) done++;
+            }
+
+            poTotal += total;
+            poDone += done;
+
+            var (jobTotal, jobDone) = jobTallies.TryGetValue(row.JobNumber, out var t) ? t : (0, 0);
+            jobTallies[row.JobNumber] = (jobTotal + total, jobDone + done);
+        }
+
+        TitleLabel.Text = $"P.O. {header.PoNumber}    O.E. {header.OeNumber}{FormatCompletionSuffix(poTotal, poDone)}";
+
         foreach (var jobGroup in items.GroupBy(i => i.JobNumber))
-            JobsPanel.Children.Add(BuildJobSection(jobGroup.Key, jobGroup.ToList(), header.CustomerName));
+        {
+            var (jobTotal, jobDone) = jobTallies.TryGetValue(jobGroup.Key, out var t) ? t : (0, 0);
+            JobsPanel.Children.Add(BuildJobSection(jobGroup.Key, jobGroup.ToList(), header.CustomerName,
+                rowRootNodes, jobTotal, jobDone));
+        }
 
         Logger.Instance.Info($"PoDetailControl: loaded poId={poId}, {items.Count} order item(s)");
     }
 
+    /// <summary>Returns true if the given node's part has a DIR attachment (for the given order item) marked completed or reviewed.</summary>
+    private bool IsDirDone(DrawingNode node, int orderItemId)
+    {
+        if (node.Drawing.PartId is not int partId) return false;
+        var dirRow = GetDirCached(partId, orderItemId);
+        return dirRow != null &&
+               (string.Equals(dirRow.Status, "completed", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(dirRow.Status, "reviewed", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private PartAttachmentRow? GetDirCached(int partId, int orderItemId)
+    {
+        var key = (partId, orderItemId);
+        if (!_dirCache.TryGetValue(key, out var row))
+        {
+            row = _partRepository.GetDirAttachmentForOrderItem(partId, orderItemId);
+            _dirCache[key] = row;
+        }
+        return row;
+    }
+
+    /// <summary>Formats a "    Completion: {pct}%" suffix (one decimal place), or "" if there are no drawings to count.</summary>
+    private static string FormatCompletionSuffix(int total, int done)
+    {
+        if (total == 0) return string.Empty;
+        double pct = (double)done / total * 100;
+        return $"    Completion: {pct.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}%";
+    }
+
     // ── UI construction ─────────────────────────────────────────────────
 
-    private Border BuildJobSection(string jobNumber, List<PoOrderItemRow> rows, string? customerName)
+    private Border BuildJobSection(string jobNumber, List<PoOrderItemRow> rows, string? customerName,
+        Dictionary<int, DrawingNode> rowRootNodes, int jobTotal, int jobDone)
     {
         var content = new StackPanel();
 
@@ -103,8 +165,10 @@ public partial class PoDetailControl : UserControl
 
         content.Children.Add(jobHeader);
 
+        string completionSuffix = FormatCompletionSuffix(jobTotal, jobDone);
         foreach (var row in rows)
-            content.Children.Add(BuildOrderItemBlock(row, customerName));
+            content.Children.Add(BuildOrderItemBlock(row, customerName,
+                rowRootNodes.GetValueOrDefault(row.OrderItemId), completionSuffix));
 
         return new Border
         {
@@ -121,24 +185,25 @@ public partial class PoDetailControl : UserControl
     /// Builds one order_item's display block: line/date header (detached from the table)
     /// followed by a flat (non-tree) list of the part's drawing number plus all BOM descendants.
     /// </summary>
-    private StackPanel BuildOrderItemBlock(PoOrderItemRow row, string? customerName)
+    private StackPanel BuildOrderItemBlock(PoOrderItemRow row, string? customerName,
+        DrawingNode? rootNode, string completionSuffix)
     {
         var panel = new StackPanel { Margin = new Thickness(0, 4, 0, 10) };
 
         panel.Children.Add(new TextBlock
         {
             Text = $"Line {row.LineNumber}    Qty {row.Quantity}    " +
-                   $"Release Date: {row.ReleaseDate ?? "-"}    Due Date: {row.DueDate ?? "-"}",
+                   $"Release Date: {row.ReleaseDate ?? "-"}    Due Date: {row.DueDate ?? "-"}" +
+                   completionSuffix,
             FontSize = 12,
             FontWeight = FontWeights.SemiBold,
             Foreground = System.Windows.Media.Brushes.DimGray,
             Margin = new Thickness(0, 0, 0, 4)
         });
 
-        if (row.PartId is int partId)
+        if (rootNode != null)
         {
             panel.Children.Add(BuildPartTableHeader());
-            var rootNode = BuildRootNode(partId);
             foreach (var node in Flatten(rootNode))
                 panel.Children.Add(BuildPartRow(node, row.OrderItemId, customerName));
         }
@@ -246,7 +311,7 @@ public partial class PoDetailControl : UserControl
         grid.Children.Add(openPdfBtn);
 
         PartAttachmentRow? dirRow = node.Drawing.PartId is int dirPartId
-            ? _partRepository.GetDirAttachmentForOrderItem(dirPartId, orderItemId)
+            ? GetDirCached(dirPartId, orderItemId)
             : null;
 
         if (dirRow != null)
