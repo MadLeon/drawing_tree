@@ -225,6 +225,15 @@ class TestOpenProdReadonly(unittest.TestCase):
             script.open_prod_readonly(r"C:\path\does\not\exist\record.db")
         self.assertEqual(ctx.exception.code, 1)
 
+    def test_missing_unc_path_exits_cleanly(self):
+        # Regression test: a "file:...?mode=ro" URI raises "invalid uri
+        # authority" for any UNC path (see open_prod_readonly docstring),
+        # not the expected "unable to open database file". Guard against
+        # reintroducing that URI-based approach.
+        with self.assertRaises(SystemExit) as ctx:
+            script.open_prod_readonly(r"\\fakehost\share\does_not_exist.db")
+        self.assertEqual(ctx.exception.code, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

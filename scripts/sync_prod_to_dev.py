@@ -9,9 +9,13 @@
     its natural key (e.g. job.job_number, part.(drawing_number, revision));
     rows that already exist in dev are left completely untouched -- this is
     an insert-only sync, it never overwrites dev data. The production
-    database is opened strictly read-only (SQLite URI mode=ro), so it can
-    never be modified by this script. Runs in dry-run mode by default; pass
-    --apply to commit changes, which backs up the dev database first.
+    database is opened with PRAGMA query_only = ON, so any write statement
+    raises an error and it can never be modified by this script (a plain,
+    non-URI connection is used because prod lives on a UNC network path,
+    and SQLite's file: URI parser rejects non-empty/non-localhost
+    authorities -- see open_prod_readonly). Runs in dry-run mode by
+    default; pass --apply to commit changes, which backs up the dev
+    database first.
   </description>
   <usage>
     python scripts/sync_prod_to_dev.py                     # dry-run (default)
@@ -62,17 +66,26 @@ def log(level: str, func_name: str, message: str) -> None:
 def open_prod_readonly(prod_path: str) -> sqlite3.Connection:
     """
     <summary>
-    Opens the production database using a SQLite read-only URI, so no write
-    statement can ever reach the production file even by accident.
+    Opens the production database and enforces read-only access with
+    PRAGMA query_only, so no write statement can ever reach the production
+    file even by accident. A plain (non-URI) connection is used rather than
+    a "file:...?mode=ro" URI: prod lives on a UNC network path
+    (\\\\rtdnas2\\OE\\record.db), and SQLite's URI parser rejects any
+    non-empty, non-"localhost" authority (the UNC hostname) unless the
+    library was built with SQLITE_ENABLE_URI_AUTHORITY, which the stock
+    Windows Python sqlite3.dll is not -- so mode=ro URIs fail with
+    "invalid uri authority" for UNC paths regardless of filesystem
+    permissions. PRAGMA query_only gives the same guarantee without going
+    through URI parsing.
     </summary>
     <param name="prod_path">Filesystem path to the production record.db</param>
     <returns>Read-only sqlite3.Connection</returns>
     <exception cref="SystemExit">Exits with code 1 if the file cannot be opened</exception>
     """
     func = "sync_prod_to_dev.open_prod_readonly"
-    uri = f"file:{Path(prod_path).as_posix()}?mode=ro"
     try:
-        conn = sqlite3.connect(uri, uri=True)
+        conn = sqlite3.connect(prod_path)
+        conn.execute("PRAGMA query_only = ON")
         conn.execute("SELECT 1")
         return conn
     except sqlite3.OperationalError as exc:
