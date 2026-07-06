@@ -32,6 +32,8 @@ public partial class PoDetailControl : UserControl
 
     private int _currentPoId;
     private Dictionary<(int PartId, int OrderItemId), PartAttachmentRow?> _dirCache = new();
+    private List<DocumentPackageExportService.ExportRow> _exportRows = new();
+    private string _currentPoNumber = string.Empty;
 
     public event EventHandler? BackRequested;
     public event EventHandler<int>? ViewTreeRequested;
@@ -50,6 +52,7 @@ public partial class PoDetailControl : UserControl
     {
         _currentPoId = poId;
         _dirCache = new Dictionary<(int PartId, int OrderItemId), PartAttachmentRow?>();
+        _exportRows = new List<DocumentPackageExportService.ExportRow>();
 
         var header = _poRepository.GetPoHeader(poId);
         JobsPanel.Children.Clear();
@@ -60,6 +63,8 @@ public partial class PoDetailControl : UserControl
             Logger.Instance.Error($"PoDetailControl: no PO found for poId={poId}");
             return;
         }
+
+        _currentPoNumber = header.PoNumber;
 
         var items = _poRepository.GetPoOrderItems(poId);
 
@@ -80,6 +85,15 @@ public partial class PoDetailControl : UserControl
             {
                 total++;
                 if (IsDirDone(node, row.OrderItemId)) done++;
+
+                var dirRow = node.Drawing.PartId is int partIdForDir
+                    ? GetDirCached(partIdForDir, row.OrderItemId)
+                    : null;
+                _exportRows.Add(new DocumentPackageExportService.ExportRow(
+                    row.JobNumber,
+                    node.Drawing.DrawingNumber,
+                    Completed: dirRow != null && string.Equals(dirRow.Status, "completed", StringComparison.OrdinalIgnoreCase),
+                    Reviewed: dirRow != null && string.Equals(dirRow.Status, "reviewed", StringComparison.OrdinalIgnoreCase)));
             }
 
             poTotal += total;
@@ -472,6 +486,26 @@ public partial class PoDetailControl : UserControl
     private void BackButton_Click(object sender, RoutedEventArgs e)
     {
         BackRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void ExportButton_Click(object sender, RoutedEventArgs e)
+    {
+        var confirm = MessageBox.Show(
+            $"This will clear the contents of\n{DocumentPackageExportService.TargetPath}\nand fill it with the document package for P.O. {_currentPoNumber}.\n" +
+            "The file will be left open for you to review and save manually.\n\nContinue?",
+            "Export Document Package", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        if (confirm != MessageBoxResult.Yes) return;
+
+        try
+        {
+            DocumentPackageExportService.Export(_currentPoNumber, _exportRows);
+            Logger.Instance.Info($"PoDetailControl: exported document package for poId={_currentPoId}, {_exportRows.Count} row(s)");
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoDetailControl: export failed for poId={_currentPoId}", ex);
+            MessageBox.Show($"Export failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────
