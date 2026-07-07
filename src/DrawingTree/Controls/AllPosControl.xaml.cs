@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -219,6 +220,27 @@ public class OeRowItem : INotifyPropertyChanged
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
+/// <summary>Column visibility toggles for the OE view DataGrid. In-memory only, resets on control construction.</summary>
+public class OeColumnConfig : INotifyPropertyChanged
+{
+    private bool _showOe = true, _showLine = true, _showCustomer = true, _showContact = true,
+                 _showQty = true, _showRev = true, _showDescription = true, _showRlsDate = true, _showDueDate = true;
+
+    public bool ShowOe          { get => _showOe;          set { _showOe = value;          OnChanged(); } }
+    public bool ShowLine        { get => _showLine;        set { _showLine = value;        OnChanged(); } }
+    public bool ShowCustomer    { get => _showCustomer;    set { _showCustomer = value;    OnChanged(); } }
+    public bool ShowContact     { get => _showContact;     set { _showContact = value;     OnChanged(); } }
+    public bool ShowQty         { get => _showQty;         set { _showQty = value;         OnChanged(); } }
+    public bool ShowRev         { get => _showRev;         set { _showRev = value;         OnChanged(); } }
+    public bool ShowDescription { get => _showDescription; set { _showDescription = value; OnChanged(); } }
+    public bool ShowRlsDate     { get => _showRlsDate;     set { _showRlsDate = value;     OnChanged(); } }
+    public bool ShowDueDate     { get => _showDueDate;     set { _showDueDate = value;     OnChanged(); } }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnChanged([CallerMemberName] string? p = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(p));
+}
+
 // ── Control ───────────────────────────────────────────────────────────────────
 
 public partial class AllPosControl : UserControl
@@ -231,6 +253,12 @@ public partial class AllPosControl : UserControl
     private readonly DispatcherTimer _debounceTimer;
     private readonly ObservableCollection<OeRowItem> _oeItems = new();
     private ListCollectionView? _oeView;
+
+    // ── Filter panel state (Customer / Contact / Due Date range) ────────────
+    private string? _filterCustomer;
+    private string? _filterContact;
+    private DateTime? _filterDueFrom;
+    private DateTime? _filterDueTo;
 
     // ── SearchTerm dependency property ───────────────────────────────────────
 
@@ -322,15 +350,18 @@ public partial class AllPosControl : UserControl
 
     private void ApplySearch(string term)
     {
+        bool hasFilter = _filterCustomer != null || _filterContact != null
+            || _filterDueFrom.HasValue || _filterDueTo.HasValue;
+
         List<PoListRow> filtered;
-        if (string.IsNullOrEmpty(term))
+        if (string.IsNullOrEmpty(term) && !hasFilter)
         {
             filtered = _allRows;
         }
         else
         {
             var matchingPoIds = _allRows
-                .Where(r => RowMatchesTerm(r, term))
+                .Where(r => (string.IsNullOrEmpty(term) || RowMatchesTerm(r, term)) && RowMatchesFilters(r))
                 .Select(r => r.PoId)
                 .ToHashSet();
             filtered = _allRows.Where(r => matchingPoIds.Contains(r.PoId)).ToList();
@@ -348,12 +379,102 @@ public partial class AllPosControl : UserControl
     private static bool Contains(string? text, string term) =>
         text != null && text.Contains(term, StringComparison.OrdinalIgnoreCase);
 
+    private bool RowMatchesFilters(PoListRow r)
+    {
+        if (_filterCustomer != null && !string.Equals(r.CustomerName, _filterCustomer, StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (_filterContact != null && !string.Equals(r.ContactName, _filterContact, StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (_filterDueFrom.HasValue || _filterDueTo.HasValue)
+        {
+            if (!DateTime.TryParse(r.DueDate, out var due)) return false;
+            if (_filterDueFrom.HasValue && due.Date < _filterDueFrom.Value.Date) return false;
+            if (_filterDueTo.HasValue   && due.Date > _filterDueTo.Value.Date)   return false;
+        }
+        return true;
+    }
+
     private void PoSearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         PoPlaceholderText.Visibility = PoSearchBox.Text.Length == 0
             ? Visibility.Visible : Visibility.Collapsed;
         _debounceTimer.Stop();
         _debounceTimer.Start();
+    }
+
+    // ── Filter panel (Customer / Contact / Due Date range) ─────────────────────
+
+    private void FilterButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!FilterPopup.IsOpen)
+        {
+            var customers = _allRows
+                .Where(r => !string.IsNullOrEmpty(r.CustomerName))
+                .Select(r => r.CustomerName!)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(c => c)
+                .ToList();
+            customers.Insert(0, "");
+            FilterCustomerBox.ItemsSource = customers;
+            FilterCustomerBox.SelectedItem = _filterCustomer ?? "";
+
+            UpdateContactOptions(_filterCustomer);
+            FilterContactBox.SelectedItem = _filterContact ?? "";
+
+            FilterDueFromPicker.SelectedDate = _filterDueFrom;
+            FilterDueToPicker.SelectedDate   = _filterDueTo;
+        }
+        FilterPopup.IsOpen = !FilterPopup.IsOpen;
+    }
+
+    private void FilterCustomerBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateContactOptions(FilterCustomerBox.SelectedItem as string);
+        FilterContactBox.SelectedItem = "";
+    }
+
+    private void UpdateContactOptions(string? customer)
+    {
+        if (string.IsNullOrEmpty(customer))
+        {
+            FilterContactBox.ItemsSource = null;
+            FilterContactBox.IsEnabled = false;
+            return;
+        }
+
+        var contacts = _allRows
+            .Where(r => string.Equals(r.CustomerName, customer, StringComparison.OrdinalIgnoreCase)
+                        && !string.IsNullOrEmpty(r.ContactName))
+            .Select(r => r.ContactName!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(c => c)
+            .ToList();
+        contacts.Insert(0, "");
+        FilterContactBox.ItemsSource = contacts;
+        FilterContactBox.IsEnabled = true;
+    }
+
+    private void ApplyFilterButton_Click(object sender, RoutedEventArgs e)
+    {
+        _filterCustomer = string.IsNullOrEmpty(FilterCustomerBox.SelectedItem as string) ? null : (string)FilterCustomerBox.SelectedItem;
+        _filterContact  = string.IsNullOrEmpty(FilterContactBox.SelectedItem as string)  ? null : (string)FilterContactBox.SelectedItem;
+        _filterDueFrom  = FilterDueFromPicker.SelectedDate;
+        _filterDueTo    = FilterDueToPicker.SelectedDate;
+
+        FilterPopup.IsOpen = false;
+        ApplySearch(SearchTerm);
+    }
+
+    private void CancelFilterButton_Click(object sender, RoutedEventArgs e)
+    {
+        FilterPopup.IsOpen = false;
+    }
+
+    // ── Columns panel (OE view DataGrid column visibility) ──────────────────────
+
+    private void ColumnsButton_Click(object sender, RoutedEventArgs e)
+    {
+        ColumnsPopup.IsOpen = !ColumnsPopup.IsOpen;
     }
 
     // ── OE View ──────────────────────────────────────────────────────────────
@@ -393,6 +514,8 @@ public partial class AllPosControl : UserControl
         ResultsGrid.Visibility     = Visibility.Visible;
         SimpleViewScroll.Visibility = Visibility.Collapsed;
         ToggleViewButton.Content   = "Simple View";
+        FilterButton.Visibility   = Visibility.Visible;
+        ColumnsButton.Visibility  = Visibility.Visible;
     }
 
     // ── Simple View ───────────────────────────────────────────────────────────
@@ -420,6 +543,8 @@ public partial class AllPosControl : UserControl
         ResultsGrid.Visibility      = Visibility.Collapsed;
         SimpleViewScroll.Visibility = Visibility.Visible;
         ToggleViewButton.Content    = "OE View";
+        FilterButton.Visibility    = Visibility.Collapsed;
+        ColumnsButton.Visibility   = Visibility.Collapsed;
 
         var partIds = groups
             .SelectMany(g => g.Items)
@@ -498,6 +623,8 @@ public partial class AllPosControl : UserControl
     private void ToggleViewButton_Click(object sender, RoutedEventArgs e)
     {
         _isSimpleView = !_isSimpleView;
+        FilterPopup.IsOpen = false;
+        ColumnsPopup.IsOpen = false;
         ApplySearch(SearchTerm);
     }
 
