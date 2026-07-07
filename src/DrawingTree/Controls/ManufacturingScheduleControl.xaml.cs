@@ -1015,7 +1015,7 @@ public partial class ManufacturingScheduleControl : UserControl
         };
         dialog.ShowDialog();
 
-        if (dialog.NoteAdded)
+        if (dialog.NotesChanged)
         {
             var notes      = new Data.PartRepository().GetPartNotes(row.PartId);
             var latestMemo = notes.Count > 0 ? notes[0].Content : null;

@@ -191,6 +191,53 @@ public class PartRepository
         }
     }
 
+    /// <summary>
+    /// Updates an existing note's content, re-stamping the author as the current Windows user.
+    /// </summary>
+    /// <param name="noteId">part_note.id</param>
+    /// <param name="content">New note text</param>
+    public void UpdatePartNote(int noteId, string content)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                UPDATE part_note
+                SET content = @content, author = @author, updated_at = datetime('now','localtime')
+                WHERE id = @id
+                """;
+            cmd.Parameters.AddWithValue("@id", noteId);
+            cmd.Parameters.AddWithValue("@content", content);
+            cmd.Parameters.AddWithValue("@author", Environment.UserName);
+            cmd.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.UpdatePartNote failed for noteId={noteId}: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Deletes a note by id.
+    /// </summary>
+    /// <param name="noteId">part_note.id</param>
+    public void DeletePartNote(int noteId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "DELETE FROM part_note WHERE id = @id";
+            cmd.Parameters.AddWithValue("@id", noteId);
+            cmd.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.DeletePartNote failed for noteId={noteId}: {ex.Message}");
+        }
+    }
+
     // ── MP Attachments ────────────────────────────────────────────────────
 
     /// <summary>

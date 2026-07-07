@@ -6,6 +6,10 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
         ShowInTaskbar="False">
+    <Window.Resources>
+        <Geometry x:Key="EditDocumentGeo">M560-80v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q8 9 12.5 20t4.5 22q0 11-4 22.5T903-300L683-80H560Zm300-263-37-37 37 37ZM620-140h38l121-122-18-19-19-18-122 121v38ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v120h-80v-80H520v-200H240v640h240v80H240Zm280-400Zm241 199-19-18 37 37-18-19Z</Geometry>
+        <Geometry x:Key="ScanDeleteGeo">M240-800v200-200 640-9.5 9.5-640Zm0 720q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v174q-19-7-39-10.5t-41-3.5v-120H520v-200H240v640h254q8 23 20 43t28 37H240Zm396-20-56-56 84-84-84-84 56-56 84 84 84-84 56 56-83 84 83 84-56 56-84-83-84 83Z</Geometry>
+    </Window.Resources>
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -20,10 +24,11 @@
             </ScrollViewer>
         </Border>
 
-        <!-- Add note row -->
+        <!-- Add / edit note row -->
         <Grid Grid.Row="1" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <TextBox x:Name="NewNoteBox"
@@ -33,7 +38,16 @@
                      VerticalContentAlignment="Center"
                      Padding="6,0"
                      FontSize="11"/>
-            <Button Grid.Column="1"
+            <Button x:Name="CancelEditButton"
+                    Grid.Column="1"
+                    Content="Cancel"
+                    Width="60" Height="28"
+                    Margin="0,0,8,0"
+                    FontSize="11"
+                    Visibility="Collapsed"
+                    Click="CancelEditButton_Click"/>
+            <Button x:Name="AddOrSaveButton"
+                    Grid.Column="2"
                     Content="Add Note"
                     Width="72" Height="28"
                     FontSize="11"
