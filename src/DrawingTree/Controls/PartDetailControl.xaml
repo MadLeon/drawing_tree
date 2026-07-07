@@ -121,6 +121,10 @@
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <TextBlock Text="Manufacturing Process" FontWeight="Bold" FontSize="13"
                                        VerticalAlignment="Center"/>
+                            <Button x:Name="OpenMpFolderButton" Content="Open Folder"
+                                    Height="24" FontSize="11" Padding="8,0"
+                                    Margin="8,0,0,0" VerticalAlignment="Center"
+                                    Click="OpenMpFolderButton_Click"/>
                             <Button x:Name="NewMpButton" Content="New MP"
                                     Height="24" FontSize="11" Padding="8,0"
                                     Margin="8,0,0,0" VerticalAlignment="Center"

@@ -59,6 +59,24 @@ public static class MpFileService
     }
 
     /// <summary>
+    /// Resolves the MP target folder for the given context without creating any files.
+    /// Throws <see cref="MpFolderNotConfiguredException"/> when the customer has no configured folder.
+    /// </summary>
+    public static string ResolveFolder(MpContext ctx)
+    {
+        var customerName = ctx.CustomerName ?? "Unknown";
+        var folderName   = MpConfig.GetFolderName(customerName);
+        if (folderName == null)
+        {
+            var allCustomers = new PoRepository().GetAllCustomers().Select(c => c.Name);
+            var unconfigured = MpConfig.SyncCustomerKeys(allCustomers);
+            throw new MpFolderNotConfiguredException(customerName, MpConfig.ConfigFilePath, unconfigured);
+        }
+
+        return BuildTargetFolder(folderName, ctx.PoNumber);
+    }
+
+    /// <summary>
     /// Creates a new MP file from the template, pre-fills cells, records it in the database,
     /// and opens it in Excel.
     /// Throws <see cref="MpFolderNotConfiguredException"/> when the customer has no configured folder.
@@ -72,17 +90,7 @@ public static class MpFileService
         if (!File.Exists(TemplatePath))
             throw new FileNotFoundException($"MP template not found: {TemplatePath}");
 
-        // Resolve customer folder from config
-        var customerName = ctx.CustomerName ?? "Unknown";
-        var folderName   = MpConfig.GetFolderName(customerName);
-        if (folderName == null)
-        {
-            var allCustomers = new PoRepository().GetAllCustomers().Select(c => c.Name);
-            var unconfigured = MpConfig.SyncCustomerKeys(allCustomers);
-            throw new MpFolderNotConfiguredException(customerName, MpConfig.ConfigFilePath, unconfigured);
-        }
-
-        var folder   = BuildTargetFolder(folderName, ctx.PoNumber);
+        var folder   = ResolveFolder(ctx);
         var fileName = BuildFileName(ctx.DrawingNumber, ctx.Description, ctx.JobNumber);
         var target   = Path.Combine(folder, fileName);
 

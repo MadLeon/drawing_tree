@@ -93,6 +93,7 @@ public partial class PartDetailControl : UserControl
         MpFilesPanel.Children.Clear();
 
         NewMpButton.Visibility = _mpContext != null ? Visibility.Visible : Visibility.Collapsed;
+        OpenMpFolderButton.Visibility = _mpContext != null ? Visibility.Visible : Visibility.Collapsed;
 
         var attachments = _partRepository.GetMpAttachments(_partId);
 
@@ -178,6 +179,39 @@ public partial class PartDetailControl : UserControl
         catch (Exception ex)
         {
             MessageBox.Show($"Failed to open file: {ex.Message}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void OpenMpFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_mpContext == null) return;
+
+        try
+        {
+            var folder = MpFileService.ResolveFolder(_mpContext);
+            if (!Directory.Exists(folder))
+            {
+                MessageBox.Show($"Folder does not exist yet:\n{folder}", "Folder Not Found",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            Process.Start(new ProcessStartInfo { FileName = folder, UseShellExecute = true });
+        }
+        catch (MpFolderNotConfiguredException ex)
+        {
+            Logger.Instance.Warning($"PartDetailControl: MP folder not configured for '{ex.CustomerName}'");
+            MessageBox.Show(
+                $"No MP folder configured for customer '{ex.CustomerName}'.\n\n" +
+                $"Please open config.txt and set the folder name under [CustomerFolderMappings]:\n" +
+                $"  {ex.CustomerName}=\n\n" +
+                $"Config file:\n{ex.ConfigFilePath}",
+                "MP Folder Not Configured", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartDetailControl: failed to open MP folder: {ex.Message}");
+            MessageBox.Show($"Failed to open folder:\n{ex.Message}", "Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
