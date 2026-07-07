@@ -114,6 +114,7 @@ public class ChildDrawingItem
     public string? Revision      { get; set; }
     public string? Description   { get; set; }
     public int?    PartId        { get; set; }
+    public int     OrderItemId   { get; set; }
     public string  SearchTerm    { get; set; } = string.Empty;
 
     public bool HasMp { get; set; }
@@ -164,7 +165,7 @@ public class OeRowItem : INotifyPropertyChanged
     public int     Quantity     => Row.Quantity;
     public string? ReleaseDate  => Row.ReleaseDate;
     public string? DueDate      => Row.DueDate;
-    public int     OrderItemId  => IsChildRow ? 0 : Row.OrderItemId;
+    public int     OrderItemId  => Row.OrderItemId;
 
     public string? DrawingNumber => IsChildRow ? ChildData!.DrawingNumber : Row.DrawingNumber;
     public string? Revision      => IsChildRow ? ChildData!.Revision      : Row.Revision;
@@ -746,7 +747,7 @@ public partial class AllPosControl : UserControl
     {
         if (sender is FrameworkElement fe && fe.Tag is ChildDrawingItem child && child.PartId.HasValue)
         {
-            NavigateToPartRequested?.Invoke(this, (child.PartId.Value, 0));
+            NavigateToPartRequested?.Invoke(this, (child.PartId.Value, child.OrderItemId));
             e.Handled = true;
         }
     }
@@ -800,6 +801,7 @@ public partial class AllPosControl : UserControl
                     Revision      = c.Revision,
                     Description   = c.Description,
                     PartId        = c.PartId,
+                    OrderItemId   = item.Row.OrderItemId,
                     SearchTerm    = SearchTerm,
                     HasPdf        = pdfSet.Contains(c.PartId)
                 });
