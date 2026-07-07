@@ -49,11 +49,21 @@ public class PoSimpleGroup
     public ObservableCollection<ExpandableOrderItem> Items { get; } = new();
 }
 
+/// <summary>Shared expand/collapse icon geometries for order-item rows (both views).</summary>
+public static class ExpandIcons
+{
+    public static readonly Geometry AddBoxGeo = Geometry.Parse("M440-280h80v-160h160v-80H520v-160h-80v160H280v80h160v160ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z");
+    public static readonly Geometry IndeterminateBoxGeo = Geometry.Parse("M280-440h400v-80H280v80ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z");
+}
+
+/// <summary>Shared brush for a PDF icon whose file was not found on disk.</summary>
+public static class PdfMissingFill
+{
+    public static readonly Brush Value = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xBB, 0xBB, 0xBB));
+}
+
 public class ExpandableOrderItem : INotifyPropertyChanged
 {
-    private static readonly Geometry AddBoxGeo = Geometry.Parse("M440-280h80v-160h160v-80H520v-160h-80v160H280v80h160v160ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z");
-    private static readonly Geometry IndeterminateBoxGeo = Geometry.Parse("M280-440h400v-80H280v80ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z");
-
     private bool _isExpanded;
 
     public PoListRow Row { get; set; } = null!;
@@ -71,15 +81,17 @@ public class ExpandableOrderItem : INotifyPropertyChanged
         }
     }
 
-    public Geometry ExpandIconGeometry => _isExpanded ? IndeterminateBoxGeo : AddBoxGeo;
+    public Geometry ExpandIconGeometry => _isExpanded ? ExpandIcons.IndeterminateBoxGeo : ExpandIcons.AddBoxGeo;
 
     public bool HasMp { get; set; }
     public bool HasDir { get; set; }
+    public bool HasPdf { get; set; }
 
     public Visibility ExpandButtonVisibility => Row.HasChildren ? Visibility.Visible : Visibility.Hidden;
     public Visibility PartButtonVisibility   => Row.PartId.HasValue ? Visibility.Visible : Visibility.Collapsed;
     public Visibility MpIconVisibility       => HasMp ? Visibility.Visible : Visibility.Collapsed;
     public Visibility DirIconVisibility      => HasDir ? Visibility.Visible : Visibility.Collapsed;
+    public Brush PdfIconFill                 => HasPdf ? Brushes.DodgerBlue : PdfMissingFill.Value;
 
     public Visibility ChildrenVisibility => IsExpanded ? Visibility.Visible : Visibility.Collapsed;
 
@@ -105,6 +117,7 @@ public class ChildDrawingItem
 
     public bool HasMp { get; set; }
     public bool HasDir { get; set; }
+    public bool HasPdf { get; set; }
 
     public Brush DrawingLinkForeground => PartId.HasValue ? Brushes.DodgerBlue : Brushes.Black;
     public TextDecorationCollection? DrawingLinkDecorations => PartId.HasValue ? TextDecorations.Underline : null;
@@ -112,13 +125,35 @@ public class ChildDrawingItem
     public Visibility PdfButtonVisibility => PartId.HasValue ? Visibility.Visible : Visibility.Collapsed;
     public Visibility MpIconVisibility    => HasMp ? Visibility.Visible : Visibility.Collapsed;
     public Visibility DirIconVisibility   => HasDir ? Visibility.Visible : Visibility.Collapsed;
+    public Brush PdfIconFill              => HasPdf ? Brushes.DodgerBlue : PdfMissingFill.Value;
 }
 
-public class OeRowItem
+/// <summary>
+/// A row in the OE view grid. Represents either a top-level order-item row (backed by
+/// <see cref="Row"/>) or an expanded child drawing row (backed by <see cref="ChildData"/>),
+/// flattened into the same <see cref="DataGrid"/> so columns stay aligned.
+/// </summary>
+public class OeRowItem : INotifyPropertyChanged
 {
+    private bool _isExpanded;
+    private bool _hasPdf;
+
     public PoListRow Row { get; }
     public string SearchTerm { get; }
+    public bool IsChildRow { get; init; }
+    public ChildDrawingRow? ChildData { get; init; }
 
+    /// <summary>True only for the first row of each P.O. group; drives the P.O. column hyperlink.</summary>
+    public bool IsFirstInPoGroup { get; set; }
+
+    /// <summary>Child OeRowItem instances currently inserted after this parent row (empty when collapsed).</summary>
+    public List<OeRowItem> ChildRows { get; } = new();
+
+    /// <summary>Lazily-fetched child drawings for this parent row, cached across collapse/expand toggles.</summary>
+    public List<ChildDrawingRow>? CachedChildren { get; set; }
+
+    // Redundant on child rows by design — see issue #35 (child rows repeat the parent's columns).
+    public int     PoId         => Row.PoId;
     public string  PoNumber     => Row.PoNumber;
     public string? OeNumber     => Row.OeNumber;
     public string  JobNumber    => Row.JobNumber;
@@ -126,17 +161,62 @@ public class OeRowItem
     public string? CustomerName => Row.CustomerName;
     public string? ContactName  => Row.ContactName;
     public int     Quantity     => Row.Quantity;
-    public string? DrawingNumber => Row.DrawingNumber;
-    public string? Revision     => Row.Revision;
-    public string? Description  => Row.Description;
     public string? ReleaseDate  => Row.ReleaseDate;
     public string? DueDate      => Row.DueDate;
+    public int     OrderItemId  => IsChildRow ? 0 : Row.OrderItemId;
+
+    public string? DrawingNumber => IsChildRow ? ChildData!.DrawingNumber : Row.DrawingNumber;
+    public string? Revision      => IsChildRow ? ChildData!.Revision      : Row.Revision;
+    public string? Description   => IsChildRow ? ChildData!.Description  : Row.Description;
+    public int?    PartId        => IsChildRow ? ChildData!.PartId       : Row.PartId;
+
+    public bool HasChildren => !IsChildRow && Row.HasChildren;
+
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set
+        {
+            _isExpanded = value;
+            OnPropertyChanged(nameof(IsExpanded));
+            OnPropertyChanged(nameof(ExpandIconGeometry));
+        }
+    }
+
+    public bool HasPdf
+    {
+        get => _hasPdf;
+        set
+        {
+            _hasPdf = value;
+            OnPropertyChanged(nameof(HasPdf));
+            OnPropertyChanged(nameof(PdfIconFill));
+        }
+    }
+
+    public Geometry   ExpandIconGeometry     => _isExpanded ? ExpandIcons.IndeterminateBoxGeo : ExpandIcons.AddBoxGeo;
+    public Visibility ExpandButtonVisibility => HasChildren ? Visibility.Visible : Visibility.Hidden;
+    public Visibility PdfButtonVisibility    => PartId.HasValue ? Visibility.Visible : Visibility.Collapsed;
+    public Brush      PdfIconFill            => HasPdf ? Brushes.DodgerBlue : PdfMissingFill.Value;
+
+    public Brush DrawingLinkForeground => PartId.HasValue ? Brushes.DodgerBlue : Brushes.Black;
+    public TextDecorationCollection? DrawingLinkDecorations => PartId.HasValue ? TextDecorations.Underline : null;
+    public Cursor DrawingLinkCursor => PartId.HasValue ? Cursors.Hand : Cursors.Arrow;
+
+    public Brush PoLinkForeground => IsFirstInPoGroup ? Brushes.DodgerBlue : Brushes.Black;
+    public TextDecorationCollection? PoLinkDecorations => IsFirstInPoGroup ? TextDecorations.Underline : null;
+    public Cursor PoLinkCursor => IsFirstInPoGroup ? Cursors.Hand : Cursors.Arrow;
 
     public OeRowItem(PoListRow row, string searchTerm)
     {
         Row = row;
         SearchTerm = searchTerm;
     }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected void OnPropertyChanged(string name)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
 // ── Control ───────────────────────────────────────────────────────────────────
@@ -145,9 +225,12 @@ public partial class AllPosControl : UserControl
 {
     private readonly PoRepository _repository = new();
     private List<PoListRow> _allRows = new();
+    private HashSet<int> _pdfPartIds = new();
     private bool _isSimpleView;
     private bool _isDataLoaded;
     private readonly DispatcherTimer _debounceTimer;
+    private readonly ObservableCollection<OeRowItem> _oeItems = new();
+    private ListCollectionView? _oeView;
 
     // ── SearchTerm dependency property ───────────────────────────────────────
 
@@ -217,7 +300,13 @@ public partial class AllPosControl : UserControl
         LoadingOverlay.Visibility = Visibility.Visible;
         bool activeOnly = !ShowHistoryOnly;
 
-        _allRows = await Task.Run(() => _repository.GetAllPoLines(activeOnly: activeOnly));
+        (_allRows, _pdfPartIds) = await Task.Run(() =>
+        {
+            var rows = _repository.GetAllPoLines(activeOnly: activeOnly);
+            var partIds = rows.Where(r => r.PartId.HasValue).Select(r => r.PartId!.Value).Distinct();
+            var pdfSet = _repository.GetPartIdsWithPdf(partIds);
+            return (rows, pdfSet);
+        });
 
         int poCount = _allRows.Select(r => r.PoId).Distinct().Count();
         PoCountLabel.Text = $"({poCount})";
@@ -269,17 +358,37 @@ public partial class AllPosControl : UserControl
 
     // ── OE View ──────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Rebuilds the flattened OE grid rows. Backed by an ObservableCollection (rather than a
+    /// fresh List/ListCollectionView per call) so expand/collapse can Insert/Remove child rows
+    /// in place — see OeExpandItem_Click. Expand state is not preserved across search/reload,
+    /// matching the simple view's existing behavior (BuildSimpleGroups also rebuilds from scratch).
+    /// </summary>
     private void ApplyOeView(List<PoListRow>? rows = null)
     {
-        var items = (rows ?? _allRows)
-            .Select(r => new OeRowItem(r, SearchTerm))
-            .ToList();
+        _oeItems.Clear();
+        foreach (var g in (rows ?? _allRows)
+                     .GroupBy(r => r.PoId)
+                     .OrderBy(g => g.First().OeNumber ?? g.First().PoNumber))
+        {
+            bool isFirst = true;
+            foreach (var row in g.OrderBy(r => r.JobNumber).ThenBy(r => r.LineNumber))
+            {
+                _oeItems.Add(new OeRowItem(row, SearchTerm)
+                {
+                    IsFirstInPoGroup = isFirst,
+                    HasPdf = row.PartId.HasValue && _pdfPartIds.Contains(row.PartId.Value)
+                });
+                isFirst = false;
+            }
+        }
 
-        var view = new ListCollectionView(items);
-        view.SortDescriptions.Add(new SortDescription(nameof(OeRowItem.OeNumber),   ListSortDirection.Ascending));
-        view.SortDescriptions.Add(new SortDescription(nameof(OeRowItem.LineNumber),  ListSortDirection.Ascending));
-        view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(OeRowItem.PoNumber)));
-        ResultsGrid.ItemsSource = view;
+        if (_oeView == null)
+        {
+            _oeView = new ListCollectionView(_oeItems);
+            _oeView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(OeRowItem.PoNumber)));
+            ResultsGrid.ItemsSource = _oeView;
+        }
 
         ResultsGrid.Visibility     = Visibility.Visible;
         SimpleViewScroll.Visibility = Visibility.Collapsed;
@@ -303,6 +412,7 @@ public partial class AllPosControl : UserControl
         {
             item.HasMp  = item.Row.PartId.HasValue && mpSet.Contains(item.Row.PartId.Value);
             item.HasDir = item.Row.PartId.HasValue && dirSet.Contains(item.Row.PartId.Value);
+            item.HasPdf = item.Row.PartId.HasValue && _pdfPartIds.Contains(item.Row.PartId.Value);
         }
 
         SimpleViewList.ItemsSource = groups;
@@ -350,11 +460,13 @@ public partial class AllPosControl : UserControl
             .ToList();
         var childMpSet  = await Task.Run(() => _repository.GetPartIdsWithMp(childPartIds));
         var childDirSet = await Task.Run(() => _repository.GetPartIdsWithDir(childPartIds));
+        var childPdfSet = await Task.Run(() => _repository.GetPartIdsWithPdf(childPartIds));
         foreach (var child in groups.SelectMany(g => g.Items).SelectMany(i => i.Children))
             if (child.PartId.HasValue)
             {
                 child.HasMp  = childMpSet.Contains(child.PartId.Value);
                 child.HasDir = childDirSet.Contains(child.PartId.Value);
+                child.HasPdf = childPdfSet.Contains(child.PartId.Value);
             }
 
         Logger.Instance.Info($"AllPosControl: prefetched children for {lookup.Count} part(s)");
@@ -516,8 +628,9 @@ public partial class AllPosControl : UserControl
     {
         if (string.IsNullOrEmpty(path) || !File.Exists(path))
         {
-            MessageBox.Show("PDF file not found.", "File Not Found",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
+            // The PDF button is disabled (HasPdf=false) whenever the file isn't found, so this
+            // only fires on the rare race where the file was deleted after the icon was computed.
+            Logger.Instance.Warning($"OpenPdfExternal: file not found, path='{path}'");
             return;
         }
         try { Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true }); }
@@ -552,6 +665,7 @@ public partial class AllPosControl : UserControl
         if (item.Children.Count == 0)
         {
             var children = _repository.GetChildDrawings(item.Row.PartId.Value);
+            var pdfSet = _repository.GetPartIdsWithPdf(children.Select(c => c.PartId).Distinct());
             foreach (var c in children)
                 item.Children.Add(new ChildDrawingItem
                 {
@@ -559,13 +673,80 @@ public partial class AllPosControl : UserControl
                     Revision      = c.Revision,
                     Description   = c.Description,
                     PartId        = c.PartId,
-                    SearchTerm    = SearchTerm
+                    SearchTerm    = SearchTerm,
+                    HasPdf        = pdfSet.Contains(c.PartId)
                 });
         }
 
         item.IsExpanded = item.Children.Count > 0;
         if (!item.IsExpanded)
             Logger.Instance.Info($"AllPosControl: no children found for partId={item.Row.PartId}");
+    }
+
+    // ── OE view — expand / hyperlinks / PDF ──────────────────────────────────
+
+    private void OeExpandItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not OeRowItem item || !item.HasChildren) return;
+
+        if (item.IsExpanded)
+        {
+            foreach (var child in item.ChildRows)
+                _oeItems.Remove(child);
+            item.ChildRows.Clear();
+            item.IsExpanded = false;
+            return;
+        }
+
+        if (!item.Row.PartId.HasValue) return;
+
+        item.CachedChildren ??= _repository.GetChildDrawings(item.Row.PartId.Value);
+        if (item.CachedChildren.Count == 0)
+        {
+            Logger.Instance.Info($"AllPosControl: no children found for partId={item.Row.PartId}");
+            return;
+        }
+
+        var pdfSet = _repository.GetPartIdsWithPdf(item.CachedChildren.Select(c => c.PartId).Distinct());
+        int insertAt = _oeItems.IndexOf(item) + 1;
+        foreach (var c in item.CachedChildren)
+        {
+            var childItem = new OeRowItem(item.Row, SearchTerm)
+            {
+                IsChildRow = true,
+                ChildData  = c,
+                HasPdf     = pdfSet.Contains(c.PartId)
+            };
+            _oeItems.Insert(insertAt++, childItem);
+            item.ChildRows.Add(childItem);
+        }
+
+        item.IsExpanded = true;
+    }
+
+    private void OePoNumber_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is OeRowItem item && item.IsFirstInPoGroup)
+        {
+            NavigateToPoRequested?.Invoke(this, item.PoId);
+            e.Handled = true;
+        }
+    }
+
+    private void OeDrawingNumber_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.Tag is OeRowItem item && item.PartId.HasValue)
+        {
+            NavigateToPartRequested?.Invoke(this, (item.PartId.Value, item.OrderItemId));
+            e.Handled = true;
+        }
+    }
+
+    private void OpenOePdfButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not OeRowItem item) return;
+        if (!item.PartId.HasValue) return;
+        OpenPdfExternal(_repository.GetPdfPath(item.PartId.Value));
     }
 
     // ── Copy text (right-click menu on highlight-mode TextBlocks) ────────────

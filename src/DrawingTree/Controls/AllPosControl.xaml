@@ -151,14 +151,20 @@
                       GridLinesVisibility="Horizontal"
                       HorizontalGridLinesBrush="#EEEEEE"
                       BorderThickness="0"
-                      RowBackground="White"
-                      AlternatingRowBackground="White"
                       ColumnHeaderStyle="{StaticResource HeaderCell}"
                       CellStyle="{StaticResource BodyCell}">
                 <DataGrid.RowStyle>
+                    <!-- Background is set here (not via DataGrid.RowBackground) so the DataTrigger below
+                         can actually win — RowBackground/AlternatingRowBackground apply as a local value
+                         on the row, which always beats a Style trigger. -->
                     <Style TargetType="DataGridRow">
                         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                        <Setter Property="Background" Value="White"/>
                         <Style.Triggers>
+                            <!-- Child (expanded) rows get a light background, matching the simple view's child rows -->
+                            <DataTrigger Binding="{Binding IsChildRow}" Value="True">
+                                <Setter Property="Background" Value="#FAFAFA"/>
+                            </DataTrigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter Property="Background" Value="White"/>
                             </Trigger>
@@ -185,12 +191,32 @@
                 </DataGrid.GroupStyle>
                 <DataGrid.Columns>
 
-                    <!-- P.O. — searchable, toggle TextBox/TextBlock -->
+                    <!-- Expand — reveal child drawings for assemblies -->
+                    <DataGridTemplateColumn Header="" Width="28" CanUserResize="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Width="18" Height="18"
+                                        Style="{StaticResource IconLinkBtn}"
+                                        Padding="0"
+                                        Visibility="{Binding ExpandButtonVisibility}"
+                                        Tag="{Binding}"
+                                        Click="OeExpandItem_Click">
+                                    <Path Stretch="Uniform" Fill="#555555" Width="12" Height="12"
+                                          Data="{Binding ExpandIconGeometry}"/>
+                                </Button>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- P.O. — searchable; hyperlink to PO Detail on the first row of each PO group -->
                     <DataGridTemplateColumn Header="P.O." Width="200">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid>
-                                    <TextBox Text="{Binding PoNumber, Mode=OneWay}">
+                                    <TextBox Text="{Binding PoNumber, Mode=OneWay}"
+                                             Foreground="{Binding PoLinkForeground}"
+                                             Cursor="{Binding PoLinkCursor}"
+                                             Tag="{Binding}" PreviewMouseLeftButtonDown="OePoNumber_Click">
                                         <TextBox.Style>
                                             <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -204,6 +230,10 @@
                                     </TextBox>
                                     <TextBlock local:HighlightBehavior.FullText="{Binding PoNumber}"
                                                local:HighlightBehavior.SearchTerm="{Binding SearchTerm}"
+                                               Foreground="{Binding PoLinkForeground}"
+                                               TextDecorations="{Binding PoLinkDecorations}"
+                                               Cursor="{Binding PoLinkCursor}"
+                                               Tag="{Binding}" MouseLeftButtonDown="OePoNumber_Click"
                                                VerticalAlignment="Center" Margin="8,0" FontSize="12">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
@@ -356,38 +386,43 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <!-- Drawing Number — searchable -->
+                    <!-- Drawing Number — hyperlink to Drawing/Part Detail, searchable via highlight -->
                     <DataGridTemplateColumn Header="Drawing Number" Width="220">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Grid>
-                                    <TextBox Text="{Binding DrawingNumber, Mode=OneWay}">
-                                        <TextBox.Style>
-                                            <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SearchTerm}" Value="">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBox.Style>
-                                    </TextBox>
-                                    <TextBlock local:HighlightBehavior.FullText="{Binding DrawingNumber}"
-                                               local:HighlightBehavior.SearchTerm="{Binding SearchTerm}"
-                                               VerticalAlignment="Center" Margin="8,0" FontSize="12">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SearchTerm}" Value="">
-                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </Grid>
+                                <TextBlock FontSize="12" VerticalAlignment="Center" Margin="8,0"
+                                           HorizontalAlignment="Left"
+                                           Foreground="{Binding DrawingLinkForeground}"
+                                           TextDecorations="{Binding DrawingLinkDecorations}"
+                                           Cursor="{Binding DrawingLinkCursor}"
+                                           Tag="{Binding}"
+                                           MouseLeftButtonDown="OeDrawingNumber_Click"
+                                           local:HighlightBehavior.FullText="{Binding DrawingNumber}"
+                                           local:HighlightBehavior.SearchTerm="{Binding SearchTerm}">
+                                    <TextBlock.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Copy" Click="CopyText_Click"/>
+                                        </ContextMenu>
+                                    </TextBlock.ContextMenu>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- PDF — open the linked drawing file -->
+                    <DataGridTemplateColumn Header="PDF" Width="50">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Visibility="{Binding PdfButtonVisibility}"
+                                        IsEnabled="{Binding HasPdf}"
+                                        Tag="{Binding}" Click="OpenOePdfButton_Click"
+                                        Style="{StaticResource IconLinkBtn}" Padding="2,0"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        ToolTip="Open PDF">
+                                    <Viewbox Width="13" Height="13">
+                                        <Path Data="{StaticResource OpenInNewGeo}" Stretch="Uniform" Fill="{Binding PdfIconFill}"/>
+                                    </Viewbox>
+                                </Button>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -662,12 +697,13 @@
                                                             <!-- PDF button -->
                                                             <Button Grid.Column="6"
                                                                     Visibility="{Binding PartButtonVisibility}"
+                                                                    IsEnabled="{Binding HasPdf}"
                                                                     Tag="{Binding}" Click="OpenPartButton_Click"
                                                                     Style="{StaticResource IconLinkBtn}" Padding="2,0"
                                                                     HorizontalAlignment="Center" VerticalAlignment="Center"
                                                                     ToolTip="Open PDF">
                                                                 <Viewbox Width="13" Height="13">
-                                                                    <Path Data="{StaticResource OpenInNewGeo}" Stretch="Uniform" Fill="DodgerBlue"/>
+                                                                    <Path Data="{StaticResource OpenInNewGeo}" Stretch="Uniform" Fill="{Binding PdfIconFill}"/>
                                                                 </Viewbox>
                                                             </Button>
                                                             <!-- MP icon -->
@@ -748,12 +784,13 @@
                                                                         <!-- PDF button -->
                                                                         <Button Grid.Column="6"
                                                                                 Visibility="{Binding PdfButtonVisibility}"
+                                                                                IsEnabled="{Binding HasPdf}"
                                                                                 Tag="{Binding}" Click="OpenChildPdfButton_Click"
                                                                                 Style="{StaticResource IconLinkBtn}" Padding="2,0"
                                                                                 HorizontalAlignment="Center" VerticalAlignment="Center"
                                                                                 ToolTip="Open PDF">
                                                                             <Viewbox Width="13" Height="13">
-                                                                                <Path Data="{StaticResource OpenInNewGeo}" Stretch="Uniform" Fill="DodgerBlue"/>
+                                                                                <Path Data="{StaticResource OpenInNewGeo}" Stretch="Uniform" Fill="{Binding PdfIconFill}"/>
                                                                             </Viewbox>
                                                                         </Button>
                                                                         <!-- MP icon -->

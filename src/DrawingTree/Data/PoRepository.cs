@@ -8,6 +8,7 @@
 /// - GetPartTree():    recursively loads saved parent-child relationships for a root drawing
 /// </remarks>
 
+using System.IO;
 using DrawingTree.Logging;
 using DrawingTree.Models;
 using Microsoft.Data.Sqlite;
@@ -499,6 +500,42 @@ public class PoRepository
             Logger.Instance.Error($"PoRepository.GetPdfPath failed for partId={partId}: {ex.Message}");
             return null;
         }
+    }
+
+    /// <summary>
+    /// Returns the set of part IDs (from the input list) whose latest active PDF file exists on disk.
+    /// </summary>
+    public HashSet<int> GetPartIdsWithPdf(IEnumerable<int> partIds)
+    {
+        var result = new HashSet<int>();
+        var ids = partIds.Distinct().ToList();
+        if (ids.Count == 0) return result;
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            var placeholders = string.Join(",", ids.Select((_, i) => $"@id{i}"));
+            cmd.CommandText = $"SELECT part_id, file_path FROM drawing_file WHERE is_active = 1 AND part_id IN ({placeholders}) ORDER BY part_id, id DESC";
+            for (int i = 0; i < ids.Count; i++)
+                cmd.Parameters.AddWithValue($"@id{i}", ids[i]);
+            using var reader = cmd.ExecuteReader();
+            var seen = new HashSet<int>();
+            while (reader.Read())
+            {
+                if (reader.IsDBNull(0)) continue;
+                int partId = reader.GetInt32(0);
+                if (!seen.Add(partId)) continue; // keep only the latest (first) row per part
+                if (reader.IsDBNull(1)) continue;
+                string path = reader.GetString(1);
+                if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                    result.Add(partId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PoRepository.GetPartIdsWithPdf failed: {ex.Message}");
+        }
+        return result;
     }
 
     /// <summary>
