@@ -21,6 +21,11 @@ public partial class EditItemDialog : Window
     private readonly PoListRow _row;
     private List<CustomerRow> _customers = new();
 
+    /// <summary>The input that was saved; set only after a successful save.</summary>
+    public EditItemInput? SavedInput { get; private set; }
+    /// <summary>The repository result of the save; set only after a successful save.</summary>
+    public EditItemResult? Result { get; private set; }
+
     public EditItemDialog(PoRepository repository, PoListRow row)
     {
         _repository = repository;
@@ -90,7 +95,8 @@ public partial class EditItemDialog : Window
         if (MessageBox.Show(summary, "Confirm Edit", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
             return;
 
-        if (!_repository.UpdateOrderItemCascade(input))
+        var editResult = _repository.UpdateOrderItemCascade(input);
+        if (!editResult.Success)
         {
             MessageBox.Show("Failed to save changes. Check the log for details.", "Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
@@ -98,6 +104,8 @@ public partial class EditItemDialog : Window
             return;
         }
 
+        SavedInput = input;
+        Result     = editResult;
         Logger.Instance.Info($"EditItemDialog: updated order_item id={_row.OrderItemId}");
         DialogResult = true;
     }

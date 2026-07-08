@@ -8,7 +8,6 @@
 /// - GetPartTree():    recursively loads saved parent-child relationships for a root drawing
 /// </remarks>
 
-using System.IO;
 using DrawingTree.Logging;
 using DrawingTree.Models;
 using Microsoft.Data.Sqlite;
@@ -507,7 +506,9 @@ public class PoRepository
     }
 
     /// <summary>
-    /// Returns the set of part IDs (from the input list) whose latest active PDF file exists on disk.
+    /// Returns the set of part IDs (from the input list) that have an active drawing_file record.
+    /// Trusts the database only — does not probe the network share for file existence, since that
+    /// I/O was the main cause of All POs load-time stalls. OpenPdfExternal validates on open instead.
     /// </summary>
     public HashSet<int> GetPartIdsWithPdf(IEnumerable<int> partIds)
     {
@@ -531,7 +532,7 @@ public class PoRepository
                 if (!seen.Add(partId)) continue; // keep only the latest (first) row per part
                 if (reader.IsDBNull(1)) continue;
                 string path = reader.GetString(1);
-                if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                if (!string.IsNullOrEmpty(path))
                     result.Add(partId);
             }
         }
@@ -954,19 +955,22 @@ public class PoRepository
 
     /// <summary>
     /// Updates an existing order_item and its associated part fields.
-    /// Returns true on success.
     /// </summary>
-    public bool UpdateOrderItemCascade(EditItemInput input)
+    public EditItemResult UpdateOrderItemCascade(EditItemInput input)
     {
         try
         {
             using var conn = DatabaseConnectionFactory.OpenDevConnection();
             using var tx = conn.BeginTransaction();
 
+            bool partUpdated = false;
+            long partId = 0;
+
             if (!string.IsNullOrWhiteSpace(input.DrawingNumber))
             {
-                long partId = UpsertPart(conn, tx, input.DrawingNumber, input.Revision,
-                                         input.Description, input.UnitPrice);
+                partId = UpsertPart(conn, tx, input.DrawingNumber, input.Revision,
+                                     input.Description, input.UnitPrice);
+                partUpdated = true;
 
                 using var linkCmd = conn.CreateCommand();
                 linkCmd.Transaction = tx;
@@ -1006,12 +1010,14 @@ public class PoRepository
 
             tx.Commit();
             Logger.Instance.Info($"PoRepository.UpdateOrderItemCascade: updated order_item id={input.OrderItemId}");
-            return true;
+            return partUpdated
+                ? new EditItemResult(true, null, PartUpdated: true, PartId: (int)partId, Description: input.Description)
+                : new EditItemResult(true, null);
         }
         catch (Exception ex)
         {
             Logger.Instance.Error($"PoRepository.UpdateOrderItemCascade failed: {ex.Message}");
-            return false;
+            return new EditItemResult(false, ex.Message);
         }
     }
 
@@ -1326,6 +1332,22 @@ public class NewJobInput
     public string PoRevision    { get; set; } = string.Empty;
     public string DeliveryDate  { get; set; } = string.Empty;
 }
+
+/// <summary>
+/// Result of UpdateOrderItemCascade, carrying enough info for callers to locally patch cached
+/// rows instead of re-querying the database.
+/// </summary>
+/// <param name="Success">True if the update succeeded.</param>
+/// <param name="ErrorMessage">Failure detail; null on success.</param>
+/// <param name="PartUpdated">
+/// True when input.DrawingNumber was non-blank and UpsertPart ran (its ON CONFLICT may have hit
+/// an existing part_id shared by other order_items). False when DrawingNumber was blank and only
+/// order_item-level fields changed — part linkage/description/price are untouched.
+/// </param>
+/// <param name="PartId">The part.id now linked to the order item; null when PartUpdated is false.</param>
+/// <param name="Description">The description persisted to that part row; null when PartUpdated is false.</param>
+public record EditItemResult(bool Success, string? ErrorMessage, bool PartUpdated = false,
+    int? PartId = null, string? Description = null);
 
 /// <summary>Input DTO for editing an existing order_item cascade.</summary>
 public class EditItemInput

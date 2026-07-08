@@ -154,9 +154,6 @@ public class OeRowItem : INotifyPropertyChanged
     /// <summary>Child OeRowItem instances currently inserted after this parent row (empty when collapsed).</summary>
     public List<OeRowItem> ChildRows { get; } = new();
 
-    /// <summary>Lazily-fetched child drawings for this parent row, cached across collapse/expand toggles.</summary>
-    public List<ChildDrawingRow>? CachedChildren { get; set; }
-
     // Redundant on child rows by design — see issue #35 (child rows repeat the parent's columns).
     public int     PoId           => Row.PoId;
     public string  PoNumber       => Row.PoNumber;
@@ -254,6 +251,9 @@ public partial class AllPosControl : UserControl
     private readonly PoRepository _repository = new();
     private List<PoListRow> _allRows = new();
     private HashSet<int> _pdfPartIds = new();
+    private HashSet<int> _mpPartIds = new();
+    private HashSet<int> _dirPartIds = new();
+    private Dictionary<int, List<ChildDrawingRow>> _childrenByPartId = new();
     private bool _isSimpleView;
     private bool _isDataLoaded;
     private readonly DispatcherTimer _debounceTimer;
@@ -334,12 +334,25 @@ public partial class AllPosControl : UserControl
         LoadingOverlay.Visibility = Visibility.Visible;
         bool activeOnly = !ShowHistoryOnly;
 
-        (_allRows, _pdfPartIds) = await Task.Run(() =>
+        (_allRows, _pdfPartIds, _mpPartIds, _dirPartIds, _childrenByPartId) = await Task.Run(() =>
         {
             var rows = _repository.GetAllPoLines(activeOnly: activeOnly);
-            var partIds = rows.Where(r => r.PartId.HasValue).Select(r => r.PartId!.Value).Distinct();
-            var pdfSet = _repository.GetPartIdsWithPdf(partIds);
-            return (rows, pdfSet);
+
+            // Prefetch children for every top-level part that has any, up front — shared by
+            // both OE and Simple views so expanding/switching never queries the database again.
+            var rootPartIds = rows.Where(r => r.HasChildren && r.PartId.HasValue)
+                                   .Select(r => r.PartId!.Value).Distinct().ToList();
+            var childrenByPartId = _repository.GetAllChildDrawings(rootPartIds);
+
+            var allPartIds = rows.Where(r => r.PartId.HasValue).Select(r => r.PartId!.Value)
+                .Concat(childrenByPartId.Values.SelectMany(list => list.Select(c => c.PartId)))
+                .Distinct().ToList();
+
+            var pdfSet = _repository.GetPartIdsWithPdf(allPartIds);
+            var mpSet  = _repository.GetPartIdsWithMp(allPartIds);
+            var dirSet = _repository.GetPartIdsWithDir(allPartIds);
+
+            return (rows, pdfSet, mpSet, dirSet, childrenByPartId);
         });
 
         int poCount = _allRows.Select(r => r.PoId).Distinct().Count();
@@ -349,7 +362,8 @@ public partial class AllPosControl : UserControl
 
         _isDataLoaded = true;
         LoadingOverlay.Visibility = Visibility.Collapsed;
-        Logger.Instance.Info($"AllPosControl: loaded {_allRows.Count} PO line(s) (historyMode={ShowHistoryOnly})");
+        Logger.Instance.Info($"AllPosControl: loaded {_allRows.Count} PO line(s), " +
+            $"{_childrenByPartId.Count} part(s) with children (historyMode={ShowHistoryOnly})");
     }
 
     // ── Search / filter ───────────────────────────────────────────────────────
@@ -530,18 +544,29 @@ public partial class AllPosControl : UserControl
     {
         var groups = BuildSimpleGroups(rows ?? _allRows, SearchTerm);
 
-        var topPartIds = groups.SelectMany(g => g.Items)
-            .Where(i => i.Row.PartId.HasValue)
-            .Select(i => i.Row.PartId!.Value)
-            .Distinct()
-            .ToList();
-        var mpSet  = _repository.GetPartIdsWithMp(topPartIds);
-        var dirSet = _repository.GetPartIdsWithDir(topPartIds);
         foreach (var item in groups.SelectMany(g => g.Items))
         {
-            item.HasMp  = item.Row.PartId.HasValue && mpSet.Contains(item.Row.PartId.Value);
-            item.HasDir = item.Row.PartId.HasValue && dirSet.Contains(item.Row.PartId.Value);
+            item.HasMp  = item.Row.PartId.HasValue && _mpPartIds.Contains(item.Row.PartId.Value);
+            item.HasDir = item.Row.PartId.HasValue && _dirPartIds.Contains(item.Row.PartId.Value);
             item.HasPdf = item.Row.PartId.HasValue && _pdfPartIds.Contains(item.Row.PartId.Value);
+
+            if (item.Row.HasChildren && item.Row.PartId.HasValue &&
+                _childrenByPartId.TryGetValue(item.Row.PartId.Value, out var children))
+            {
+                foreach (var c in children)
+                    item.Children.Add(new ChildDrawingItem
+                    {
+                        DrawingNumber = c.DrawingNumber,
+                        Revision      = c.Revision,
+                        Description   = c.Description,
+                        PartId        = c.PartId,
+                        OrderItemId   = item.Row.OrderItemId,
+                        SearchTerm    = SearchTerm,
+                        HasMp  = _mpPartIds.Contains(c.PartId),
+                        HasDir = _dirPartIds.Contains(c.PartId),
+                        HasPdf = _pdfPartIds.Contains(c.PartId)
+                    });
+            }
         }
 
         SimpleViewList.ItemsSource = groups;
@@ -551,56 +576,6 @@ public partial class AllPosControl : UserControl
         ToggleViewButton.Content    = "OE View";
         FilterButton.Visibility    = Visibility.Collapsed;
         ColumnsButton.Visibility   = Visibility.Collapsed;
-
-        var partIds = groups
-            .SelectMany(g => g.Items)
-            .Where(i => i.Row.HasChildren && i.Row.PartId.HasValue)
-            .Select(i => i.Row.PartId!.Value)
-            .Distinct()
-            .ToList();
-        if (partIds.Count > 0)
-            _ = PrefetchChildrenAsync(groups, partIds);
-    }
-
-    private async Task PrefetchChildrenAsync(List<PoSimpleGroup> groups, List<int> partIds)
-    {
-        var lookup = await Task.Run(() => _repository.GetAllChildDrawings(partIds));
-
-        foreach (var item in groups.SelectMany(g => g.Items))
-        {
-            if (!item.Row.PartId.HasValue) continue;
-            if (!lookup.TryGetValue(item.Row.PartId.Value, out var rows)) continue;
-            if (item.Children.Count > 0) continue;
-
-            foreach (var r in rows)
-                item.Children.Add(new ChildDrawingItem
-                {
-                    DrawingNumber = r.DrawingNumber,
-                    Revision      = r.Revision,
-                    Description   = r.Description,
-                    PartId        = r.PartId,
-                    SearchTerm    = SearchTerm
-                });
-        }
-
-        var childPartIds = groups.SelectMany(g => g.Items)
-            .SelectMany(i => i.Children)
-            .Where(c => c.PartId.HasValue)
-            .Select(c => c.PartId!.Value)
-            .Distinct()
-            .ToList();
-        var childMpSet  = await Task.Run(() => _repository.GetPartIdsWithMp(childPartIds));
-        var childDirSet = await Task.Run(() => _repository.GetPartIdsWithDir(childPartIds));
-        var childPdfSet = await Task.Run(() => _repository.GetPartIdsWithPdf(childPartIds));
-        foreach (var child in groups.SelectMany(g => g.Items).SelectMany(i => i.Children))
-            if (child.PartId.HasValue)
-            {
-                child.HasMp  = childMpSet.Contains(child.PartId.Value);
-                child.HasDir = childDirSet.Contains(child.PartId.Value);
-                child.HasPdf = childPdfSet.Contains(child.PartId.Value);
-            }
-
-        Logger.Instance.Info($"AllPosControl: prefetched children for {lookup.Count} part(s)");
     }
 
     private static List<PoSimpleGroup> BuildSimpleGroups(List<PoListRow> rows, string term = "")
@@ -762,9 +737,11 @@ public partial class AllPosControl : UserControl
     {
         if (string.IsNullOrEmpty(path) || !File.Exists(path))
         {
-            // The PDF button is disabled (HasPdf=false) whenever the file isn't found, so this
-            // only fires on the rare race where the file was deleted after the icon was computed.
+            // GetPartIdsWithPdf no longer probes the disk (DB-only, to avoid network-share I/O
+            // during list load), so a missing file surfaces here instead of at load time.
             Logger.Instance.Warning($"OpenPdfExternal: file not found, path='{path}'");
+            MessageBox.Show("The PDF file was not found on disk. It may have been moved or deleted.",
+                "File Not Found", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
         try { Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true }); }
@@ -835,22 +812,20 @@ public partial class AllPosControl : UserControl
 
         if (!item.Row.PartId.HasValue) return;
 
-        item.CachedChildren ??= _repository.GetChildDrawings(item.Row.PartId.Value);
-        if (item.CachedChildren.Count == 0)
+        if (!_childrenByPartId.TryGetValue(item.Row.PartId.Value, out var children) || children.Count == 0)
         {
             Logger.Instance.Info($"AllPosControl: no children found for partId={item.Row.PartId}");
             return;
         }
 
-        var pdfSet = _repository.GetPartIdsWithPdf(item.CachedChildren.Select(c => c.PartId).Distinct());
         int insertAt = _oeItems.IndexOf(item) + 1;
-        foreach (var c in item.CachedChildren)
+        foreach (var c in children)
         {
             var childItem = new OeRowItem(item.Row, SearchTerm)
             {
                 IsChildRow = true,
                 ChildData  = c,
-                HasPdf     = pdfSet.Contains(c.PartId)
+                HasPdf     = _pdfPartIds.Contains(c.PartId)
             };
             _oeItems.Insert(insertAt++, childItem);
             item.ChildRows.Add(childItem);
@@ -920,7 +895,52 @@ public partial class AllPosControl : UserControl
 
         var dlg = new EditItemDialog(_repository, row) { Owner = Window.GetWindow(this) };
         if (dlg.ShowDialog() == true)
-            Reload();
+            PatchAfterEdit(row, dlg.SavedInput!, dlg.Result!);
+    }
+
+    /// <summary>
+    /// Applies an EditItemDialog save to the in-memory _allRows cache and re-renders the current
+    /// view, without re-querying the database. Patches by part_id (UpsertPart's ON CONFLICT can
+    /// silently update a part shared by other order_items/POs — see UpsertPart) and by po_id
+    /// (customer/contact live on purchase_order, shared by every line under that PO).
+    /// </summary>
+    private void PatchAfterEdit(PoListRow oldRow, EditItemInput input, EditItemResult result)
+    {
+        bool contactChanged = !string.IsNullOrWhiteSpace(input.ContactName);
+
+        for (int i = 0; i < _allRows.Count; i++)
+        {
+            var r = _allRows[i];
+            bool isEditedRow = r.OrderItemId == input.OrderItemId;
+            bool sharesPart = result.PartUpdated && r.PartId.HasValue
+                && (r.PartId.Value == oldRow.PartId || r.PartId.Value == result.PartId);
+            bool sharesPo = contactChanged && r.PoId == input.PoId;
+
+            if (!isEditedRow && !sharesPart && !sharesPo) continue;
+
+            var updated = r;
+            if (isEditedRow)
+            {
+                updated = updated with
+                {
+                    LineNumber    = input.LineNumber,
+                    Quantity      = input.Quantity,
+                    DueDate       = input.DeliveryDate,
+                    DrawingNumber = result.PartUpdated ? input.DrawingNumber : updated.DrawingNumber,
+                    Revision      = result.PartUpdated ? input.Revision      : updated.Revision,
+                    PartId        = result.PartUpdated ? result.PartId      : updated.PartId
+                };
+            }
+            if (sharesPart)
+                updated = updated with { Description = result.Description };
+            if (sharesPo)
+                updated = updated with { CustomerName = input.CustomerName, ContactName = input.ContactName };
+
+            _allRows[i] = updated;
+        }
+
+        ApplySearch(SearchTerm);
+        Logger.Instance.Info($"AllPosControl: patched cache after edit of order_item id={input.OrderItemId}");
     }
 
     private static PoListRow? GetPoListRowFromMenuSender(object sender)

@@ -191,13 +191,16 @@ public partial class MainWindow : Window
     {
         MainDisplayArea.Children.Clear();
 
-        _allPosControl = new AllPosControl();
-        _allPosControl.NavigateToPoRequested  += OnAllPosNavigateToPo;
-        _allPosControl.ImportDrawingRequested += OnAllPosImportDrawing;
-        _allPosControl.HistoryRequested       += OnAllPosHistoryRequested;
-        _allPosControl.NavigateToTreeRequested += OnAllPosNavigateToTree;
-        _allPosControl.NavigateToPartRequested += OnAllPosNavigateToPart;
-        _allPosControl.EditPartsRequested     += OnAllPosEditParts;
+        if (_allPosControl == null)
+        {
+            _allPosControl = new AllPosControl();
+            _allPosControl.NavigateToPoRequested  += OnAllPosNavigateToPo;
+            _allPosControl.ImportDrawingRequested += OnAllPosImportDrawing;
+            _allPosControl.HistoryRequested       += OnAllPosHistoryRequested;
+            _allPosControl.NavigateToTreeRequested += OnAllPosNavigateToTree;
+            _allPosControl.NavigateToPartRequested += OnAllPosNavigateToPart;
+            _allPosControl.EditPartsRequested     += OnAllPosEditParts;
+        }
 
         MainDisplayArea.Children.Add(_allPosControl);
         Logger.Instance.Info("All POs control displayed");
