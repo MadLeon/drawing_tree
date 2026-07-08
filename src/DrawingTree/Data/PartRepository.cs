@@ -270,6 +270,36 @@ public class PartRepository
     }
 
     /// <summary>
+    /// Checks whether an MP attachment already exists for the given part under the given order item.
+    /// </summary>
+    /// <param name="partId">part.id</param>
+    /// <param name="orderItemId">order_item.id</param>
+    /// <returns>True if a matching part_attachment row (part_id and order_item_id both match) exists</returns>
+    public bool HasOrderItemMpAttachment(int partId, int orderItemId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT 1
+                FROM part_attachment
+                WHERE part_id = @pid AND order_item_id = @oid AND file_type = 'MP' COLLATE NOCASE
+                LIMIT 1
+                """;
+            cmd.Parameters.AddWithValue("@pid", partId);
+            cmd.Parameters.AddWithValue("@oid", orderItemId);
+            using var reader = cmd.ExecuteReader();
+            return reader.Read();
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.HasOrderItemMpAttachment failed for partId={partId}, orderItemId={orderItemId}: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Inserts a new MP file attachment record.
     /// </summary>
     /// <param name="partId">part.id (0 if no part linked)</param>

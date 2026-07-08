@@ -92,8 +92,9 @@ public partial class PartDetailControl : UserControl
     {
         MpFilesPanel.Children.Clear();
 
-        NewMpButton.Visibility = _mpContext != null ? Visibility.Visible : Visibility.Collapsed;
-        OpenMpFolderButton.Visibility = _mpContext != null ? Visibility.Visible : Visibility.Collapsed;
+        var hasOrderItemMp = _mpContext != null && _partRepository.HasOrderItemMpAttachment(_partId, _orderItemId);
+        NewMpButton.Visibility = _mpContext != null && !hasOrderItemMp ? Visibility.Visible : Visibility.Collapsed;
+        OpenMpFolderButton.Visibility = _orderItemId > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         var attachments = _partRepository.GetMpAttachments(_partId);
 
@@ -185,7 +186,12 @@ public partial class PartDetailControl : UserControl
 
     private void OpenMpFolderButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_mpContext == null) return;
+        if (_mpContext == null)
+        {
+            MessageBox.Show("Could not resolve order item information for this part.", "Order Item Not Found",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
 
         try
         {
