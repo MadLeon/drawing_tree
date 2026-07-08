@@ -7,6 +7,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -51,6 +52,27 @@ public class PoSimpleGroup
     public ObservableCollection<ExpandableOrderItem> Items { get; } = new();
 
     public string PoNumberDisplay => PoDisplayFormat.Format(PoNumber, PoRevision);
+}
+
+/// <summary>One PO group in the OE view (grouped, group-level-virtualized ItemsControl — mirrors PoSimpleGroup).</summary>
+public class OePoGroup
+{
+    public int PoId { get; set; }
+    public ObservableCollection<OeRowItem> Items { get; } = new();
+}
+
+/// <summary>Converts an OeColumnConfig bool flag + width parameter ("80" or "*") into a collapsible GridLength (0 when hidden).</summary>
+public class BoolToGridLengthConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is not bool show || !show) return new GridLength(0);
+        var p = (string)parameter;
+        return p == "*" ? new GridLength(1, GridUnitType.Star) : new GridLength(double.Parse(p, CultureInfo.InvariantCulture));
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
 }
 
 /// <summary>Shared expand/collapse icon geometries for order-item rows (both views).</summary>
@@ -153,6 +175,9 @@ public class OeRowItem : INotifyPropertyChanged
 
     /// <summary>Child OeRowItem instances currently inserted after this parent row (empty when collapsed).</summary>
     public List<OeRowItem> ChildRows { get; } = new();
+
+    /// <summary>The PO group's row collection this item lives in — used by OeExpandItem_Click to insert/remove child rows.</summary>
+    public ObservableCollection<OeRowItem>? ParentList { get; set; }
 
     // Redundant on child rows by design — see issue #35 (child rows repeat the parent's columns).
     public int     PoId           => Row.PoId;
@@ -257,8 +282,6 @@ public partial class AllPosControl : UserControl
     private bool _isSimpleView;
     private bool _isDataLoaded;
     private readonly DispatcherTimer _debounceTimer;
-    private readonly ObservableCollection<OeRowItem> _oeItems = new();
-    private ListCollectionView? _oeView;
 
     // ── Filter panel state (Customer / Contact / Due Date range) ────────────
     private string? _filterCustomer;
@@ -500,38 +523,34 @@ public partial class AllPosControl : UserControl
     // ── OE View ──────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Rebuilds the flattened OE grid rows. Backed by an ObservableCollection (rather than a
-    /// fresh List/ListCollectionView per call) so expand/collapse can Insert/Remove child rows
-    /// in place — see OeExpandItem_Click. Expand state is not preserved across search/reload,
-    /// matching the simple view's existing behavior (BuildSimpleGroups also rebuilds from scratch).
+    /// Rebuilds the OE view's PO groups from scratch, mirroring BuildSimpleGroups/ApplySimpleView.
+    /// Expand state is not preserved across search/reload, matching the simple view's existing behavior.
     /// </summary>
     private void ApplyOeView(List<PoListRow>? rows = null)
     {
-        _oeItems.Clear();
+        var groups = new List<OePoGroup>();
         foreach (var g in (rows ?? _allRows)
                      .GroupBy(r => r.PoId)
                      .OrderBy(g => g.First().OeNumber ?? g.First().PoNumber))
         {
+            var group = new OePoGroup { PoId = g.Key };
             bool isFirst = true;
             foreach (var row in g.OrderBy(r => r.JobNumber).ThenBy(r => r.LineNumber))
             {
-                _oeItems.Add(new OeRowItem(row, SearchTerm)
+                group.Items.Add(new OeRowItem(row, SearchTerm)
                 {
                     IsFirstInPoGroup = isFirst,
-                    HasPdf = row.PartId.HasValue && _pdfPartIds.Contains(row.PartId.Value)
+                    HasPdf = row.PartId.HasValue && _pdfPartIds.Contains(row.PartId.Value),
+                    ParentList = group.Items
                 });
                 isFirst = false;
             }
+            groups.Add(group);
         }
 
-        if (_oeView == null)
-        {
-            _oeView = new ListCollectionView(_oeItems);
-            _oeView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(OeRowItem.PoNumber)));
-            ResultsGrid.ItemsSource = _oeView;
-        }
+        OeGroupsList.ItemsSource = groups;
 
-        ResultsGrid.Visibility     = Visibility.Visible;
+        OeGroupsScroll.Visibility  = Visibility.Visible;
         SimpleViewScroll.Visibility = Visibility.Collapsed;
         ToggleViewButton.Content   = "Simple View";
         FilterButton.Visibility   = Visibility.Visible;
@@ -571,7 +590,7 @@ public partial class AllPosControl : UserControl
 
         SimpleViewList.ItemsSource = groups;
 
-        ResultsGrid.Visibility      = Visibility.Collapsed;
+        OeGroupsScroll.Visibility  = Visibility.Collapsed;
         SimpleViewScroll.Visibility = Visibility.Visible;
         ToggleViewButton.Content    = "OE View";
         FilterButton.Visibility    = Visibility.Collapsed;
@@ -801,10 +820,13 @@ public partial class AllPosControl : UserControl
     {
         if (sender is not Button btn || btn.Tag is not OeRowItem item || !item.HasChildren) return;
 
+        var list = item.ParentList;
+        if (list == null) return;
+
         if (item.IsExpanded)
         {
             foreach (var child in item.ChildRows)
-                _oeItems.Remove(child);
+                list.Remove(child);
             item.ChildRows.Clear();
             item.IsExpanded = false;
             return;
@@ -818,16 +840,17 @@ public partial class AllPosControl : UserControl
             return;
         }
 
-        int insertAt = _oeItems.IndexOf(item) + 1;
+        int insertAt = list.IndexOf(item) + 1;
         foreach (var c in children)
         {
             var childItem = new OeRowItem(item.Row, SearchTerm)
             {
                 IsChildRow = true,
                 ChildData  = c,
-                HasPdf     = _pdfPartIds.Contains(c.PartId)
+                HasPdf     = _pdfPartIds.Contains(c.PartId),
+                ParentList = list
             };
-            _oeItems.Insert(insertAt++, childItem);
+            list.Insert(insertAt++, childItem);
             item.ChildRows.Add(childItem);
         }
 
