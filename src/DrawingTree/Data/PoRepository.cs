@@ -257,7 +257,9 @@ public class PoRepository
                        oi.part_id, oi.id AS order_item_id,
                        CASE WHEN oi.part_id IS NOT NULL
                                  AND EXISTS (SELECT 1 FROM part_tree WHERE parent_id = oi.part_id)
-                            THEN 1 ELSE 0 END AS has_children
+                            THEN 1 ELSE 0 END AS has_children,
+                       po.revision AS po_revision,
+                       po.description AS po_description
                 FROM purchase_order po
                 JOIN job j ON j.po_id = po.id
                 JOIN order_item oi ON oi.job_id = j.id
@@ -287,7 +289,9 @@ public class PoRepository
                     DueDate:       reader.IsDBNull(12) ? null : reader.GetString(12),
                     PartId:        reader.IsDBNull(13) ? null : reader.GetInt32(13),
                     OrderItemId:   reader.GetInt32(14),
-                    HasChildren:   reader.GetInt32(15) != 0
+                    HasChildren:   reader.GetInt32(15) != 0,
+                    PoRevision:    reader.IsDBNull(16) ? null : reader.GetString(16),
+                    PoDescription: reader.IsDBNull(17) ? null : reader.GetString(17)
                 ));
             }
         }
@@ -897,9 +901,9 @@ public class PoRepository
     /// <summary>
     /// Creates a new job cascade in a single transaction:
     /// customer → customer_contact → purchase_order → job → part → order_item.
-    /// Returns the new order_item.id, or -1 on failure.
     /// </summary>
-    public int CreateOrderItemCascade(NewJobInput input)
+    /// <returns>The new order_item.id and a null Error on success; -1 and the failure reason on error.</returns>
+    public (int Id, string? Error) CreateOrderItemCascade(NewJobInput input)
     {
         try
         {
@@ -911,13 +915,15 @@ public class PoRepository
             string poNumber = string.IsNullOrWhiteSpace(input.PoNumber)
                 ? $"NPO-{input.JobNumber}"
                 : input.PoNumber;
-            long poId = UpsertPurchaseOrder(conn, tx, poNumber, input.OeNumber, contactId);
+            long poId = UpsertPurchaseOrder(conn, tx, poNumber, input.OeNumber, contactId,
+                                            input.Description, input.PoRevision);
             long jobId = UpsertJob(conn, tx, input.JobNumber, poId);
 
             long partId = -1;
             if (!string.IsNullOrWhiteSpace(input.DrawingNumber))
                 partId = UpsertPart(conn, tx, input.DrawingNumber, input.Revision,
-                                    input.Description, input.UnitPrice);
+                                    input.Description, input.UnitPrice,
+                                    overwriteDescriptionOnConflict: false);
 
             using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
@@ -937,12 +943,12 @@ public class PoRepository
             long newId = Convert.ToInt64(cmd.ExecuteScalar()!);
             tx.Commit();
             Logger.Instance.Info($"PoRepository.CreateOrderItemCascade: created order_item id={newId}");
-            return (int)newId;
+            return ((int)newId, null);
         }
         catch (Exception ex)
         {
             Logger.Instance.Error($"PoRepository.CreateOrderItemCascade failed: {ex.Message}");
-            return -1;
+            return (-1, ex.Message);
         }
     }
 
@@ -1052,21 +1058,26 @@ public class PoRepository
 
     private static long UpsertPurchaseOrder(Microsoft.Data.Sqlite.SqliteConnection conn,
                                             Microsoft.Data.Sqlite.SqliteTransaction tx,
-                                            string poNumber, string oeNumber, long contactId)
+                                            string poNumber, string oeNumber, long contactId,
+                                            string? description = null, string? poRevision = null)
     {
         using var cmd = conn.CreateCommand();
         cmd.Transaction = tx;
         cmd.CommandText = """
-            INSERT INTO purchase_order (po_number, oe_number, contact_id, is_active, updated_at)
-            VALUES (@po, @oe, @cid, 1, datetime('now','localtime'))
+            INSERT INTO purchase_order (po_number, oe_number, contact_id, description, revision, is_active, updated_at)
+            VALUES (@po, @oe, @cid, @desc, @rev, 1, datetime('now','localtime'))
             ON CONFLICT(po_number) DO UPDATE SET
-                oe_number  = excluded.oe_number,
-                contact_id = excluded.contact_id,
-                updated_at = datetime('now','localtime')
+                oe_number   = excluded.oe_number,
+                contact_id  = excluded.contact_id,
+                description = excluded.description,
+                revision    = excluded.revision,
+                updated_at  = datetime('now','localtime')
             """;
-        cmd.Parameters.AddWithValue("@po",  poNumber);
-        cmd.Parameters.AddWithValue("@oe",  string.IsNullOrWhiteSpace(oeNumber) ? DBNull.Value : (object)oeNumber);
-        cmd.Parameters.AddWithValue("@cid", contactId);
+        cmd.Parameters.AddWithValue("@po",   poNumber);
+        cmd.Parameters.AddWithValue("@oe",   string.IsNullOrWhiteSpace(oeNumber) ? DBNull.Value : (object)oeNumber);
+        cmd.Parameters.AddWithValue("@cid",  contactId);
+        cmd.Parameters.AddWithValue("@desc", string.IsNullOrWhiteSpace(description) ? DBNull.Value : (object)description);
+        cmd.Parameters.AddWithValue("@rev",  string.IsNullOrWhiteSpace(poRevision)  ? DBNull.Value : (object)poRevision);
         cmd.ExecuteNonQuery();
 
         cmd.CommandText = "SELECT id FROM purchase_order WHERE po_number = @po";
@@ -1095,18 +1106,20 @@ public class PoRepository
     private static long UpsertPart(Microsoft.Data.Sqlite.SqliteConnection conn,
                                    Microsoft.Data.Sqlite.SqliteTransaction tx,
                                    string drawingNumber, string revision,
-                                   string description, string unitPrice)
+                                   string description, string unitPrice,
+                                   bool overwriteDescriptionOnConflict = true)
     {
         decimal price = decimal.TryParse(unitPrice, out var p) ? p : 0m;
         using var cmd = conn.CreateCommand();
         cmd.Transaction = tx;
-        cmd.CommandText = """
+        string descriptionUpdateClause = overwriteDescriptionOnConflict
+            ? "description = excluded.description,\n                "
+            : "";
+        cmd.CommandText = $"""
             INSERT INTO part (drawing_number, revision, description, unit_price, updated_at)
             VALUES (@dn, @rev, @desc, @price, datetime('now','localtime'))
-            ON CONFLICT(drawing_number) DO UPDATE SET
-                revision    = excluded.revision,
-                description = excluded.description,
-                unit_price  = excluded.unit_price,
+            ON CONFLICT(drawing_number, revision) DO UPDATE SET
+                {descriptionUpdateClause}unit_price  = excluded.unit_price,
                 updated_at  = datetime('now','localtime')
             """;
         cmd.Parameters.AddWithValue("@dn",    drawingNumber);
@@ -1115,7 +1128,7 @@ public class PoRepository
         cmd.Parameters.AddWithValue("@price", price);
         cmd.ExecuteNonQuery();
 
-        cmd.CommandText = "SELECT id FROM part WHERE drawing_number = @dn COLLATE NOCASE";
+        cmd.CommandText = "SELECT id FROM part WHERE drawing_number = @dn COLLATE NOCASE AND revision = @rev";
         return Convert.ToInt64(cmd.ExecuteScalar()!);
     }
 
@@ -1131,7 +1144,7 @@ public class PoRepository
             using var conn = DatabaseConnectionFactory.OpenDevConnection();
             using var cmd = conn.CreateCommand();
             cmd.CommandText = """
-                SELECT po.po_number, po.oe_number, cust.customer_name
+                SELECT po.po_number, po.oe_number, cust.customer_name, po.revision
                 FROM purchase_order po
                 LEFT JOIN customer_contact cc ON cc.id = po.contact_id
                 LEFT JOIN customer cust ON cust.id = cc.customer_id
@@ -1146,7 +1159,8 @@ public class PoRepository
                     poId,
                     reader.GetString(0),
                     reader.IsDBNull(1) ? null : reader.GetString(1),
-                    reader.IsDBNull(2) ? null : reader.GetString(2));
+                    reader.IsDBNull(2) ? null : reader.GetString(2),
+                    reader.IsDBNull(3) ? null : reader.GetString(3));
             }
         }
         catch (Exception ex)
@@ -1203,7 +1217,19 @@ public class PoRepository
 /// <param name="PoNumber">Purchase order number</param>
 /// <param name="OeNumber">Customer OE/order number</param>
 /// <param name="CustomerName">customer.customer_name; null if no contact/customer linked</param>
-public record PoHeader(int PoId, string PoNumber, string? OeNumber, string? CustomerName);
+/// <param name="PoRevision">purchase_order.revision; null if not set</param>
+public record PoHeader(int PoId, string PoNumber, string? OeNumber, string? CustomerName, string? PoRevision = null)
+{
+    /// <summary>Display string: "{PoNumber}-R{PoRevision}" when a revision is set, else just PoNumber.</summary>
+    public string PoNumberDisplay => PoDisplayFormat.Format(PoNumber, PoRevision);
+}
+
+/// <summary>Formats a PO number for display, appending "-R{revision}" when a revision is set.</summary>
+public static class PoDisplayFormat
+{
+    public static string Format(string poNumber, string? revision) =>
+        string.IsNullOrWhiteSpace(revision) ? poNumber : $"{poNumber}-R{revision}";
+}
 
 /// <param name="OrderItemId">order_item.id</param>
 /// <param name="JobNumber">Job number</param>
@@ -1231,13 +1257,23 @@ public record PoOrderItemRow(
 /// <param name="DueDate">Delivery required date</param>
 /// <param name="PartId">part.id; null if no linked part</param>
 /// <param name="OrderItemId">order_item.id</param>
+/// <param name="PoRevision">purchase_order.revision; null if not set</param>
+/// <param name="PoDescription">purchase_order.description; null if not set</param>
 public record PoListRow(
     int PoId, string PoNumber, string? OeNumber,
     string JobNumber, int LineNumber,
     string? CustomerName, string? ContactName,
     int Quantity, string? DrawingNumber, string? Revision, string? Description,
     string? ReleaseDate, string? DueDate,
-    int? PartId = null, int OrderItemId = 0, bool HasChildren = false);
+    int? PartId = null, int OrderItemId = 0, bool HasChildren = false, string? PoRevision = null,
+    string? PoDescription = null)
+{
+    /// <summary>Display string: "{PoNumber}-R{PoRevision}" when a revision is set, else just PoNumber.</summary>
+    public string PoNumberDisplay => PoDisplayFormat.Format(PoNumber, PoRevision);
+
+    /// <summary>purchase_order.description when set, else falls back to the linked part's description.</summary>
+    public string? DescriptionDisplay => string.IsNullOrWhiteSpace(PoDescription) ? Description : PoDescription;
+}
 
 /// <summary>Flat child drawing row returned by GetChildDrawings.</summary>
 public record ChildDrawingRow(int PartId, string DrawingNumber, string? Revision, string? Description);
@@ -1287,6 +1323,7 @@ public class NewJobInput
     public string Description   { get; set; } = string.Empty;
     public string UnitPrice     { get; set; } = string.Empty;
     public string PoNumber      { get; set; } = string.Empty;
+    public string PoRevision    { get; set; } = string.Empty;
     public string DeliveryDate  { get; set; } = string.Empty;
 }
 

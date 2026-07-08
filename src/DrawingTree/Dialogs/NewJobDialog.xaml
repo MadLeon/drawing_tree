@@ -81,7 +81,7 @@
             <!-- Customer -->
             <TextBlock Grid.Row="2" Grid.Column="0" Text="Customer:" Style="{StaticResource Label}"/>
             <ComboBox  Grid.Row="2" Grid.Column="1" x:Name="CustomerBox" Style="{StaticResource Combo}"
-                       SelectionChanged="CustomerBox_SelectionChanged"/>
+                       SelectionChanged="CustomerBox_SelectionChanged" TextBoxBase.TextChanged="CustomerBox_TextChanged"/>
 
             <!-- Contact -->
             <TextBlock Grid.Row="3" Grid.Column="0" Text="Contact:" Style="{StaticResource Label}"/>
@@ -93,7 +93,8 @@
 
             <!-- Parts (Drawing Number) -->
             <TextBlock Grid.Row="5" Grid.Column="0" Text="Parts:" Style="{StaticResource Label}"/>
-            <TextBox   Grid.Row="5" Grid.Column="1" x:Name="PartsBox" Style="{StaticResource Field}"/>
+            <TextBox   Grid.Row="5" Grid.Column="1" x:Name="PartsBox" Style="{StaticResource Field}"
+                       LostFocus="PartsBox_LostFocus"/>
 
             <!-- Rev -->
             <TextBlock Grid.Row="6" Grid.Column="0" Text="Rev:" Style="{StaticResource Label}"/>
@@ -109,17 +110,28 @@
 
             <!-- Price -->
             <TextBlock Grid.Row="9" Grid.Column="0" Text="Price:" Style="{StaticResource Label}"/>
-            <TextBox   Grid.Row="9" Grid.Column="1" x:Name="PriceBox" Style="{StaticResource Field}"/>
+            <TextBox   Grid.Row="9" Grid.Column="1" x:Name="PriceBox" Style="{StaticResource Field}"
+                       PreviewTextInput="PriceBox_PreviewTextInput"/>
 
-            <!-- P.O. -->
+            <!-- P.O. + Revision -->
             <TextBlock Grid.Row="10" Grid.Column="0" Text="P.O.:" Style="{StaticResource Label}"/>
-            <TextBox   Grid.Row="10" Grid.Column="1" x:Name="PoBox" Style="{StaticResource Field}"
-                       ToolTip="Leave blank to auto-generate NPO-{JobNumber}"/>
+            <Grid Grid.Row="10" Grid.Column="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="80"/>
+                </Grid.ColumnDefinitions>
+                <TextBox   x:Name="PoBox" Style="{StaticResource Field}" Grid.Column="0"
+                           ToolTip="Leave blank to auto-generate NPO-{JobNumber}"/>
+                <TextBlock Text="Rev:" Style="{StaticResource Label}" Grid.Column="1" Margin="8,0,8,0"/>
+                <TextBox   x:Name="RevisionBox" Style="{StaticResource Field}" Grid.Column="2"
+                           ToolTip="PO Revision (e.g. 1)"/>
+            </Grid>
 
             <!-- Del. Req'd -->
             <TextBlock Grid.Row="11" Grid.Column="0" Text="Del. Req'd:" Style="{StaticResource Label}"/>
-            <TextBox   Grid.Row="11" Grid.Column="1" x:Name="DelBox" Style="{StaticResource Field}"
-                       ToolTip="e.g. 2026-12-31"/>
+            <DatePicker Grid.Row="11" Grid.Column="1" x:Name="DelPicker" Height="28" Margin="0,4"
+                        ToolTip="e.g. 2026-12-31"/>
         </Grid>
 
         <!-- Buttons -->

@@ -44,10 +44,13 @@ public class PoSimpleGroup
 {
     public int     PoId         { get; set; }
     public string  PoNumber     { get; set; } = string.Empty;
+    public string? PoRevision   { get; set; }
     public string? OeNumber     { get; set; }
     public string? CustomerName { get; set; }
     public string? ContactName  { get; set; }
     public ObservableCollection<ExpandableOrderItem> Items { get; } = new();
+
+    public string PoNumberDisplay => PoDisplayFormat.Format(PoNumber, PoRevision);
 }
 
 /// <summary>Shared expand/collapse icon geometries for order-item rows (both views).</summary>
@@ -155,8 +158,9 @@ public class OeRowItem : INotifyPropertyChanged
     public List<ChildDrawingRow>? CachedChildren { get; set; }
 
     // Redundant on child rows by design — see issue #35 (child rows repeat the parent's columns).
-    public int     PoId         => Row.PoId;
-    public string  PoNumber     => Row.PoNumber;
+    public int     PoId           => Row.PoId;
+    public string  PoNumber       => Row.PoNumber;
+    public string  PoNumberDisplay => Row.PoNumberDisplay;
     public string? OeNumber     => Row.OeNumber;
     public string  JobNumber    => Row.JobNumber;
     public int     LineNumber   => Row.LineNumber;
@@ -170,6 +174,7 @@ public class OeRowItem : INotifyPropertyChanged
     public string? DrawingNumber => IsChildRow ? ChildData!.DrawingNumber : Row.DrawingNumber;
     public string? Revision      => IsChildRow ? ChildData!.Revision      : Row.Revision;
     public string? Description   => IsChildRow ? ChildData!.Description  : Row.Description;
+    public string? DescriptionDisplay => IsChildRow ? ChildData!.Description : Row.DescriptionDisplay;
     public int?    PartId        => IsChildRow ? ChildData!.PartId       : Row.PartId;
 
     public bool HasChildren => !IsChildRow && Row.HasChildren;
@@ -608,6 +613,7 @@ public partial class AllPosControl : UserControl
             {
                 PoId         = first.PoId,
                 PoNumber     = first.PoNumber,
+                PoRevision   = first.PoRevision,
                 OeNumber     = first.OeNumber,
                 CustomerName = first.CustomerName,
                 ContactName  = first.ContactName

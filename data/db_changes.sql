@@ -149,3 +149,30 @@ ALTER TABLE part_attachment ADD COLUMN status TEXT NOT NULL DEFAULT 'in progress
 
 -- Backfill pre-existing rows (created before status tracking existed) as completed
 UPDATE part_attachment SET status = 'completed';
+
+-- 2026-07-08: Add description/revision to purchase_order; enforce uniqueness on customer_contact (Issue #37)
+ALTER TABLE purchase_order ADD COLUMN description TEXT;
+ALTER TABLE purchase_order ADD COLUMN revision TEXT;
+
+-- Rebuild customer_contact with UNIQUE(customer_id, contact_name) — no existing duplicates today,
+-- but UpsertContact's INSERT OR IGNORE silently relies on this constraint to dedupe.
+BEGIN;
+DROP TABLE IF EXISTS customer_contact_new;
+CREATE TABLE customer_contact_new (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id   INTEGER NOT NULL,
+    contact_name  TEXT NOT NULL,
+    contact_email TEXT,
+    usage_count   INTEGER DEFAULT 0,
+    last_used     TEXT,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    updated_at    TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    UNIQUE(customer_id, contact_name),
+    FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE CASCADE
+);
+INSERT INTO customer_contact_new SELECT * FROM customer_contact;
+DROP TABLE customer_contact;
+ALTER TABLE customer_contact_new RENAME TO customer_contact;
+CREATE INDEX IF NOT EXISTS idx_customer_contact_customer_id ON customer_contact(customer_id);
+CREATE INDEX IF NOT EXISTS idx_customer_contact_name ON customer_contact(contact_name);
+COMMIT;

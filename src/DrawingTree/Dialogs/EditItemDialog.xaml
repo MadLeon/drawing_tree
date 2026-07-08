@@ -89,7 +89,7 @@
 
             <!-- Del. Req'd -->
             <TextBlock Grid.Row="7" Grid.Column="0" Text="Del. Req'd:" Style="{StaticResource Label}"/>
-            <TextBox   Grid.Row="7" Grid.Column="1" x:Name="DelBox" Style="{StaticResource Field}"/>
+            <DatePicker Grid.Row="7" Grid.Column="1" x:Name="DelPicker" Height="28" Margin="0,4"/>
         </Grid>
 
         <!-- Buttons -->

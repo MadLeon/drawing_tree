@@ -103,7 +103,7 @@ public partial class PoDetailControl : UserControl
             jobTallies[row.JobNumber] = (jobTotal + total, jobDone + done);
         }
 
-        TitleLabel.Text = $"P.O. {header.PoNumber}    O.E. {header.OeNumber}{FormatCompletionSuffix(poTotal, poDone)}";
+        TitleLabel.Text = $"P.O. {header.PoNumberDisplay}    O.E. {header.OeNumber}{FormatCompletionSuffix(poTotal, poDone)}";
 
         foreach (var jobGroup in items.GroupBy(i => i.JobNumber))
         {

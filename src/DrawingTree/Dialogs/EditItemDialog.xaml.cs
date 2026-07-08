@@ -45,7 +45,7 @@ public partial class EditItemDialog : Window
         DescBox.Text      = _row.Description   ?? string.Empty;
         QtyBox.Text       = _row.Quantity.ToString();
         LnBox.Text        = _row.LineNumber.ToString();
-        DelBox.Text       = _row.DueDate       ?? string.Empty;
+        DelPicker.Text    = _row.DueDate       ?? string.Empty;
     }
 
     private void CustomerBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -76,7 +76,7 @@ public partial class EditItemDialog : Window
             Description   = DescBox.Text.Trim(),
             Quantity      = qty,
             LineNumber    = ln,
-            DeliveryDate  = DelBox.Text.Trim(),
+            DeliveryDate  = FormatDeliveryDate(DelPicker.Text),
             CustomerName  = CustomerBox.Text.Trim(),
             ContactName   = ContactBox.Text.Trim(),
             PoId          = _row.PoId
@@ -104,4 +104,10 @@ public partial class EditItemDialog : Window
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)
         => DialogResult = false;
+
+    private static string FormatDeliveryDate(string rawText)
+    {
+        string trimmed = rawText.Trim();
+        return DateTime.TryParse(trimmed, out var date) ? date.ToString("yyyy-MM-dd") : trimmed;
+    }
 }

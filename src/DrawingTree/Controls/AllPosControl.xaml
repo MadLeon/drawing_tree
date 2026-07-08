@@ -292,7 +292,7 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid>
-                                    <TextBox Text="{Binding PoNumber, Mode=OneWay}"
+                                    <TextBox Text="{Binding PoNumberDisplay, Mode=OneWay}"
                                              Foreground="{Binding PoLinkForeground}"
                                              Cursor="{Binding PoLinkCursor}"
                                              Tag="{Binding}" PreviewMouseLeftButtonDown="OePoNumber_Click">
@@ -307,7 +307,7 @@
                                             </Style>
                                         </TextBox.Style>
                                     </TextBox>
-                                    <TextBlock local:HighlightBehavior.FullText="{Binding PoNumber}"
+                                    <TextBlock local:HighlightBehavior.FullText="{Binding PoNumberDisplay}"
                                                local:HighlightBehavior.SearchTerm="{Binding SearchTerm}"
                                                Foreground="{Binding PoLinkForeground}"
                                                TextDecorations="{Binding PoLinkDecorations}"
@@ -527,8 +527,8 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid>
-                                    <TextBox Text="{Binding Description, Mode=OneWay}"
-                                             ToolTip="{Binding Description}">
+                                    <TextBox Text="{Binding DescriptionDisplay, Mode=OneWay}"
+                                             ToolTip="{Binding DescriptionDisplay}">
                                         <TextBox.Style>
                                             <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -540,10 +540,10 @@
                                             </Style>
                                         </TextBox.Style>
                                     </TextBox>
-                                    <TextBlock local:HighlightBehavior.FullText="{Binding Description}"
+                                    <TextBlock local:HighlightBehavior.FullText="{Binding DescriptionDisplay}"
                                                local:HighlightBehavior.SearchTerm="{Binding SearchTerm}"
                                                TextTrimming="CharacterEllipsis"
-                                               ToolTip="{Binding Description}"
+                                               ToolTip="{Binding DescriptionDisplay}"
                                                VerticalAlignment="Center" Margin="8,0" FontSize="12">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
@@ -620,7 +620,7 @@
                                             </Grid.ColumnDefinitions>
                                             <WrapPanel Grid.Column="0" VerticalAlignment="Center">
                                                 <TextBlock Margin="0,0,16,0" FontSize="12" FontWeight="SemiBold" Foreground="#1A237E">
-                                                    <Run Text="PO: "/><Run Text="{Binding PoNumber}" FontWeight="Bold"/>
+                                                    <Run Text="PO: "/><Run Text="{Binding PoNumberDisplay}" FontWeight="Bold"/>
                                                 </TextBlock>
                                                 <TextBlock Margin="0,0,16,0" FontSize="12" Foreground="#555">
                                                     <Run Text="OE: "/><Run Text="{Binding OeNumber}"/>
@@ -747,8 +747,8 @@
                                                             </TextBlock>
                                                             <!-- Description — toggle TextBox/TextBlock for selection + highlight -->
                                                             <Grid Grid.Column="5">
-                                                                <TextBox Text="{Binding Row.Description, Mode=OneWay}"
-                                                                         ToolTip="{Binding Row.Description}">
+                                                                <TextBox Text="{Binding Row.DescriptionDisplay, Mode=OneWay}"
+                                                                         ToolTip="{Binding Row.DescriptionDisplay}">
                                                                     <TextBox.Style>
                                                                         <Style TargetType="TextBox" BasedOn="{StaticResource SelectableText}">
                                                                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -760,10 +760,10 @@
                                                                         </Style>
                                                                     </TextBox.Style>
                                                                 </TextBox>
-                                                                <TextBlock local:HighlightBehavior.FullText="{Binding Row.Description}"
+                                                                <TextBlock local:HighlightBehavior.FullText="{Binding Row.DescriptionDisplay}"
                                                                            local:HighlightBehavior.SearchTerm="{Binding SearchTerm}"
                                                                            TextTrimming="CharacterEllipsis"
-                                                                           ToolTip="{Binding Row.Description}"
+                                                                           ToolTip="{Binding Row.DescriptionDisplay}"
                                                                            VerticalAlignment="Center" Margin="4,0" FontSize="12">
                                                                     <TextBlock.Style>
                                                                         <Style TargetType="TextBlock">
