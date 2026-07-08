@@ -43,6 +43,10 @@
                     </Button>
                     <TextBlock x:Name="PoLabel"
                                FontWeight="Bold" FontSize="14" VerticalAlignment="Center"/>
+                    <Button x:Name="OpenFolderButton" Content="Open Folder"
+                            Height="24" FontSize="11" Padding="8,0"
+                            Margin="12,0,0,0" VerticalAlignment="Center"
+                            Click="OpenFolderButton_Click"/>
                 </StackPanel>
                 <Button Grid.Column="1" Content="Save All" Width="80" Height="32"
                         Click="SaveAllButton_Click"/>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -29,6 +30,9 @@ public partial class DrawingEditorControl : System.Windows.Controls.UserControl
 
     /// <summary>Pre-fills the Purchase Order text box when entering from All POs.</summary>
     public string? PrefilledPoNumber { get; set; }
+
+    /// <summary>Folder the user selected when importing drawings; used by the Open Folder button.</summary>
+    public string? SourceFolder { get; set; }
 
     public DrawingEditorControl()
     {
@@ -378,5 +382,61 @@ public partial class DrawingEditorControl : System.Windows.Controls.UserControl
 
         // Raise ReturnRequested event
         ReturnRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Handle Open Folder button click
+    /// Opens the source folder the drawings were scanned from
+    /// </summary>
+    private void OpenFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(SourceFolder) || !Directory.Exists(SourceFolder))
+        {
+            System.Windows.MessageBox.Show($"Folder not found:\n{SourceFolder}", "Folder Not Found",
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo { FileName = SourceFolder, UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"Failed to open source folder: {ex.Message}");
+            System.Windows.MessageBox.Show($"Failed to open folder:\n{ex.Message}", "Error",
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+    }
+
+    /// <summary>
+    /// Handle row Open PDF button click
+    /// Opens the PDF file for the corresponding drawing row
+    /// </summary>
+    private void RowOpenPdfButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.FrameworkElement el && el.Tag is DrawingInfo drawing)
+            OpenPdf(drawing.PdfPath);
+    }
+
+    private static void OpenPdf(string path)
+    {
+        if (string.IsNullOrEmpty(path) || !File.Exists(path))
+        {
+            System.Windows.MessageBox.Show("PDF file not found.", "File Not Found",
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"Failed to open PDF: {ex.Message}");
+            System.Windows.MessageBox.Show($"Failed to open PDF:\n{ex.Message}", "Error",
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
     }
 }

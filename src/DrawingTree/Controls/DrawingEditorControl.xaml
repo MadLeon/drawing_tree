@@ -7,6 +7,10 @@
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="1000"
              Loaded="UserControl_Loaded">
+    <UserControl.Resources>
+        <!-- Material Icons path geometry -->
+        <Geometry x:Key="OpenInNewGeo">M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z</Geometry>
+    </UserControl.Resources>
     <Grid Background="White">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -44,11 +48,22 @@
                 </StackPanel>
 
                 <!-- Status display (middle) -->
-                <TextBlock x:Name="StatusText" 
-                           Grid.Column="1"
-                           VerticalAlignment="Center"
-                           FontSize="14"
-                           Foreground="#666666"/>
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <TextBlock x:Name="StatusText"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               Foreground="#666666"/>
+                    <Button x:Name="OpenFolderButton"
+                            Content="Open Folder"
+                            Height="24"
+                            FontSize="11"
+                            Padding="8,0"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            Click="OpenFolderButton_Click"/>
+                </StackPanel>
 
                 <!-- Buttons (right aligned) -->
                 <StackPanel Grid.Column="2" 
@@ -87,6 +102,7 @@
                     <ColumnDefinition Width="250"/>
                     <ColumnDefinition Width="400"/>
                     <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="50"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- No header for delete button column -->
@@ -138,6 +154,7 @@
                                     <ColumnDefinition Width="250"/>
                                     <ColumnDefinition Width="400"/>
                                     <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="50"/>
                                 </Grid.ColumnDefinitions>
 
                                 <!-- Delete button -->
@@ -182,12 +199,24 @@
                                          ToolTip="{Binding PdfPath}"/>
 
                                 <!-- Browse button -->
-                                <Button Grid.Column="4" 
-                                        Content="Browse" 
-                                        Width="90" 
+                                <Button Grid.Column="4"
+                                        Content="Browse"
+                                        Width="90"
                                         Height="30"
                                         Click="SelectFileButton_Click"
                                         Tag="{Binding}"/>
+
+                                <!-- Open PDF button -->
+                                <Button Grid.Column="5"
+                                        Style="{StaticResource IconLinkBtn}"
+                                        Padding="2,0"
+                                        ToolTip="Open PDF"
+                                        Click="RowOpenPdfButton_Click"
+                                        Tag="{Binding}">
+                                    <Viewbox Width="14" Height="14">
+                                        <Path Data="{StaticResource OpenInNewGeo}" Stretch="Uniform" Fill="#1976D2"/>
+                                    </Viewbox>
+                                </Button>
                             </Grid>
                         </Border>
                     </DataTemplate>

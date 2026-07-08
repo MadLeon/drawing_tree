@@ -376,7 +376,8 @@ public partial class MainWindow : Window
         MainDisplayArea.Children.Clear();
         _drawingEditorControl = new DrawingEditorControl
         {
-            PrefilledPoNumber = poNumber
+            PrefilledPoNumber = poNumber,
+            SourceFolder = folderDialog.SelectedPath
         };
         _drawingEditorControl.LoadDrawings(drawings);
         _drawingEditorControl.ReturnRequested  += OnDrawingEditorReturn;

@@ -277,6 +277,30 @@ public partial class PartEditorControl : UserControl
         ReturnRequested?.Invoke(this, EventArgs.Empty);
     }
 
+    private void OpenFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        string? pdfPath = _rows.FirstOrDefault(r => !string.IsNullOrEmpty(r.PdfPath))?.PdfPath;
+        string? folder = string.IsNullOrEmpty(pdfPath) ? null : Path.GetDirectoryName(pdfPath);
+
+        if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+        {
+            MessageBox.Show($"Folder not found:\n{folder}", "Folder Not Found",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo { FileName = folder, UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartEditor: failed to open folder: {ex.Message}");
+            MessageBox.Show($"Failed to open folder:\n{ex.Message}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────
 
     private static void OpenPdf(string path)
