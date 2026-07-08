@@ -550,11 +550,18 @@ public partial class AllPosControl : UserControl
 
         OeGroupsList.ItemsSource = groups;
 
-        OeGroupsScroll.Visibility  = Visibility.Visible;
+        OeViewRoot.Visibility     = Visibility.Visible;
         SimpleViewScroll.Visibility = Visibility.Collapsed;
         ToggleViewButton.Content   = "Simple View";
         FilterButton.Visibility   = Visibility.Visible;
         ColumnsButton.Visibility  = Visibility.Visible;
+    }
+
+    /// <summary>Keeps the OE view's global sticky header in horizontal lockstep with the content below it.</summary>
+    private void OeGroupsScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        if (e.HorizontalChange != 0)
+            OeHeaderScroll.ScrollToHorizontalOffset(e.HorizontalOffset);
     }
 
     // ── Simple View ───────────────────────────────────────────────────────────
@@ -590,7 +597,7 @@ public partial class AllPosControl : UserControl
 
         SimpleViewList.ItemsSource = groups;
 
-        OeGroupsScroll.Visibility  = Visibility.Collapsed;
+        OeViewRoot.Visibility     = Visibility.Collapsed;
         SimpleViewScroll.Visibility = Visibility.Visible;
         ToggleViewButton.Content    = "OE View";
         FilterButton.Visibility    = Visibility.Collapsed;

@@ -190,13 +190,66 @@
             <!-- Grouped by PO with virtualization only at the group (PO) level — mirrors Simple View's
                  mechanism below. DataGrid row-level virtualization/recycling was still laggy on scroll
                  even after removing RelativeSource bindings (see commit d1d7e62 / Issue #43), so OE View
-                 gave up the DataGrid entirely in favor of this proven-smooth structure. -->
-            <ScrollViewer x:Name="OeGroupsScroll"
-                          VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Auto"
-                          CanContentScroll="True"
-                          Visibility="Visible">
-                <ItemsControl x:Name="OeGroupsList" Background="White"
+                 gave up the DataGrid entirely in favor of this proven-smooth structure. A single global
+                 sticky header (Row 0) replaces the old per-PO-group header; its horizontal scroll offset
+                 is synced from the content ScrollViewer in code-behind (OeGroupsScroll_ScrollChanged),
+                 since ScrollViewer has no native "frozen row that still tracks horizontal scroll". -->
+            <Grid x:Name="OeViewRoot" Visibility="Visible">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Global sticky column header -->
+                <ScrollViewer Grid.Row="0" x:Name="OeHeaderScroll"
+                              HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Disabled"
+                              IsHitTestVisible="False">
+                    <Border Background="#F5F5F5" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1" Padding="0,6">
+                        <Grid MinWidth="1600">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="28"/>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowOe, Converter={StaticResource BoolToWidth}, ConverterParameter=80}"/>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowLine, Converter={StaticResource BoolToWidth}, ConverterParameter=70}"/>
+                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowCustomer, Converter={StaticResource BoolToWidth}, ConverterParameter=140}"/>
+                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowContact, Converter={StaticResource BoolToWidth}, ConverterParameter=160}"/>
+                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowQty, Converter={StaticResource BoolToWidth}, ConverterParameter=60}"/>
+                                <ColumnDefinition Width="220"/>
+                                <ColumnDefinition Width="50"/>
+                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowRev, Converter={StaticResource BoolToWidth}, ConverterParameter=60}"/>
+                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowDescription, Converter={StaticResource BoolToWidth}, ConverterParameter=*}"/>
+                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowRlsDate, Converter={StaticResource BoolToWidth}, ConverterParameter=100}"/>
+                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowDueDate, Converter={StaticResource BoolToWidth}, ConverterParameter=100}"/>
+                                <ColumnDefinition Width="50"/>
+                                <!-- Spacer matching the content ScrollViewer's vertical scrollbar width, so columns stay aligned at max horizontal scroll -->
+                                <ColumnDefinition Width="{x:Static SystemParameters.VerticalScrollBarWidth}"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="1"  Text="P.O."            FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="2"  Text="O.E."             FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="3"  Text="Job No"           FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="4"  Text="Line No"          FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="5"  Text="Customer"         FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="6"  Text="Contact"          FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="7"  Text="Qty"              FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="8"  Text="Drawing Number"   FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="9"  Text="PDF"              FontSize="11" FontWeight="SemiBold" Foreground="#555555" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="10" Text="Rev."             FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="11" Text="Description"      FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="12" Text="Rls Date"         FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="13" Text="Due Date"         FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                        </Grid>
+                    </Border>
+                </ScrollViewer>
+
+                <ScrollViewer Grid.Row="1" x:Name="OeGroupsScroll"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Auto"
+                              CanContentScroll="True"
+                              ScrollChanged="OeGroupsScroll_ScrollChanged">
+                <ItemsControl x:Name="OeGroupsList" Background="#F4F5F6"
+                              AlternationCount="100000"
                               VirtualizingPanel.IsVirtualizing="True"
                               VirtualizingPanel.VirtualizationMode="Recycling">
                     <ItemsControl.ItemsPanel>
@@ -206,58 +259,40 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type local:OePoGroup}">
-                            <Border Margin="0,8,0,0">
-                                <StackPanel>
-
-                                    <!-- Column header row — lives inside the PO group so it scrolls
-                                         horizontally in lockstep with the rows below it. -->
-                                    <Border Background="#F5F5F5" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1" Padding="0,6">
-                                        <Grid MinWidth="1600">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="28"/>
-                                                <ColumnDefinition Width="200"/>
-                                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowOe, Converter={StaticResource BoolToWidth}, ConverterParameter=80}"/>
-                                                <ColumnDefinition Width="80"/>
-                                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowLine, Converter={StaticResource BoolToWidth}, ConverterParameter=70}"/>
-                                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowCustomer, Converter={StaticResource BoolToWidth}, ConverterParameter=140}"/>
-                                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowContact, Converter={StaticResource BoolToWidth}, ConverterParameter=160}"/>
-                                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowQty, Converter={StaticResource BoolToWidth}, ConverterParameter=60}"/>
-                                                <ColumnDefinition Width="220"/>
-                                                <ColumnDefinition Width="50"/>
-                                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowRev, Converter={StaticResource BoolToWidth}, ConverterParameter=60}"/>
-                                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowDescription, Converter={StaticResource BoolToWidth}, ConverterParameter=*}"/>
-                                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowRlsDate, Converter={StaticResource BoolToWidth}, ConverterParameter=100}"/>
-                                                <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowDueDate, Converter={StaticResource BoolToWidth}, ConverterParameter=100}"/>
-                                                <ColumnDefinition Width="50"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="1"  Text="P.O."            FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                                            <TextBlock Grid.Column="2"  Text="O.E."             FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                                            <TextBlock Grid.Column="3"  Text="Job No"           FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                                            <TextBlock Grid.Column="4"  Text="Line No"          FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                                            <TextBlock Grid.Column="5"  Text="Customer"         FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                                            <TextBlock Grid.Column="6"  Text="Contact"          FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                                            <TextBlock Grid.Column="7"  Text="Qty"              FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                                            <TextBlock Grid.Column="8"  Text="Drawing Number"   FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                                            <TextBlock Grid.Column="9"  Text="PDF"              FontSize="11" FontWeight="SemiBold" Foreground="#555555" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="10" Text="Rev."             FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                                            <TextBlock Grid.Column="11" Text="Description"      FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                                            <TextBlock Grid.Column="12" Text="Rls Date"         FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                                            <TextBlock Grid.Column="13" Text="Due Date"         FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                                        </Grid>
-                                    </Border>
-
+                            <!-- PO group card: half-row gap above (skipped for the first group via
+                                 AlternationIndex, since it already sits right under the sticky header),
+                                 light top border, white card background against the page's light gray,
+                                 and a soft bottom shadow. The shadow is a plain gradient strip rather than
+                                 a Border.Effect — an Effect forces the whole subtree (including all the row
+                                 text) through a bitmap layer and visibly blurs it. -->
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Margin" Value="0,12,0,0"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ContentPresenter}, Path=(ItemsControl.AlternationIndex)}" Value="0">
+                                                <Setter Property="Margin" Value="0"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
                                     <!-- Rows within this PO group — not virtualized, matching Simple View's Items level. -->
                                     <ItemsControl ItemsSource="{Binding Items}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="{x:Type local:OeRowItem}">
                                                 <Border BorderBrush="#EEEEEE" BorderThickness="0,0,0,1" Padding="0,3">
                                                     <Border.Style>
-                                                        <!-- Child (expanded) rows get a light background, matching the simple view's child rows -->
+                                                        <!-- Child (expanded) rows: distinct background, and dim the columns duplicated
+                                                             from the parent row (TextElement.Foreground inherits down to any cell that
+                                                             doesn't set its own Foreground) so the child-specific Drawing/Rev/Description
+                                                             cells stand out by contrast. -->
                                                         <Style TargetType="Border">
                                                             <Setter Property="Background" Value="White"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding IsChildRow}" Value="True">
-                                                                    <Setter Property="Background" Value="#FAFAFA"/>
+                                                                    <Setter Property="Background" Value="#F1F3F7"/>
+                                                                    <Setter Property="TextElement.Foreground" Value="#9E9E9E"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -458,13 +493,17 @@
                                                             </Viewbox>
                                                         </Button>
 
-                                                        <!-- Rev. — plain TextBox -->
-                                                        <TextBox Grid.Column="10" Text="{Binding Revision, Mode=OneWay}" Style="{StaticResource SelectableCell}"/>
+                                                        <!-- Rev. — plain TextBox. Explicit Foreground so it stays full-contrast on child
+                                                             rows, overriding the dimmed color inherited from the row Border (this is the
+                                                             child's own data, not duplicated from the parent). -->
+                                                        <TextBox Grid.Column="10" Text="{Binding Revision, Mode=OneWay}" Style="{StaticResource SelectableCell}" Foreground="#212121"/>
 
-                                                        <!-- Description — searchable, with trimming/tooltip -->
+                                                        <!-- Description — searchable, with trimming/tooltip. Explicit Foreground for the
+                                                             same reason as Rev. above — this is child-specific data. -->
                                                         <Grid Grid.Column="11">
                                                             <TextBox Text="{Binding DescriptionDisplay, Mode=OneWay}"
-                                                                     ToolTip="{Binding DescriptionDisplay}">
+                                                                     ToolTip="{Binding DescriptionDisplay}"
+                                                                     Foreground="#212121">
                                                                 <TextBox.Style>
                                                                     <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
                                                                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -480,6 +519,7 @@
                                                                        local:HighlightBehavior.SearchTerm="{Binding SearchTerm}"
                                                                        TextTrimming="CharacterEllipsis"
                                                                        ToolTip="{Binding DescriptionDisplay}"
+                                                                       Foreground="#212121"
                                                                        VerticalAlignment="Center" Margin="8,0" FontSize="12">
                                                                 <TextBlock.Style>
                                                                     <Style TargetType="TextBlock">
@@ -514,12 +554,21 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
-                                </StackPanel>
-                            </Border>
+                                </Border>
+                                <Border Height="6">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#22000000" Offset="0"/>
+                                            <GradientStop Color="#00000000" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                            </StackPanel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-            </ScrollViewer>
+                </ScrollViewer>
+            </Grid>
 
             <!-- ── Simple View ────────────────────────────────────────────── -->
             <ScrollViewer x:Name="SimpleViewScroll"
