@@ -565,6 +565,15 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
+    /// Opens the OE sync review dialog (Issue #44).
+    /// </summary>
+    private void OeSyncMenu_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new Dialogs.OeSyncDialog { Owner = this };
+        dlg.ShowDialog();
+    }
+
+    /// <summary>
     /// Handle drawing viewer Return event (Home button). Returns to blank main view.
     /// </summary>
     private void OnDrawingViewerReturn(object? sender, EventArgs e)

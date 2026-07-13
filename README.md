@@ -91,6 +91,23 @@ Full schema: [`.github/skills/database/reference/schema-reference.md`](.github/s
 Copy-Item data/record.db "data/record.db.backup-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 ```
 
+### OE Sync
+
+Toolbar → gear menu → "OE Sync" opens a review dialog that parses the OE Excel log's
+DELIVERY SCHEDULE sheet, diffs it against the active `order_item` rows in the dev database, and
+lets a human approve each addition/modification/deactivation/anomaly before anything is written.
+A backup (see above) is taken automatically before the first write of each session.
+
+The Excel file path defaults to the production UNC path and can be overridden for local testing
+via `config.txt`:
+
+```
+OeExcelPath=reference/Order Entry Log.xlsm
+```
+
+`scripts/update_po_is_active.py` and `scripts/sync_prod_to_dev.py` are superseded by this feature
+(the old workflow depended on a since-abandoned Excel write-back column) but are kept in place.
+
 ## Logging
 
 Logs are written to `Logs/log_yyyy-MM-dd.txt`, auto-rotated daily, 7-day retention.

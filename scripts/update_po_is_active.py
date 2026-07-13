@@ -2,6 +2,11 @@
 <file>
   <name>update_po_is_active.py</name>
   <description>
+    DEPRECATED (Issue #44): superseded by the in-app "OE Sync" dialog (toolbar gear menu),
+    which diffs the OE Excel file against the DB directly instead of relying on column AA
+    (the write-back column this script reads is no longer trustworthy — see Issue #44).
+    Kept in place for reference; do not run against production.
+
     Full-sync script that reads active order_item IDs from the OE Excel log
     (column AA, read-only), resolves the corresponding purchase_order records
     via order_item -> job -> purchase_order, and updates purchase_order.is_active

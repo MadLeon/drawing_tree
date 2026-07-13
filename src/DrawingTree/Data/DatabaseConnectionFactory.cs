@@ -19,6 +19,9 @@ public static class DatabaseConnectionFactory
         AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\..\..\data\record.db");
     private static readonly string ProdDbPath = @"\\rtdnas2\OE\record.db";
 
+    /// <summary>Full resolved path to the dev database file (data/record.db).</summary>
+    public static string GetDevDbFullPath() => Path.GetFullPath(DevDbPath);
+
     /// <summary>
     /// Opens and returns a SQLite connection using the dev database path.
     /// Caller is responsible for disposing the connection.

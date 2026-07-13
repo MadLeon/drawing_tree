@@ -176,3 +176,18 @@ ALTER TABLE customer_contact_new RENAME TO customer_contact;
 CREATE INDEX IF NOT EXISTS idx_customer_contact_customer_id ON customer_contact(customer_id);
 CREATE INDEX IF NOT EXISTS idx_customer_contact_name ON customer_contact(contact_name);
 COMMIT;
+
+-- 2026-07-13: Add order_item.is_active for item-level shipped tracking (Issue #44)
+-- purchase_order.is_active is too coarse: a PO can be partially shipped
+-- (some order_items already delivered, others still open).
+ALTER TABLE order_item ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1;
+
+-- Backfill from the owning PO: items of an already-inactive PO start inactive;
+-- items of active POs start active (corrected later by OE sync runs).
+UPDATE order_item
+SET is_active = COALESCE((
+    SELECT po.is_active
+    FROM job j
+    JOIN purchase_order po ON po.id = j.po_id
+    WHERE j.id = order_item.job_id
+), 1);

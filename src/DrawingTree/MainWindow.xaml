@@ -64,6 +64,7 @@
                         <ContextMenu>
                             <MenuItem Header="Config" Click="ConfigMenu_Click"/>
                             <MenuItem Header="Run Script" Click="RunScriptMenu_Click"/>
+                            <MenuItem Header="OE Sync" Click="OeSyncMenu_Click"/>
                             <MenuItem Header="Suggestions to Leon" IsEnabled="False"/>
                         </ContextMenu>
                     </Button.ContextMenu>

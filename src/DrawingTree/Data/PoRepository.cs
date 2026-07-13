@@ -1023,7 +1023,7 @@ public class PoRepository
 
     // ── Private helpers ──────────────────────────────────────────────────────
 
-    private static long UpsertCustomer(Microsoft.Data.Sqlite.SqliteConnection conn,
+    internal static long UpsertCustomer(Microsoft.Data.Sqlite.SqliteConnection conn,
                                        Microsoft.Data.Sqlite.SqliteTransaction tx,
                                        string name)
     {
@@ -1037,7 +1037,7 @@ public class PoRepository
         return Convert.ToInt64(cmd.ExecuteScalar()!);
     }
 
-    private static long UpsertContact(Microsoft.Data.Sqlite.SqliteConnection conn,
+    internal static long UpsertContact(Microsoft.Data.Sqlite.SqliteConnection conn,
                                       Microsoft.Data.Sqlite.SqliteTransaction tx,
                                       long customerId, string contactName)
     {
@@ -1062,7 +1062,7 @@ public class PoRepository
         return Convert.ToInt64(cmd.ExecuteScalar()!);
     }
 
-    private static long UpsertPurchaseOrder(Microsoft.Data.Sqlite.SqliteConnection conn,
+    internal static long UpsertPurchaseOrder(Microsoft.Data.Sqlite.SqliteConnection conn,
                                             Microsoft.Data.Sqlite.SqliteTransaction tx,
                                             string poNumber, string oeNumber, long contactId,
                                             string? description = null, string? poRevision = null)
@@ -1090,7 +1090,7 @@ public class PoRepository
         return Convert.ToInt64(cmd.ExecuteScalar()!);
     }
 
-    private static long UpsertJob(Microsoft.Data.Sqlite.SqliteConnection conn,
+    internal static long UpsertJob(Microsoft.Data.Sqlite.SqliteConnection conn,
                                   Microsoft.Data.Sqlite.SqliteTransaction tx,
                                   string jobNumber, long poId)
     {
@@ -1109,7 +1109,7 @@ public class PoRepository
         return Convert.ToInt64(cmd.ExecuteScalar()!);
     }
 
-    private static long UpsertPart(Microsoft.Data.Sqlite.SqliteConnection conn,
+    internal static long UpsertPart(Microsoft.Data.Sqlite.SqliteConnection conn,
                                    Microsoft.Data.Sqlite.SqliteTransaction tx,
                                    string drawingNumber, string revision,
                                    string description, string unitPrice,

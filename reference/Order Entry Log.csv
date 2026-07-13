@@ -1,0 +1,435 @@
+﻿, ,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+O.E.:,Job #:,Customer:,Qty.:,Part #,Rev,Contact:,DWG Rel.,M,Descriptions:,Price:,P.O. :,Packing Slip,Qty.:,Invoice:,Del. Req'd:,Del. Ship'd:,Delay:,,,,,,,,,Order Item ID
+38123,70586,SNC-Lavalin,1,RT38-88080-0104-001-DD-1,1,Ping He,1/9/2024,21,Toggle Clamp,"$1,188.00 ",634828-18000-52X-R231- R.03,,,,31-Jan-24,,,,,,,,,,,725
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38502,71374,Woodbridge,3,MZ2x2-D-N-S7N,,Bobby Borshanpour,10/3/2024,1,Mz2x2-D Injector Nozzle,$675.00 ,20030822,,,,25-Oct-24,,,,,,,,,,,726
+38502,71375,Woodbridge,3,MZ2x2-D-AI-PIS,C,Bobby Borshanpour,10/3/2024,2,MZ2x2-D-AI-Piston,"$1,250.00 ",20030822,,,,25-Oct-24,,,,,,,,,,,727
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38539,71480,SNC-Lavalin,5,21RT-88030-0182-01-DD-2-R/W,0,Vishnu Joshi,10/28/2024,1,Bayonet - F/I for Swaging,$700.00 ,634828-15000-52BX-R079-R.07,,,,11-Nov-24,,,,,,,,,,,728
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38636,71718,Woodbridge,31500,RTD-3040/3033,,James Kearns,12/10/2024,2,Puffer Caps & Nozzles  34 x 50 Mesh,$3.44 ,PD-20551,,,,1-Dec-25,,,,,,,,,,,736
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38672,71851,Candu,2,RT-87550-0100-01-GA-E,0,Brandon Kwakye-Longdon,12/30/2024,1,Bellows Cutting Tool (SFCR),"$141,549.74 ",RT79-87550-PN-R001,,,,4-Jul-25,,,,,,,,,,,743
+38672,71873,Candu,Lot,Spare parts,,Brandon Kwakye,0109/25,2,To Capture cost for Spare parts,Included,RT79-87550-PN-R001,,,,4-Jul-25,,,,,,,,,,,746
+38672,72330,Candu,1 + 1,RT-87550-0145-01-GA-E,,Brandon Kwakye,4/24/2025,5,Shell Installation Tool Assy,"$1,950.00 ",RT79-87550-PN-R001-R.1,,,,21-Jul-25,,,,,,,,,,,786
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38740,72023,Candu,2,RT-87550-0100-01-GA-E,0,Sanchai Bartley-Ndiaye,2/11/2025,1,Bellows Cutting Tool (SFCR),"$141,549.74 ",RT98-87550-PN-R004-R.1,,,,19-Sep-25,,,,,,,,,,,748
+38740,72024,Candu,Lot,Spare parts,,Sanchai Bartley-Ndiaye,02/1125,2,To Capture cost for Spare parts,Included,RT98-87550-PN-R004-R.1,,,,19-Sep-25,,,,,,,,,,,749
+38740,72331,Candu,1 +1,RT-87550-0145-01-GA-E,,Brandon Kwakye,4/24/2025,5,Shell Installatin Tool Assy,"$1,950.00 ",RT98-87550-PN-R004-R.1,,,,19-Sep-25,,,,,,,,,,,787
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38744,72028,DJ Ind.,1,NPN,,Chris,2/15/2025,1,Auger to measure & Prelim Dwgs,,NPO #,,,,21-Feb-25,,,,,,,,,,,750
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+C.O.D,72113,Metonic,1,Misc,,Edwin,2/24/2025,1,Misc WJ Cutting,,NPO,,,,25-Feb-25,,,,,,,,,,,
+C.O.D,72113,Metonic,1,Misc,,Edwin,5/2/2025,2,Front Left Upright,,NPO,,,,9-May-25,,,,,,,,,,,756
+C.O.D,72113,Metonic,1,Misc,,Edwin,5/3/2025,3,Front Right upright,,NPO,,,,9-May-25,,,,,,,,,,,757
+C.O.D,72113,Metonic,1,Misc,,Edwin,5/4/2025,4,Rear Left Upright,,NPO,,,,9-May-25,,,,,,,,,,,758
+C.O.D,72113,Metonic,1,Misc,,Edwin,5/5/2025,5,Rear Right Upright,,NPO,,,,9-May-25,,,,,,,,,,,759
+C.O.D,72113,Metonic,1,EN-00403,,Edwin,5/6/2025,6,Motor Mount Sprocket,,NPO,,,,9-May-25,,,,,,,,,,,760
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38785,72139,Candu,1,RT-88230-0245-01-GA-E,,Angelica de la Barrera,3/4/2025,1,"Large Template , MK TP-1A","$39,444.42 ",RT79-88230-PN-R012- R.2,,,,24-Nov-25,,,,,,,,,,,761
+38785,72140,Candu,1,RT-88230-0246-01-GA-E,,Angelica de la Barrera,3/4/2025,2,"Large Template , MK TP-1C","$38,305.70 ",RT79-88230-PN-R012- R.2,,,,24-Nov-25,,,,,,,,,,,762
+38785,72141,Candu,1,RT-88230-0247-01-GA-E,,Angelica de la Barrera,3/4/2025,3,"Large Template , MK TP-2A","$39,684.13 ",RT79-88230-PN-R012- R.2,,,,24-Nov-25,,,,,,,,,,,763
+38785,72142,Candu,1,RT-88230-0248-01-GA-E,,Angelica de la Barrera,3/4/2025,4,"Large Template , MK TP-2C","$39,684.13 ",RT79-88230-PN-R012- R.2,,,,24-Nov-25,,,,,,,,,,,764
+38785,72143,Candu,1,RT-88230-0249-01-GA-D,,Angelica de la Barrera,3/4/2025,5,"Small Template , MK TP-3A","$16,803.50 ",RT79-88230-PN-R012- R.2,,,,24-Nov-25,,,,,,,,,,,765
+38785,72144,Candu,1,RT-88230-0250-01-GA-D,,Angelica de la Barrera,3/4/2025,6,"Small Template , MK TP-3C","$17,217.82 ",RT79-88230-PN-R012- R.2,,,,24-Nov-25,,,,,,,,,,,766
+38785,72145,Candu,1,RT-88230-0251-01-GA-D,,Angelica de la Barrera,3/4/2025,7,"Small Template , MK TP-4A","$17,288.48 ",RT79-88230-PN-R012- R.2,,,,24-Nov-25,,,,,,,,,,,767
+38785,72146,Candu,1,RT-88230-0252-01-GA-D,,Angelica de la Barrera,3/4/2025,8,"Small Template , MK TP-4C","$15,059.18 ",RT79-88230-PN-R012- R.2,,,,24-Nov-25,,,,,,,,,,,768
+38785,72147,Candu,2,RT-88230-0200-01-GA-E,,Angelica de la Barrera,3/4/2025,9,Upper Feeder Template Assy,"$84,206.32 ",RT79-88230-PN-R012- R.2,,,,24-Nov-25,,,,,,,,,,,769
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38804,72234,Candu,1,RT-88230-0245-01-GA-E,,Angelica de la Barrera,3/20/2025,1,"Large Template , MK TP-1A","$39,444.42 ",RT98-88230-PN-R010,,,,24-Nov-25,,,,,,,,,,,770
+38804,72235,Candu,1,RT-88230-0246-01-GA-E,,Angelica de la Barrera,3/20/2025,2,"Large Template , MK TP-1C","$38,305.70 ",RT98-88230-PN-R010,,,,24-Nov-25,,,,,,,,,,,771
+38804,72236,Candu,1,RT-88230-0247-01-GA-E,,Angelica de la Barrera,3/20/2025,3,"Large Template , MK TP-2A","$39,684.13 ",RT98-88230-PN-R010,,,,24-Nov-25,,,,,,,,,,,772
+38804,72237,Candu,1,RT-88230-0248-01-GA-E,,Angelica de la Barrera,3/20/2025,4,"Large Template , MK TP-2C","$39,684.13 ",RT98-88230-PN-R010,,,,24-Nov-25,,,,,,,,,,,773
+38804,72238,Candu,1,RT-88230-0249-01-GA-D,,Angelica de la Barrera,3/20/2025,5,"Small Template , MK TP-3A","$16,803.50 ",RT98-88230-PN-R010,,,,24-Nov-25,,,,,,,,,,,774
+38804,72239,Candu,1,RT-88230-0250-01-GA-D,,Angelica de la Barrera,3/20/2025,6,"Small Template , MK TP-3C","$17,217.82 ",RT98-88230-PN-R010,,,,24-Nov-25,,,,,,,,,,,775
+38804,72240,Candu,1,RT-88230-0251-01-GA-D,,Angelica de la Barrera,3/20/2025,7,"Small Template , MK TP-4A","$17,288.48 ",RT98-88230-PN-R010,,,,24-Nov-25,,,,,,,,,,,776
+38804,72241,Candu,1,RT-88230-0252-01-GA-D,,Angelica de la Barrera,3/20/2025,8,"Small Template , MK TP-4C","$15,059.18 ",RT98-88230-PN-R010,,,,24-Nov-25,,,,,,,,,,,777
+38804,72242,Candu,2,RT-88230-0200-01-GA-E,,Angelica de la Barrera,3/20/2025,9,Upper Feeder Template Assy,"$84,206.32 ",RT98-88230-PN-R010,,,,24-Nov-25,,,,,,,,,,,778
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38825,72280,Candu,1,RT-87640-70300-000-1-GA-E,0,Brandon Kwakye-Longdon,4/1/2025,1,Mockup LWTF Trolley,"$122,666.00 ",RT98-87590-PN-R007-R1,45192,1,53435,15-Aug-25,6/29/2026,318,,,,,,,,,781
+38825,72948,Candu,1,RT-87640-70300-000-1-GA-E,0,Laila Parveen,11/18/2025,2,LWTF Mock-UP Trolley Frame,"$45,623.00 ",RT98-87590-PN-R007-R1,45192,1,53435,15-Aug-25,6/29/2026,318,,,,,,,,,1013
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38835,72297,Bombardier,15,Sketch,,Nesha,4/8/2025,1,BA Trench Cover,,,,,,28-Apr-25,,,,,,,,,,,782
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38848,72326,DJ Ind.,1,Sample,,Chris Morrison,4/23/2025,1,Valve to repair Worn Areas & Chrome,,,,,,2-May-25,,,,,,,,,,,783
+38848,72327,DJ Ind.,1,Sample,,Chris Morrison,4/23/2025,2,Plunger Valve to Repair by Sleeve,,,,,,2-May-25,,,,,,,,,,,784
+38848,72328,DJ Ind.,1,Sample,,Chris Morrison,4/23/2025,3,Hand Pump hone after chrome,,,,,,2-May-25,,,,,,,,,,,785
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38865,72367,Candu,4,RT-87250-74016-000-1-GA-E,5,Angelica DeLa Barrera,5/2/2025,1,Pitch Yaw Mounting Frame Tool,"$161,870.00 ",RT98-87000-PN-R012-R.1,,,,29-Jul-26,,,,,,,,,,,788
+38865,72368,Candu,4,RT-87250-74010-000-1-GA-E,3,Angelica DeLa Barrera,5/2/2025,2,Pitch Yaw Mounting Table,"$181,755.00 ",RT98-87000-PN-R012-R.1,,,,29-Jul-26,,,,,,,,,,,789
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38867,72373,Candu,3,RT-87590-70000-000-1-GA-E,4,Sanchia Bartley-Ndiaye,5/5/2025,1,EFSF Removal Tool    (RT-7591-000-PRT),"$785,648.00 ",RT98-87590-PN-R006-R.1,,,,9-Oct-26,,,,,,,,,,,790
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38885,72395,Candu,1,RT-87630-71254-1000-1-GA-D,2,Ashna Irani-Kavasji,5/20/2025,1,VRS Manual Retrieval Tool,"$146,936.00 ",RT79-87630-PN-R005-R.1,,,,27-Aug-25,,,,,,,,,,,791
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38898,72422,Candu,1,0,0,Sanchia Bartley-Ndiaye,5/26/2025,1,Small Waste Transfer Flask,"$272,363.00 ",RT79-79112-PN-R002,,,,30-Nov-25,,,,,,,,,,,792
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38899,72425,Safran (Messier),1,DSK30906G01-113,,Pablo Garcida,5/27/2025,50,Loading Block,$345.00 ,4590038355,44570,1,52834,24-Jun-25,,,,,,,,,,,793
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38906,72438,Candu,3,RT-87250-0401-01-GA-e,,Sanchia Bartley-Ndiaye,6/2/2025,1,Installation Worktable,"$243,730.00 ",RT98-87250-PN-R007,,,,16-Oct-26,,,,,,,,,,,794
+38906,72439,Candu,3,RT-87250-70000-5000-1-GA-B,,Sanchia Bartley-Ndiaye,6/2/2025,2,Inst. Worktable Support Frame,"$62,656.00 ",RT98-87250-PN-R007,,,,16-Oct-26,,,,,,,,,,,795
+38906,72440,Candu,4,RT-87920-0303-01-GA-D,,Sanchia Bartley-Ndiaye,6/2/2025,3,CT Shield Sleeve- Short,"$31,479.00 ",RT98-87250-PN-R007,,,,16-Oct-26,,,,,,,,,,,796
+38906,72441,Candu,6,RT-87920-0051-01-DD-C,,Sanchia Bartley-Ndiaye,62/25,4,Hook Assy For Extension Tool,$582.00 ,RT98-87250-PN-R007,,,,16-Oct-26,,,,,,,,,,,797
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38935,72517,Candu,3,RT-87840-70000-1000-1-GA-B,,Sanchia Bartley-Ndiaye,6/27/2025,1,CV FME Inspection Tool,"$253,143.00 ",RT79-87840-PN-R002-R.1,,,,17-Nov-25,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38971,72600,Superwake,1,S93501-105,C,Miceeal Melville,7/24/2025,1,"Main Spar Mold ""A""",Lot,Verbal,,,,22-Aug-25,,,,,,,,,,,822
+38971,72600,Superwake,1,S93502-105,c,Miceeal Melville,7/24/2025,2,"Main Spar Mold ""B""",LOT $ 3692,Verbal,,,,22-Aug-25,,,,,,,,,,,823
+38971,72601,Superwake,1,S92201-105,c,Miceeal Melville,7/24/2025,3,Rear Spar Mold,"$1,950.00 ",Verbal,,,,22-Aug-25,,,,,,,,,,,824
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38973,72605,Candu,18,RT-88030-70120-2000-1-GA-B,1,Brandon Kwakye-Longdon,7/25/2025,1,SA Transport Container,"$24,549.00 ",RT79-88020-PN-R003-R.1,,,,19-Dec-25,,,,,,,,,,,828
+38973,72606,Candu,12+2,RT-88030-70121-2000-1-GA-B,1,Brandon Kwakye-Longdon,7/25/2025,2,EF Transport Container,"$9,820.00 ",RT79-88020-PN-R003-R.1,,,,19-Dec-25,,,,,,,,,,,829
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38988,72622,Candu,3,RT-87900-0400-1-GA-E,6,Brandon Kwakye-Longdon,8/1/2025,1,C6-Bore Gauge,"$31,966.90 ",RT98-87900-PN-R003,,,,28-Dec-25,,,,,,,,,,,832
+38988,72623,Candu,2,RT-87900-0500-01-GA-E,3,Brandon Kwakye-Longdon,8/1/2025,2,C6-Bore Gague- Narrow Landing,"$32,310.90 ",RT98-87900-PN-R003,,,,28-Dec-25,,,,,,,,,,,833
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+38990,72625,Candu,4,RT-88030-0053-01-GA-D,,Angelica de la Barrera,8/5/2025,1,Calandria Tube Extension Sleeve,"$1,612.00 ",RT98-87920-PN-R013,,,x,28-May-26,,,,,,,,,,,835
+38990,72626,Candu,4,RT-88020-0200-1-GA-C,,Angelica de la Barrera,8/5/2025,2,Feeder Port Angle Adjustment Tool,"$1,258.00 ",RT98-87920-PN-R013,,,,28-May-26,,,,,,,,,,,836
+38990,72627,Candu,3,RT-87920-74112-000-1-GA-E,,Angelica de la Barrera,8/5/2025,3,Lifting Grapple,"$10,765.00 ",RT98-87920-PN-R013,,,,28-May-26,,,,,,,,,,,837
+38990,72628,Candu,3,RT-87920-74107-000-1-GA-E,,Angelica de la Barrera,8/5/2025,4,Extension Trolley,"$27,754.00 ",RT98-87920-PN-R013,,,,28-May-26,,,,,,,,,,,838
+38990,72629,Candu,5,21RT-88070-0326-001-GA-1,,Angelica de la Barrera,8/5/2025,5,Cart Closure Plug Cart,"$10,517.00 ",RT98-87920-PN-R013,,,,28-May-26,,,,,,,,,,,839
+38990,72630,Candu,5,RT-87920-74104-000-1-GA-E,,Angelica de la Barrera,8/5/2025,6,Insertion Trolley & Handle,"$16,571.00 ",RT98-87920-PN-R013,,,,28-May-26,,,,,,,,,,,840
+38990,72631,Candu,3,RT-87590-0250-1-GA-0,,Angelica de la Barrera,8/5/2025,7,EF in Shuttle Flask Tool,"$4,197.00 ",RT98-87920-PN-R013,,,,28-May-26,,,,,,,,,,,841
+38990,72632,Candu,5,RT-87500-0108-1-GA-0,,Angelica de la Barrera,8/5/2025,8,EF Rotation Tool,"$4,192.00 ",RT98-87920-PN-R013,,,,28-May-26,,,,,,,,,,,842
+38990,72633,Candu,5,RT-87590-70201-4000-1-GA-B,,Angelica de la Barrera,8/5/2025,9,Manual Bellows Push Tool,"$46,607.00 ",RT98-87920-PN-R013,,,,28-May-26,,,,,,,,,,,843
+38990,72634,Candu,6,RT-79100-0100-01-GA-E,,Angelica de la Barrera,8/5/2025,10,Closure Plug Shuttle Box,"$4,517.00 ",RT98-87920-PN-R013,,,,28-May-26,,,,,,,,,,,844
+38990,72635,Candu,4,RT-87000-0480-1-GA-D,,Angelica de la Barrera,8/5/2025,11,Tool Delivery  Trough,"$12,782.00 ",RT98-87920-PN-R013,,,,28-May-26,,,,,,,,,,,845
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39004,72651,Candu,3,RT-87920-74245-048-1-DD-B,,Sanchia Bartley-Ndiaye,8/16/2025,1,Modified Air Motor Adaptor,"$2,154.00 ",RT98-87920-PN-R014-R.2,,,,16-Feb-26,,,,,,,,,,,853
+39004,72651,Candu,1,RT-87920-74245-048-1-DD-B,,Sanchia Bartley-Ndiaye,8/16/2025,1A,Modified Air Motor Adaptor,"$2,896.00 ",RT98-87920-PN-R014-R.2,,,,,,,,,,,,,,,1082
+39004,72652,Candu,3,RT-87920-74245-000-1-GA-E,,Sanchia Bartley-Ndiaye,8/16/2025,2,Air Motor Stande,"$25,597.00 ",RT98-87920-PN-R014-R.2,,,,16-Feb-26,,,,,,,,,,,854
+39004,72653,Candu,2,RT-88000-70097-000-1-GA-E,,Sanchia Bartley-Ndiaye,8/16/2025,3,Air Motor Support Stand,"$23,777.00 ",RT98-87920-PN-R014-R.2,,,,16-Feb-26,,,,,,,,,,,855
+39004,72654,Candu,1,RT-88000-70056-000-1-GA-E,,Sanchia Bartley-Ndiaye,8/16/2025,4,Air Motor Support with Stabalizer,"$17,784.00 ",RT98-87920-PN-R014-R.2,,,,16-Feb-26,,,,,,,,,,,856
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39016,72692,Candu,2,RT-87000-71100-1000-1-GA-E,,Angelica de la Barrera,8/29/2025,1,Bellows Replacement Tool Base,"$17,821.00 ",RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,865
+39016,72693,Candu,2,RT-87000-71150-1000-1-GA-E,,Angelica de la Barrera,8/29/2025,2,Plug Insertion Tool,"$38,376.00 ",RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,866
+39016,72694,Candu,2,RT-87000-71150-1021-1-DD-D,,Angelica de la Barrera,8/29/2025,3,Shield Plug to Handling Tool Adapter,"$2,911.00 ",RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,867
+39016,72695,Candu,2,21RT-81000-0140-001-GA-1,,Angelica de la Barrera,8/29/2025,4,Shield Plug Manual Insertion Tool,"$4,617.00 ",RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,868
+39016,72696,Candu,6,RT-87000-71150-1001-1-DD-D,,Angelica de la Barrera,8/29/2025,5,Bellows Replacement Shield Plug,"$10,453.00 ",RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,869
+39016,72697,Candu,2,RT-87000-71200-1000-1-GA-E,,Angelica de la Barrera,8/29/2025,6,Bellows Removal Cutting Tool,"$79,970.00 ",RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,870
+39016,72698,Candu,2,RT-87000-71225-1000-1-GA-E,,Angelica de la Barrera,8/29/2025,7,Bellows Removal Cutting Tool Drive,"$50,363.00 ",RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,871
+39016,72699,Candu,1,RT-87000-71300-1000-1-GA-E,,Angelica de la Barrera,8/29/2025,8,Bellows Replacement Machine Chuck,"$16,754.00 ",RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,872
+39016,72700,Candu,1,RT-87000-72000-1000-1-GA-E,,Angelica de la Barrera,8/29/2025,10,Tool Mockup Components,"$18,455.00 ",RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,873
+39016,72701,Candu,2,RT-87000-0223-1-GA-2,,Angelica de la Barrera,8/29/2025,11,ALT. weld head Mounting Tool,$775.00 ,RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,874
+39016,72702,Candu,2,RT-87000-0300-1-GA-D,,Angelica de la Barrera,8/29/2025,12,Tool Alignment Tool,"$6,408.00 ",RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,875
+39016,72703,Candu,2,RT-87000-0166-1-GA-C,,Angelica de la Barrera,8/29/2025,13,Extension Adaptor,"$2,057.00 ",RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,876
+39016,72704,Candu,2,RT38-15200-014-00-GA00-001,,Angelica de la Barrera,8/29/2025,14,Junction Control Box  ( with Cables),"$70,664.00 ",RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,877
+39016,72705,Candu,2,RT-87000-0165-1-SK-C,,Angelica de la Barrera,8/29/2025,15,Tool Ring Gauges ( Set),"$6,646.00 ",RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,878
+39016,72706,Candu,2,RT-87000-71200-1004-1-DD-B,,Angelica de la Barrera,8/29/2025,16,Axial Wear Ring .633,$660.00 ,RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,879
+39016,72707,Candu,2,RT-87000-71230-1011-1-DD-B,,Angelica de la Barrera,8/29/2025,17,Axial Wera Ring Cut 1,$662.00 ,RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,880
+39016,72708,Candu,2,RT-87000-71230-1012-1-DD-B,,Angelica de la Barrera,8/29/2025,18,Azial Wear Ring Cut 2,$657.00 ,RT79-87000-PN-R020,,,,30-Apr-26,,,,,,,,,,,881
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39021,72713,Candu,1,RT-87910-0130-1-GA-D,,Sanchia Bartley Ndiaye,9/8/2025,1,Measure/Cut off Bench,"$25,379.00 ",RT98-88010-PN-R010,,,,16-Mar-26,,,,,,,,,,,883
+39021,72714,Candu,1,RT-87910-0133-1-GA-0,,Sanchia Bartley Ndiaye,9/8/2025,2,Scribing Tool,"$5,164.00 ",RT98-88010-PN-R010,,,,17-Mar-26,,,,,,,,,,,884
+39021,72715,Candu,2,RT-88000-70059-000-1-GA-E,,Sanchia Bartley Ndiaye,9/8/2025,3,Bore Gague & Ring Gauge Cal. Stor Trough,"$3,278.00 ",RT98-88010-PN-R010,,,,18-Mar-26,,,,,,,,,,,885
+39021,72716,Candu,1,RT-88000-70011-000-1-GA-E,,Sanchia Bartley Ndiaye,9/8/2025,4,Tool E/F Assy Bench,"$12,468.00 ",RT98-88010-PN-R010,,,,19-Mar-26,,,,,,,,,,,886
+39021,72717,Candu,1,RT-88000-70036-002-2-DD-D,,Sanchia Bartley Ndiaye,9/8/2025,5,Tool End Stop Bench (RH),"$9,166.00 ",RT98-88010-PN-R010,,,,20-Mar-26,,,,,,,,,,,887
+39021,72718,Candu,1,RT-88000-70012-000-1-GA-E,,Sanchia Bartley Ndiaye,9/8/2025,6,Tool P/T Measuring Bench,"$26,145.00 ",RT98-88010-PN-R010,,,,21-Mar-26,,,,,,,,,,,888
+39021,72719,Candu,1,RT-88000-70035-000-1-GA-E,,Sanchia Bartley Ndiaye,9/8/2025,7,S/A Preparation Bench ( LH),"$85,101.00 ",RT98-88010-PN-R010,,,,22-Mar-26,,,,,,,,,,,889
+39021,72720,Candu,1,RT-88000-70036-000-1-GA-E,,Sanchia Bartley Ndiaye,9/8/2025,8,S/A Preparation Bench ( RH),"$83,447.00 ",RT98-88010-PN-R010,,,,23-Mar-26,,,,,,,,,,,890
+39021,72721,Candu,1,RT-88000-70050-000-1-GA-E,,Sanchia Bartley Ndiaye,9/8/2025,9,Expander Support Stand,"$9,079.00 ",RT98-88010-PN-R010,,,,24-Mar-26,,,,,,,,,,,891
+39021,72722,Candu,2,RT-88000-0013-01-GA-C,,Sanchia Bartley Ndiaye,9/8/2025,10,Roller Supports for Measuring Bench,"$1,964.00 ",RT98-88010-PN-R010,,,,25-Mar-26,,,,,,,,,,,892
+39021,72723,Candu,1,RT-88000-73530-100-1-DD-E,,Sanchia Bartley Ndiaye,9/8/2025,11,Roller Support Frame,"$4,397.00 ",RT98-88010-PN-R010,,,,26-Mar-26,,,,,,,,,,,893
+39021,72724,Candu,1,RT-88000-70035-002-1-DD-D,,Sanchia Bartley Ndiaye,9/8/2025,12,End Stop Bench ( LH),"$6,305.00 ",RT98-88010-PN-R010,,,,27-Mar-26,,,,,,,,,,,894
+39021,72725,Candu,2,RT-88000-70036-011-1-DD-D,,Sanchia Bartley Ndiaye,9/8/2025,13,SA Prep Bench (RH) Supt Stand,"$2,867.00 ",RT98-88010-PN-R010,,,,28-Mar-26,,,,,,,,,,,895
+39021,72726,Candu,2,RT-88000-70035-011-1-DD-D,,Sanchia Bartley Ndiaye,9/8/2025,14,Prep Bench ( LH) Supt Stand,"$2,867.00 ",RT98-88010-PN-R010,,,,29-Mar-26,,,,,,,,,,,896
+39021,73061,Candu,2,RT-88000-70059-000-1-GA-E,,Sanchia Bartley Ndiaye,1/26/2026,3A,Bore Gague & Ring Gauge Cal. Stor Trough,"$3,278.00 ",RT98-88010-PN-R010-R.1,,,,17-Jul-26,,,,,,,,,,,1086
+39021,73062,Candu,1,RT-88000-73530-100-1-DD-E,,Sanchia Bartley Ndiaye,1/26/2026,11A,Roller Support Frame,"$4,397.00 ",RT98-88010-PN-R010-R.1,,,,17-Jul-26,,,,,,,,,,,1087
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39023,72728,Candu,1,RT-87640-72150-000-1-GA-E,,Etianne Machado,9/22/2025,1,Airlock Trolley c/w Wings,"$297,681.00 ",RT98-87640-PN-R004,,,,24-Feb-25,,,,,,,,,,,897
+39023,72729,Candu,1+1,RT-87640-72150-000-1-GA-E,,Etianne Machado,9/22/2025,2 + 2A,LWTF Trolley- Corridor-NO Wing,"$317,378.00 ",RT98-87640-PN-R004,,,,24-Feb-25,,,,,,,,,,,898
+39023,72730,Candu,2,RT87640-73150-000-1-GA-E,,Etianne Machado,9/22/2025,3,Shuttle Flask Trolley FM Room,"$274,203.00 ",RT98-87640-PN-R004,,,,24-Feb-25,,,,,,,,,,,899
+39023,72731,Candu,1,RT-87640-70320-000-1-GA-E,,Etianne Machado,9/22/2025,4,Tool Trolley Track Asy ( Airlock),"$207,317.00 ",RT98-87640-PN-R004,,,,24-Feb-25,,,,,,,,,,,900
+39023,72732,Candu,1,RT-87640-70315-000-1-GA-E,,Etianne Machado,9/22/2025,5,Tool Trolley Track (SF Trolley & LWTF),"$339,127.00 ",RT98-87640-PN-R004,,,,24-Feb-25,,,,,,,,,,,901
+39023,72733,Candu,1,RT-87640-70315-049-1-GA-C,,Etianne Machado,9/22/2025,6,Flag Assembly 1,$812.00 ,RT98-87640-PN-R004,,,,24-Feb-25,,,,,,,,,,,902
+39023,72734,Candu,1,RT-87640-70315-050-1-GA-C,,Etianne Machado,9/22/2025,7,Flag Assembly 2,$790.00 ,RT98-87640-PN-R004,,,,24-Feb-25,,,,,,,,,,,903
+39023,72735,Candu,1,RT-87640-70315-051-1-GA-C,,Etianne Machado,9/22/2025,8,Flag Assembly 3,$798.00 ,RT98-87640-PN-R004,,,,24-Feb-25,,,,,,,,,,,904
+39023,72736,Candu,1,RT-87640-70315-052-1-GA-C,,Etianne Machado,9/22/2025,9,Flag Assembly 4,$802.00 ,RT98-87640-PN-R004,,,,24-Feb-25,,,,,,,,,,,905
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39040,72753,M.D.A,1,4034050-151,,Madhu Ragavan Mani,9/11/2025,1,LJA Pendulum Assu,"$139,436.00 ",PO1021410,,,,9-Jan-26,,,,,,,,,,,906
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39058,72775,Candu,6,RT-88040-0020-01-GA,,Angelica de la Barrera,9/18/2025,1,FC Axial Adjustment Tool,"$8,424.00 ",RT98-88040-PN-R004 R.1,,,,17-Jul-26,,,,,,,,,,,907
+39058,72776,Candu,2,RT-88030-0007-01-GA-1,2,Angelica de la Barrera,9/18/2025,2,EC Spacer Detention End Fitting Adaptor Tool,"$6,219.00 ",RT98-88040-PN-R004 R.1,,,,17-Jul-26,,,,,,,,,,,908
+39058,72777,Candu,4,RT-88030-0090-01-GA-C,,Angelica de la Barrera,9/18/2025,3,CT Extension Installation Tool,"$5,194.00 ",RT98-88040-PN-R004 R.1,,,,17-Jul-26,,,,,,,,,,,909
+39058,72778,Candu,6,RT-88080-71000-038-01-GA-E,,Angelica de la Barrera,9/18/2025,4,Shield Plug Installation Tool,"$25,949.00 ",RT98-88040-PN-R004 R.1,,,,17-Jul-26,,,,,,,,,,,910
+39058,72779,Candu,5,RT-88090-71060-2000-1-GA-D,,Angelica de la Barrera,9/18/2025,5,Closure Plug Installation Tool,"$97,326.00 ",RT98-88040-PN-R004 R.1,,,,17-Jul-26,,,,,,,,,,,911
+39058,72780,Candu,5,RT-88090-71055-2000-1-GA-D,,Angelica de la Barrera,9/18/2025,6,Calibration Fixture,"$22,143.00 ",RT98-88040-PN-R004 R.1,,,,28-Aug-26,,,,,,,,,,,912
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39073,72811,Candu,6,RT-88000-70057-020-1-GA-D,0,Angelica de la Barrera,9/29/2025,1,PT Expander Mandrel Clamp,"$1,280.00 ",RT98-87920-PN-R015,,,,23-Feb-26,,,,,,,,,,,918
+39073,72812,Candu,4,RT-88010-0160-1-DD-C,,Angelica de la Barrera,9/29/2025,2,End Fitting E-Face Inspection Ring,"$1,435.00 ",RT98-87920-PN-R015,,,,23-Feb-26,,,,,,,,,,,919
+39073,72813,Candu,7,RT-88000-70047-000-1-GA-D,,Angelica de la Barrera,9/29/2025,3,Seal Face Protective Sleeve (Reactor Face),"$2,314.00 ",RT98-87920-PN-R015,,,,23-Feb-26,,,,,,,,,,,920
+39073,72814,Candu,2,RT-88040-0005-01-GA-E,,Angelica de la Barrera,9/29/2025,4,Tool EF Levelling Tool,"$10,568.00 ",RT98-87920-PN-R015,,,,23-Feb-26,,,,,,,,,,,921
+39073,72815,Candu,2,RT-87600-0220-1-GA-E,,Angelica de la Barrera,9/29/2025,5,Lattice Sleeve Removal Tool ,"$21,257.00 ",RT98-87920-PN-R015,,,,23-Feb-26,,,,,,,,,,,922
+39073,72816,Candu,3,RT-87920-74105-000-1-GA-E,,Angelica de la Barrera,9/29/2025,6,Tool Extension Tool,"$38,367.00 ",RT98-87920-PN-R015,,,,23-Feb-26,,,,,,,,,,,923
+39073,72817,Candu,2,RT-88030-0140-1-DD-C,,Angelica de la Barrera,9/30/2025,13,PT Protective Sleeve  for Annulus Spacer,$765.00 ,RT98-87920-PN-R015,,,,23-Feb-26,,,,,,,,,,,924
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39074,72818,Candu,1,RT-88000-0300-000-01-GA-E,,Angelica de la Barrera,9/29/2025,1,Tool EF Tool Rack,"$29,696.00 ",RT98-87640-PN-R005,,,,27-Feb-26,,,,,,,,,,,925
+39074,72819,Candu,8,RT-87600-70050-1-GA-B,,Angelica de la Barrera,9/29/2025,2,Transfer Carts for Lattice Sleeve & Plugs,"$9,649.00 ",RT98-87640-PN-R005,,,,27-Feb-26,,,,,,,,,,,926
+39074,72820,Candu,3,RT-87910-0110-1-GA-0,,Angelica de la Barrera,9/29/2025,3,CT Storage Rack,"$25,262.00 ",RT98-87640-PN-R005,,,,27-Feb-26,,,,,,,,,,,927
+39074,72967,Candu,1,RT-88000-0300-000-01-GA-E,,Laila Parveen,12/4/2025,01A,Tool EF Tool Rack,"$29,696.00 ",RT98-87640-PN-R005-R1,,,,22-Apr-26,,,,,,,,,,,1092
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39082,72840,Candu,5,RT-88000-70010-000-1-GA-E,,Sanchia Bartley-Nidaye,10/3/2025,1,Tool E/F Lifting Beam,"$7,783.00 ",RT98-87920-PN-R017,,,,13-Feb-26,,,,,,,,,,,942
+39082,72841,Candu,1,RT-88000-70018-000-1-GA-E,,Sanchia Bartley-Nidaye,10/3/2025,2,Tool Lifting Rig for Measuring  Bench,"$10,783.00 ",RT98-87920-PN-R017,,,,13-Feb-26,,,,,,,,,,,943
+39082,72842,Candu,1,RT-87290-7020-1-GA-D,,Sanchia Bartley-Nidaye,10/3/2025,3,15T Spreader Beam for Fuel Channel,"$15,491.00 ",RT98-87920-PN-R017,,,,13-Feb-26,,,,,,,,,,,944
+39082,72843,Candu,1,RT-87250-0280-1-DD-C,,Sanchia Bartley-Nidaye,10/3/2025,4,5.5 Ton Heavy Worktable Spreader Beam,"$10,117.00 ",RT98-87920-PN-R017,,,,13-Feb-26,,,,,,,,,,,945
+39082,72844,Candu,2,RT-87290-7024-1-GA-D,,Sanchia Bartley-Nidaye,10/3/2025,5,6T Spreader Beam for  EFSP Removal,"$20,286.00 ",RT98-87920-PN-R017,,,,13-Feb-26,,,,,,,,,,,946
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+C.O.D,72855,Superwake,3,S60401-101,,Travis Krebs,10/7/2025,,Output Shaft,,,,,,7-Oct-25,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39132,72906,Candu,3,RT-87840-0220-01-GA-2,0,Laila Parveen,10/30/2025,1,Bearing Assy,"$29,698.00 ",RT79-87840-PN-R002-R1,,,,27-Feb-26,,,,,,,,,,,1083
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39142,72924,Candu,2,RT-87000-71100-1000-1-GA-E,,Angelica de la Barrera,11/13/2025,1,Bellows Replacement Tool Base,"$17,821.00 ",RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,989
+39142,72925,Candu,2,RT-87000-71150-1000-1-GA-E,,Angelica de la Barrera,11/13/2025,2,Plug Insertion Tool,"$38,376.00 ",RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,990
+39142,72926,Candu,2,RT-87000-71150-1021-1-DD-D,,Angelica de la Barrera,11/13/2025,3,Shield Plug to Handling Tool Adapter,"$2,911.00 ",RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,991
+39142,72927,Candu,2,21RT-81000-0140-001-GA-1,,Angelica de la Barrera,11/13/2025,4,Shield Plug Manual Insertion Tool,"$4,617.00 ",RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,992
+39142,72928,Candu,6,RT-87000-71150-1001-1-DD-D,,Angelica de la Barrera,11/13/2025,5,Bellows Replacement Shield Plug,"$10,453.00 ",RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,993
+39142,72929,Candu,2,RT-87000-71200-1000-1-GA-E,,Angelica de la Barrera,11/13/2025,6,Bellows Removal Cutting Tool,"$79,970.00 ",RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,994
+39142,72930,Candu,2,RT-87000-71225-1000-1-GA-E,,Angelica de la Barrera,11/13/2025,7,Bellows Removal Cutting Tool Drive,"$50,363.00 ",RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,995
+39142,72931,Candu,1,RT-87000-71300-1000-1-GA-E,,Angelica de la Barrera,11/13/2025,8,Bellows Replacement Machine Chuck,"$16,754.00 ",RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,996
+39142,72932,Candu,1,RT-87000-72000-1000-1-GA-E,,Angelica de la Barrera,11/13/2025,10,Tool Mockup Components,"$18,455.00 ",RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,997
+39142,72933,Candu,2,RT-87000-0223-1-GA-2,,Angelica de la Barrera,11/13/2025,11,ALT. weld head Mounting Tool,$775.00 ,RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,998
+39142,72934,Candu,2,RT-87000-0300-1-GA-D,,Angelica de la Barrera,11/13/2025,12,Tool Alignment Tool,"$6,408.00 ",RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,999
+39142,72935,Candu,2,RT-87000-0166-1-GA-C,,Angelica de la Barrera,11/13/2025,13,Extension Adaptor,"$2,057.00 ",RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,1000
+39142,72936,Candu,2,RT38-15200-014-00-GA00-001,,Angelica de la Barrera,11/13/2025,14,Junction Control Box  ( with Cables),"$70,664.00 ",RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,1001
+39142,72937,Candu,2,RT-87000-0165-1-SK-C,,Angelica de la Barrera,11/13/2025,15,Tool Ring Gauges ( Set),"$6,646.00 ",RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,1002
+39142,72938,Candu,2,RT-87000-71200-1004-1-DD-B,,Angelica de la Barrera,11/13/2025,16,Axial Wear Ring .633,$660.00 ,RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,1003
+39142,72939,Candu,2,RT-87000-71230-1011-1-DD-B,,Angelica de la Barrera,11/13/2025,17,Axial Wear Ring Cut 1,$662.00 ,RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,1004
+39142,72940,Candu,2,RT-87000-71230-1012-1-DD-B,,Angelica de la Barrera,11/13/2025,18,Axial Wear Ring Cut 2,$657.00 ,RT98-87000-PN-R018,,,,10-Aug-26,,,,,,,,,,,1005
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39144,72942,Candu,10+10,79F-31124-0008-01-DD-C,1,Olivier,11/15/2025,2,Spacer Clips ( Stock per Olivier),,NPO,,,,13-Feb-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39147,72945,Woodbridge,"16,000",RTD-3040/3033,,James Kearns,11/17/2025,1,Puff.Caps & Nozzles 34 x 40 mesh,$3.84 ,PD-21099,,,,1-Mar-26,,,,,,,,,,,1011
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39161,72964,Kinectrics,1,K-565052-DET-0002,0,Micheal O Brien,12/4/2025,10,Inflatale Seal Test Assy- Side Supt,$900.00 ,280106227,44878,1,53142,Jan-5-26,12/19/2025,#VALUE!,,,,,,,,,1028
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39178,73009,Candu,1,RT-87600-0250-1-GA-E,,Sachin Miranda,12/24/2025,10A,Lattice Sleeve Removal Tool HWT,"$43,580.00 ",RT98-87540-PN-R002-R.2,,,,8-May-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39192,73023,Candu,260,79RF-31170-0002-01-DD-2,,Padmashri Paranjape,12/29/2025,1,Screw Feeder Coupling Cap Scerw,$706.10 ,RT30-12100-PN-R002-R.2,,,,11-May-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39193,73027,Candu,1+1,XX-31912-959-1-GA-E,1,Ashna Irani-Kavasji,12/30/2025,1+ 4,Flask and Trolley for Garter Spring,"$49,452/$ 47,452",RT79-31912-PN-R006,,,,22-Apr-26,,,,,,,,,,,1114
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39202,73044,EHV Power,1-Set,Misc Parts,,,1/13/2026,1,Measure/Draw/ Make,,,,,,30-Jan-26,,,,,,,,,,,1130
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39209,73050,Candu,6,RT-88000-70047-000-1-GA-D,3,Laila Parveen,1/19/2026,10A,Protective Sleeve,"$1,799.00 ",RT98-88010-PN-R001-R.3,45204,6,,3-Apr-26,7/7/2026,95,,,,,,,,,1136
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39212,73057,ATS-Corp,1,125777129,AI,Scott Wilson,1/19/2026,1,Rolled & Machined Insert - F/I by ATS,"$3,900.00 ",83354-Rev.3,,1,,9-Mar-26,,,,,,,,,,,1145
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39214,73063,Candu,1,RT-88000-0300-01-GA-E,0,Angelica de la Barrera,1/27/2026,1,EF Tool Rack,"$29,696.00 ",RT79-87640-PN-R004,,,,17-Apr-26,,,,,,,,,,,1140
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39218,73068,Candu,1,RT-87600-0250-1-GA-E,,Laila Parveen,1/29/2026,10A,Lattice Sleeve Removal Tool,"$43,580.00 ",RT79-87540-PN-R001-R3,,,,14-May-26,,,,,,,,,,,1446
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39241,73101,Buffalo,1,254693,1,Hemal Prajapati,2/23/2026,1,Extruder Terminal Box 60mm,"$1,974.00 ",211262325,,,,30-Jun-26,,,,,,,,,,,1486
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39244,73104,M.D.A,2,4043463-151,,Dave Brydon,2/23/2026,1,Dee Lifting Fixture,"$11,787.00 ",PO1024780,,,,10-Apr-26,,,,,,,,,,,1490
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39250,73110,Aecon Ind,1,Fabricated Dwgs,,Hardik Vyas,3/2/2026,10,Cost for making 4 Dwgs,"$1,000.00 ",4500735264,,,,22-Jun-26,,,,,,,,,,,
+39250,73110,Aecon Ind,3,3000641938-IT-20,,Hardik Vyas,9/18/2025,20,"1.5"" Binning Cup  ( All Sizes)","$4,435.00 ",RT98-87920-PN-R017,,,,17-Jul-26,,,,,,,,,,,
+39250,73110,Aecon Ind,3,3000641938-IT-30,,Hardik Vyas,9/18/2025,30,"2.5"" Binning Cup  ( All Sizes)","$4,580.00 ",RT98-87920-PN-R017,,,,17-Jul-26,,,,,,,,,,,
+39250,73110,Aecon Ind,3,3000641938-IT-40,,Hardik Vyas,9/18/2025,40,"2.5"" Binning Cup  ( All Sizes)","$5,200.00 ",RT98-87920-PN-R017,,,,17-Jul-26,,,,,,,,,,,
+39250,73110,Aecon Ind,3,3000641938-IT-50,,Hardik Vyas,9/18/2025,50,"3.0"" Binnign Cup  ( All Sizes)","$5,966.00 ",RT98-87920-PN-R017,,,,17-Jul-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39255,73115,Woodbridge,2,58967-MAPIR,,James Kearns,3/4/2026,1,Single injector Block,"$6,720.00 ",PD-21252,,,,15-Apr-26,,,,,,,,,,,1498
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39264,73127,Candu,1,RT-87900-0500-01-GA-E,3,Laila Parveen,3/19/2026,2A,C6-Bore Gauge Narrow Landing,"$34,791.00 ",RT98-87900-PN-R003-R.1,,,,5-Jun-26,,,,,,,,,,,
+39264,73128,Candu,3,RT-87900-0420-1-DD-C,,Laila Parveen,3/19/2026,3A,Custom Probe Tips,$249.50 ,RT98-87900-PN-R003-R.1,,,,5-Jun-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39272,73145,Candu,1,NPN ( Electrical)-monorail,,Ashna Irani-Kavasji,3/24/2026,4,480V AC Power Cable 4 Cond-35ft,"$90,828.00 ",RT79-87271-PN-R003-Rev.1,,,,22-Jul-26,,,,,,,,,,,1520
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39273,73146,Candu,2,RT-87900-0400-1-GA-E,6,Laila Parveen,3/30/2026,01A,C6- Bore Gauge,"$35,742.00 ",RT79-87900-PN-R003-R.2,,,,31-Jul-26,,,,,,,,,,,1521
+39273,73147,Candu,6,RT-87900-0420-1-DD-C,,Laila Parveen,3/30/2026,03A,Custom Probe Tips,$246.00 ,RT79-87900-PN-R003-R.2,,,,31-Jul-26,,,,,,,,,,,1522
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39274,73148,Candu,1,RT-87910-0130-1-GA-O,7,Ashna Irani- Kavasji,3/30/2026,1,Bench Measurement/cut off Bench,"$38,482.00 ",RT79-87910-PN-R001,,,,2-Jul-26,,,,,,,,,,,1523
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39279,73153,Candu,2,RT-88000-70030-000-1-GA-C,1,Laila Parveen,3/30/2026,1,EF B8 Bore Gauge- R/W,"$1,460.00 ",RT98-87900-PN-R002.R.3,,,,6-Apr-26,,,,,,,,,,,1528
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39281,73155,Kinectric,LOT,Samples,,Emily,3/31/2026,,Tubesheet Mockup & removed Threads,,,,,,3-Apr-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39284,73158,Hybrid,1,Altrim HFH-Asy- R/w,,Peter,4/6/2026,1,Altrim HFH 1.25mm w/o#25-7231- Fremont,"$1,585.00 ",19741,45122,1,53343,24-Apr-26,,,,,,,,,,,
+39284,73159,Hybrid,1,Altrim HFH-Asy- R/w,,Peter,1/0/00,2,Altrim HFH 1.25mm w/o#25-7243- St.Peters,"$1,585.00 ",19741,45122,1,53343,0-Jan-00,,,,,,,,,,,
+39284,73160,Hybrid,1,Altrim HFH-Asy- R/w,,Peter,1/0/00,3,Altrim HFH 1.25mm w/o#25-7247- St.Peters,"$1,585.00 ",19741,45122,1,53343,0-Jan-00,,,,,,,,,,,
+39284,73161,Hybrid,1,MAPIR- R/W,,Peter,4/6/2026,4,4-Piston Blk- w/o 26-7337-  Huntsville,$940.00 ,19741,45123,1,53343,0-Jan-00,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39288,73165,Candu,10,RT-87120-70184-003-1-DD-B,0,Sachin Miranda,4/10/2026,01A,Feeder Mockup Seal Ring Washer,$766.75 ,RT98-87000-PN-R021- Rev.1,45184,10,53434,8-Jun-26,6/22/2026,14,,,,,,,,,1535
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39290,73167,Candu,10,RT-87000-72000-1006-1-DD-E,1,Laila Parveen,4/13/2026,01A,Mock-UP Ferule- C1,"$1,987.00 ",RT79-87000-PN-R020-Rev1,,,,15-Jun-26,,,,,,,,,,,1537
+39290,73168,Candu,2,RT-87000-72000-1002-1-DD-E,1,Laila Parveen,4/13/2026,02A,Mock-up Ferule- S1,"$2,259.00 ",RT79-87000-PN-R020-Rev.1,,,,15-Jun-26,,,,,,,,,,,1538
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39291,73169,Candu,10,RT-87000-72000-1006-1-DD-E,1,Laila Parveen,4/13/2026,01A,Mock-UP Ferule- C1,"$1,987.00 ",RT98-87000-PN-R018-Rev.1,,,,15-Jun-26,,,,,,,,,,,
+39291,73170,Candu,2,RT-87000-72000-1002-1-DD-E,1,Laila Parveen,4/13/2026,02A,Mock-up Ferule- S1,"$2,259.00 ",RT98-87000-PN-R018-Rev.1,,,,15-Jun-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39298,73180,Hunstville,3,MZ2X2-D-AI- R/W,,James kearns,4/21/2026,1,"Adj.  Injector asy -r/w S/N-220805-1-3,4 (68147-1-3-4)",2212 & 951.50,NPO#,45198,3,,15-May-26,7/6/2026,52,,,,,,,,,
+39298,73181,Hunstville,1,MZ4- Asy- R/W,,James kearns,4/21/2026,2,MZ4 Injector r/w- S/N 200108-2 (64245-2),"$2,025.43 ",NPO#,45198,1,,15-May-26,7/6/2026,52,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39300,73183,ATS-Corp,2,700650806,AB,Scott Wilson,6/10/2026,5 & 8,Sleeve Weldment,"$11,645.00 ",92844-Rev.22,,,,9-Aug-26,,,,,,,,,,,
+39300,73183,ATS-Corp,6,700650806,AB,Scott Wilson,6/10/2026,"1-4, 6,7",Sleeve Weldment,"$11,645.00 ",92844- Rev.22,,,,9-Oct-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39301,73185,Buffalo,1,2604658,0,Hemal Prajapati,4/23/2026,1,Machine Leveling Bar,"$3,497.00 ",211265100,,,,6-Jun-26,,,,,,,,,,,1552
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39302,73186,Candu,5,RT38-16100-004-000-5000-014-01-GA-C,1,Padmashri Paranjape,4/23/2026,1,Prop Rod Weldment- RH,$509.00 ,RT30-16100-PN-R003,,,,28-May-26,,,,,,,,,,,1553
+39302,73187,Candu,5,RT38-16100-004-000-5000-011-01-GA-C,1,Padmashri Paranjape,4/23/2026,2,Prop Rod Weldment- LH,$509.00 ,RT30-16100-PN-R003,,,,28-May-26,,,,,,,,,,,1554
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39303,73188,Candu,6,RT-88000-0103-01-GA-C,2,Yamini Chaudhry,4/23/2026,1,Split Halves ,"$1,214.00 ",RT79-88010-PN-R018-R.1,,,,3-Jul-26,,,,,,,,,,,1555
+39303,73189,Candu,1,RT-88010-0506-1-DD-C,2,Yamini Chaudhry,4/23/2026,2,Push Sleeve,"$1,930.00 ",RT79-88010-PN-R018-R.1,,,,3-Jul-26,,,,,,,,,,,1556
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39306,73195,ATS-Corp,2,700759338,AB,Scott Wilson,5/1/2026,1 & 2,Window Cover Weldment,"$4,660.00 ",93090-Rev.3,,,,10-Jul-26,,,,,,,,,,,
+39306,73195,ATS-Corp,4,700759338,AB,Scott Wilson,5/1/2026,3~6,Window Cover Weldment,"$4,660.00 ",93090-Rev.3,,,,28-Aug-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39307,73196,HV Grid,6,CT-240-2900B/ It.1 (HOLD),,Greg Lee,5/4/2026,1,"8"" dia Copper Casing Assy (1-set)","$11,886.00 ",12340-0101,,,,15-Aug-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39308,73197,ATS-Corp,1,700473149,AC,Sanket Patel,5/5/2026,1,Gauge Pipe,"$2,570.00 ",8250959,45203,1,,26-May-26,7/6/2026,41,,,,,,,,,1563
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39309,73198,ATS-Corp,1,700741777,AB,Scott Wilson,5/5/2026,1,CT Gripper Actuator,"$29,600.00 ",93095- Rev.1,,,,23-Jul-26,,,,,,,,,,,
+39309,73198,ATS-Corp,1,700741777,AB,Scott Wilson,5/6/2026,2,CT Gripper Actuator,"$29,600.00 ",93095- Rev.1,,,,17-Aug-26,,,,,,,,,,,
+39309,73198,ATS-Corp,1,700741777,AB,Scott Wilson,5/7/2026,3,CT Gripper Actuator,"$29,600.00 ",93095- Rev.1,,,,17-Sep-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39310,73199,ATS-Corp,2,700759343,AA,Abhijith Lakshmanan,5/7/2026,1 & 2,Stem,"$1,688.00 ",93129- Rev.16,,,,3-Jul-26,,,,,,,,,,,
+39310,73199,ATS-Corp,4,700759343,AA,Abhijith Lakshmanan,5/7/2026,3~6,Stem,"$1,689.00 ",93129- Rev.16,,,,21-Aug-26,,,,,,,,,,,
+39310,73200,ATS-Corp,4,700759354,AC,Abhijith Lakshmanan,5/7/2026,7 & 8,Vacuuming Pipe,"$1,160.00 ",93129- Rev.16,,,,3-Jul-26,,,,,,,,,,,
+39310,73200,ATS-Corp,8,700759354,AC,Abhijith Lakshmanan,5/7/2026,9 ~12,Vacuuming Pipe,"$1,160.00 ",93129- Rev.16,,,,21-Aug-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39311,73201,Bombardier,1,,,Tony Mazza,5/7/2026,,Part for material testing,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39312,73202,BWXT Med,5,K128412-779,A,John Ondrovcik,5/8/2026,1,"2"" Sanitary Adapter-DS",$798.00 ,1116481,,,,14-Jul-26,,,,,,,,,,,
+39312,73203,BWXT Med,5,K128412-742,A,John Ondrovcik,#REF!,2,"2"" Sanitary Adapter-HS",$910.00 ,1116481,,,,14-Jul-26,,,,,,,,,,,
+39312,73204,BWXT Med,1,K128412-738,,John Ondrovcik,#REF!,4,Bearing Housing _ Lower,"$7,589.00 ",1116481,,,,14-Jul-26,,,,,,,,,,,
+39312,73205,BWXT Med,1,K128412-740,,John Ondrovcik,#REF!,5,Bearing Housing Asy-MID Geared,$910.00 ,1116481,,,,14-Jul-26,,,,,,,,,,,
+39312,73206,BWXT Med,1,K128412-741,,John Ondrovcik,#REF!,6,Bearing Housing Asy- Upper,"$5,182.00 ",1116481,,,,14-Jul-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39313,73207,BWXT Med,5,ALP-DWG-106372,A,John Ondrovcik,5/8/2026,1,Agitator Shaft/ Blade Assy,"$7,966.00 ",1116532,,,,26-Oct-26,,,,,,,,,,,1569
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39314,73208,BWXT Med,10,K128412-743,,John Ondrovcik,1/0/00,1,Input Shaft,$676.00 ,1116533,,,,14-Jul-26,,,,,,,,,,,
+39314,73209,BWXT Med,10,K128412-744,,John Ondrovcik,1/0/00,2,Idler Shaft,$368.00 ,1116533,,,,14-Jul-26,,,,,,,,,,,
+39314,73210,BWXT Med,10,K128412-745,,John Ondrovcik,1/0/00,3,Gear Spacer,$252.00 ,1116533,,,,14-Jul-26,,,,,,,,,,,
+39314,73211,BWXT Med,40,K128412-746,,John Ondrovcik,1/0/00,4,Shim Washer,$102.00 ,1116533,,,,14-Jul-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39317,73219,ATS-Corp,2,700759336,AC,Scott Wilson,5/12/2026,1 & 2,"Stationary Tubing, Weldment","$13,430.00 ",93366- Rev.6,,,,30-Jun-26,,,,,,,,,,,
+39317,73219,ATS-Corp,4,700759336,AC,Scott Wilson,5/12/2026,3~6,"Stationary Tubing, Weldment","$13,430.00 ",93366- Rev.6,,,,25-Sep-26,,,,,,,,,,,
+39317,73220,ATS-Corp,4,700759355,AC,Scott Wilson,5/12/2026,7 ~10,Head Rotating Shaft Weldment,"$8,315.00 ",93366- Rev.6,,,,25-Sep-26,,,,,,,,,,,
+39317,73220,ATS-Corp,2,700759355,AC,Scott Wilson,5/12/2026,11 &12,Head Rotating Shaft Weldment,"$8,315.00 ",93366- Rev.6,,,,30-Jun-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+C.O.D,73221,Polyson,4,sample,,Danny,5/13/2026,1,Timing Hose - Rework,,Verbal,,,,15-May-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39319,73223,Bombardier,2,McM# 8911K397,,Tony Mazza,5/15/2026,1,"Brg Bronze Tube 1""w x3-1/2"" OD x 13""lg",,,,,,22-May-26,,,,,,,,,,,1572
+39319,73223,Bombardier,2,McM # 8911K375,,Tony Mazza,5/15/2026,2,"Brg Bronze 5/8""w  x 2""OD x 13""lg",,,,,,22-May-26,,,,,,,,,,,1573
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39320,73224,Bombardier,1,GO5318500-005-CJCT01-005 (HOLD),,Tony Mazza,5/15/2026,1,Target Board Assy-005001,,,,,,29-May-26,,,,,,,,,,,1574
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39326,73233,ATS-Corp,2,125808661,AE,Abhijith Lakshmanan,5/19/2026,1,Swab Tool Tube,"$6,360.00 ",93058-Rev.7,,,,9-Jul-26,,,,,,,,,,,1583
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39327,73234,HV Grid,2,Material only,,Greg Lee,5/20/2026,1,"3-1/2 Type ""L"" copper Tube x 13.77lg","$1,214.00 ",,,,,26-May-26,,,,,,,,,,,1584
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39329,73236,ATS-Corp,2,700741597,AB,Scott Wilson,5/26/2026,1 & 2,"Guide Ram Tube , Outer","$14,461.00 ",93641- Rev.1,,,,30-Jul-26,,,,,,,,,,,
+39329,73236,ATS-Corp,1,700741597,AB,Scott Wilson,5/26/2026,3,"Guide Ram Tube, Outer","$14,161.00 ",93641- Rev.1,,,,4-Aug-26,,,,,,,,,,,
+39329,73237,ATS-Corp,2,700821111,AB,Scott Wilson,5/26/2026,4 & 6,CT Gripper Adapter Plug,"$3,956.00 ",93641- Rev.1,,,,30-Jul-26,,,,,,,,,,,
+39329,73237,ATS-Corp,1,700821111,AB,Scott Wilson,5/26/2026,5,CT Gripper Adapter Plug,"$3,956.00 ",93641- Rev.1,,,,4-Aug-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39330,73238,Candu,2,RT-87272-73020-004-1-DD-D,2,Cindy Weng,5/27/2026,2,"Pulley Guard, Front Right",$660.00 ,216-02123-PN-T204,,,,17-Jul-26,,,,,,,,,,,1587
+39330,73239,Candu,2,RT-87272-73020-022-1-DD-D,2,Cindy Weng,5/27/2026,3,"Pulley Guard, Front Left",$660.00 ,216-02123-PN-T204,,,,17-Jul-26,,,,,,,,,,,1588
+39330,73240,Candu,4,RT-87272-73020-079-1-DD-D,0,Cindy Weng,5/27/2026,4,Light Curtain  Support,$570.00 ,216-02123-PN-T204,,,,17-Jul-26,,,,,,,,,,,1589
+39330,73241,Candu,2,RT-87272-73020-060-1-DD-B,2,Cindy Weng,5/27/2026,5,Pulley Cover RH,$870.00 ,216-02123-PN-T204,,,,17-Jul-26,,,,,,,,,,,1590
+39330,73242,Candu,2,RT-87272-73020-080-2-DD-D,0,Cindy Weng,5/27/2026,6,Guard Front Universal,"$1,950.00 ",216-02123-PN-T204,,,,17-Jul-26,,,,,,,,,,,1591
+39330,73243,Candu,2,RT-87272-73020-053-1-DD-D,1,Cindy Weng,5/27/2026,7,RH Front Pulley Guard,$675.00 ,216-02123-PN-T204,,,,17-Jul-26,,,,,,,,,,,1592
+39330,73244,Candu,2,RT-87272-73020-056-1-DD-B,2,Cindy Weng,5/27/2026,8,0,$675.00 ,216-02123-PN-T204,,,,17-Jul-26,,,,,,,,,,,1593
+39330,73245,Candu,1,RT-87272-73020-037-1-DD-B,2,Cindy Weng,5/27/2026,9,Drive Block,"$1,028.00 ",216-02123-PN-T204,,,,17-Jul-26,,,,,,,,,,,1594
+39330,73246,Candu,1,RT-87272-73020-036-1-DD-B,2,Cindy Weng,5/27/2026,10,Drive Spacer,$815.00 ,216-02123-PN-T204,,,,17-Jul-26,,,,,,,,,,,1595
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39331,73247,Candu,6,RT-88000-0103-01-GA-C,2,Angelica de la Barrera,5/27/2026,1,Split Halves,"$1,214.00 ",RT98-88010-PN-R018,,,,4-Aug-26,,,,,,,,,,,1596
+39331,73248,Candu,1,RT-88010-0506-1-DD-C,2,Angelica de la Barrera,5/27/2026,2,Push Sleeve,"$1,930.00 ",RT98-88010-PN-R018,,,,4-Aug-26,,,,,,,,,,,1597
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39332,73249,ATS-Corp,2,700741225,AB,Sanket Patil,5/27/2026,1,Tool Cart Frame,"$12,978.00 ",93716- R.3,,,,20-Jul-26,,,,,,,,,,,1598
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39334,73252,DJ Ind.,2,Sample,,Chris Morrison,6/4/2026,1,Keyed Sprockets repair Keyed Bores,,,,,,12-Jun-26,,,,,,,,,,,1600
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39335,73253,Kinectrics-Kip,2,NPD0059-7-DET-9115,,Minyoung Shin ( Ljubo),6/4/2026,10,Vaporizer Flange 120mm,"$14,948.00 ",280110756,,,,29-Jul-26,,,,,,,,,,,1601
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39336,73254,Kinectrics,1,K-402310-09-DET-5060-007,,Kristen Ho,6/4/2026,10,Double Spher Link c/w Tether Anchor,"$1,875.00 ",280110804,45197,1,53436,25-Jun-26,7/3/2026,8,,,,,,,,,1602
+39336,73255,Kinectrics,1,K-016300-04-DET-2310-004,,Kristen Ho,6/4/2026,20,Threaded Tail C,"$1,637.00 ",280110804,45197,1,53436,25-Jun-26,7/3/2026,8,,,,,,,,,1603
+39336,73256,Kinectrics,10,K-016300-04-DET-2110-002,,Kristen Ho,6/4/2026,30,Wheel Axle,$67.00 ,280110804,45197,10,53436,25-Jun-26,7/3/2026,8,,,,,,,,,1604
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39338,73259,ATS-Corp,4,700740795,AB,Justin LaFrance,6/4/2026,1~4,Cylinder Body,"$6,990.00 ",93820-Rev.1,,,,20-Aug-26,,,,,,,,,,,1607
+39338,73260,ATS-Corp,4,700740793,AB,Justin LaFrance,6/4/2026,5~8,Pull Piston,"$8,488.00 ",93820-Rev.1,,,,20-Aug-26,,,,,,,,,,,1608
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39339,73261,ATS-Corp,2,700771004,AB,Scott Wilson,6/4/2026,1 & 2,Body,"$1,964.00 ",93829-Rev.1,,,,31-Jul-26,,,,,,,,,,,
+39339,73262,ATS-Corp,2,700771020,AB,Scott Wilson,6/4/2026,3 & 4,Inner Shaft,"$1,136.00 ",93829-Rev.1,,,,31-Jul-26,,,,,,,,,,,
+39339,73263,ATS-Corp,2,700772340,AA,Scott Wilson,6/4/2026,8 & 9,Main Body Bar Handle,"$5,794.00 ",93829-Rev.1,,,,14-Aug-26,,,,,,,,,,,
+39339,73263,ATS-Corp,5,700772340,AA,Scott Wilson,6/5/2026,10 & 11,Main Body Bar Handle,"$5,795.00 ",93829-Rev.2,,,,28-Aug-26,,,,,,,,,,,
+39339,73264,ATS-Corp,2,700772357,AB,Scott Wilson,6/4/2026,14&15,Pt Extension Body,"$6,963.00 ",93829-Rev.1,,,,14-Aug-26,,,,,,,,,,,
+39339,73264,ATS-Corp,5,700772357,AB,Scott Wilson,6/4/2026,12-13 &16-18,Pt Extension Body,"$6,963.00 ",93829-Rev.1,,,,28-Aug-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39340,73265,ATS-Corp,4,700740791,AA,Justin LaFrance,6/5/2026,1~4,Gripper Pull Shaft,"$3,995.00 ",93849-Rev.2,,,,28-Jul-26,,,,,,,,,,,1614
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39341,73266,Kinectrics,2,K-016300-005-WLD-1300-400,3,Kristen HO,6/8/2026,10,SS Flange Only,"$2,720.00 ",280110650,,,,29-Jun-26,,,,,,,,,,,1615
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39342,73267,ATS-Corp,4,700740421,AC,Justin LaFrance,6/8/2026,1~4,Rear Guide Stop,"$4,864.00 ",93959- Rev.1,,,,31-Jul-26,,,,,,,,,,,1616
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39343,73268,Candu,1,RT-87110-0150-1-GA-E,0,Angelica de la Barrera,6/8/2026,2,PT Segment Cut & Measure F/I,"$28,821.00 ",RT98-87000-PN-R029,,,,17-Aug-26,,,,,,,,,,,1617
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39345,73270,ATS-Corp,2,700772444,AA,Scott Wilson,6/8/2026,1&2,Handle Short,$640.00 ,93966-Rev.10,,,,20-Jul-26,,,,,,,,,,,1619
+39345,73270,ATS-Corp,5,700772444,AA,Scott Wilson,6/8/2026,3~7,Handle Short,$640.00 ,93966- Rev.10,,,,28-Aug-26,,,,,,,,,,,
+39345,73271,ATS-Corp,10,700772448,AA,Scott Wilson,6/8/2026,8~12,Handle Long,$695.00 ,93966- Rev.10,,,,28-Aug-26,,,,,,,,,,,
+39345,73271,ATS-Corp,4,700772448,AA,Scott Wilson,6/8/2026,13~14,Handle Long,$695.00 ,93966- Rev.10,,,,20-Jul-26,,,,,,,,,,,
+39345,73272,ATS-Corp,2,700799360,AD,Scott Wilson,6/8/2026,15~16,Tie Plate,"$4,642.00 ",93966- Rev.10,,,,20-Jul-26,,,,,,,,,,,
+39345,73272,ATS-Corp,2,700799360,AD,Scott Wilson,6/8/2026,17~18,Tie Plate,"$4,642.00 ",93966- Rev.10,,,,28-Aug-26,,,,,,,,,,,
+39345,73273,ATS-Corp,2,700817215,AA,Scott Wilson,6/8/2026,19~20,Tommy Bar,$750.00 ,93966- Rev.10,,,,28-Aug-26,,,,,,,,,,,
+39345,73273,ATS-Corp,2,700817215,AA,Scott Wilson,6/8/2026,21~22,Tommy Bar,$750.00 ,93966-Rev.10,,,,20-Jul-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39346,73274,Bombardier,1,NPN-1372,,Tony Mazza,6/9/2026,1,AMAT Fixture Stand,,,,,,29-Jun-26,,,,,,,,,,,1620
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39347,73275,Candu,100,79RF-31170-0002-01-DD-C,0,Maryam Shafi,6/9/2026,,Cap Screw ( 17-4 PH ),$394.85 ,RT30-12100-PN-R002-R.3,45206,100,,9-Jul-26,7/9/2026,0,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39349,73277,Candu,100,98RF-31170-0002-01-DD-C,,Ashna Irani-Kavasji,6/12/2026,1,Feeder Coupling Cap Screw (Regular),$960.90 ,RT98-87110-PN-R007,,,,11-Mar-27,,,,,,,,,,,1623
+39349,73278,Candu,20,98RF-31170-0017-01-DD-C,,Ashna Irani-Kavasji,6/12/2026,2,Feeder Coupling Cap Screw (oversize),"$2,711.00 ",RT98-87110-PN-R007,,,,11-Mar-27,,,,,,,,,,,1624
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39350,73279,ATS-Corp,1,700827721,AC,Scott Wilson,6/18/2026,1,Collapsible Handle Weldment,"$4,570.00 ",94114- Rev.3,,,,22-Jul-26,,,,,,,,,,,1625
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39353,73282,BWXT(GE),1,NK29-DBN-35213-0144-P001,,Lisa Garey,6/19/2026,1,"Key, C/T Axial input drive",$778.00 ,724734,,,,10-Jul-26,,,,,,,,,,,1627
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39354,73283,Kipling,3,Sketch,B,Ahmed Ibrahim,6/19/2026,1,2mm Locator pin,$165.00 ,604917,,,,10-Jul-26,,,,,,,,,,,1628
+39354,73284,Kipling,3,Sketch,,Ahmed Ibrahim,6/19/2026,2,"""O"" Cavity Pin  (4140)",$126.00 ,604917,,,,10-Jul-26,,,,,,,,,,,1629
+39354,73285,Kipling,3,Sketch,,Ahmed Ibrahim,6/19/2026,3,"2"" Cavity Pin",$126.00 ,604917,,,,10-Jul-26,,,,,,,,,,,1630
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39355,73286,Bombardier,4,MS14182B-18,,Tony Mazza,6/19/2026,1,Driving Nut,,,,,,22-Jun-26,,,,,,,,,,,1631
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39356,73287,DJ Ind.,1,sample,,Chris Morrison,6/20/2026,1,Misc pce for measure & Quote,,,,,,20-Jun-26,,,,,,,,,,,1632
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39358,73289,ATS-Corp,1,NK38-DRAW-31935-10329-0001,,Scott Wilson,6/23/2026,1,Lead Shield Plate F/I for Repair Tap,"$1,481.00 ",,,,,3-Jul-26,,,,,,,,,,,1634
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39359,73290,Bombardier,1,G05346020-003-GT0014,,Tony Mazza,6/23/2026,1,Floor Board for Jeppesen asy,,,,,,10-Jul-26,,,,,,,,,,,1635
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39360,73291,Candu,3,RT-87830-0909-01-DD-C,,Cindy Weng,6/23/2026,1,Out Port Sleeve,$607.00 ,216-02123-PN-T208,,,,17-Jul-26,,,,,,,,,,,1636
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39361,73292,Honeywell,2,CT30782-1,,Melissa Lara,6/25/2026,10,Random vibration Fixture,"$32,450.00 ",6400485951E,,,,3-Sep-26,,,,,,,,,,,1637
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39362,73293,Bombardier,5,G05310000-001-PCRU01,,Tony Mazza,6/25/2026,1,Passanger Door Stepping prot cover,"$3,488.00 ",,,,,20-Aug-26,,,,,,,,,,,1638
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39363,73294,Bombardier,1,GC998-0001-1-SCLD25,,Tony Mazza,6/25/2026,1,Crawlway Floor Boards,,,,,,30-Jun-26,,,,,,,,,,,1639
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39364,73295,ABI Ltd,2,3660A121,,Mani M.,6/26/2026,10,"Tube, Tracking Roller","$1,290.00 ",4540015346-1,,,,10-Jul-26,,,,,,,,,,,1640
+39364,73306,ABI Ltd,1,00BF339-6-13.125,,Mani M.,7/8/2026,20,Belt Flattening Idler Pipe,"$1,252.00 ",4540015346-1,,,,22-Jul-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39365,73296,Candu,1,RT-87920-74104-000-1-GA-E,,Cindy Weng,6/26/2026,1,BOM It# 38 M/C  Screw Jack ,"$1,998.00 ",216-02123-PN-R210,,,,21-Aug-26,,,,,,,,,,,1641
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39366,73297,Bombardier,2,NPN,,Tony Mazza,6/29/2026,1,Alumium parts for Black Anodize,,,45199,2,,4-Jul-26,7/6/2026,2,,,,,,,,,1642
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39367,73298,Candu,3,147-31912-0571-01-GA-C,0,Nena Nicko,6/29/2026,1,Spacer Holder Assy,"$6,862.00 ",147-31912-PN-R237,,,,18-Aug-26,,,,,,,,,,,1643
+39367,73298,Candu,3,147-31912-0571-01-GA-C,0,Nena Nicko,6/29/2026,2,Spacer Holder Assy,"$6,862.00 ",147-31912-PN-R237,,,,15-Sep-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39368,73299,Bombardier,2,Sample,,Ann N,6/29/2026,1,4140 Blocks to be H/T to 45-50 RC,,,45200,2,,4-Jul-26,7/6/2026,2,,,,,,,,,1644
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39369,73300,ABI Ltd,2,00DV277-10-.5 - F/I,,Mani M.,6/30/2026,10,Roller 1-  F/I mat'l to cut only,$180.00 ,4540015402-1,45201,2,53437,3-Jul-26,7/6/2026,3,,,,,,,,,1645
+39369,73301,ABI Ltd,2,00DV277-15,,Mani M.,6/30/2026,20,Roller 1-  F/I mat'l to cut only,$180.00 ,4540015402-1,45201,2,53437,3-Jul-26,7/6/2026,3,,,,,,,,,
+39369,73302,ABI Ltd,2,00DV277-12,,Mani M.,6/30/2026,30,Roller 1-  F/I mat'l to cut only,$180.00 ,4540015402-1,45201,2,53437,3-Jul-26,7/6/2026,3,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39370,73303,Kinectrics,2,NSS-BS044-31790-S-0618-0001,0,Darren Chapmen,7/7/2026,10,Target Finger Tube Shielding,"$39,430.00 ",280111615,,,,29-Sep-26,,,,,,,,,,,1646
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39371,73304,ATS-Corp,1+1,700661419,AC,Justin LaFrance,7/8/2026,1 & 2,Chute Long Piece,"$5,685.00 ",94342- Rev.2,,,,2-Sep-26,,,,,,,,,,,
+39371,73304,ATS-Corp,1,700661419,AC,Justin LaFrance,7/8/2026,3,Chute Long Piece,"$6,150.00 ",94342- Rev.2,,,,19-Aug-26,,,,,,,,,,,
+39371,73305,ATS-Corp,5,700867010,AB,Justin LaFrance,7/8/2026,4~8,Cone With Flange,"$4,397.00 ",94342- Rev.2,,,,2-Sep-26,,,,,,,,,,,
+39371,73305,ATS-Corp,1,700867010,AB,Justin LaFrance,7/8/2026,9,Cone With Flange,"$4,750.00 ",94342- Rev.2,,,,19-Aug-26,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39372,73307,Candu,2,RT-88220-000001-01-GA-E,1,Judy Zhang,7/8/2026,1,New Feeder Tube carts w/cradles,"$1,972.00 ",RT98-88200-PN-R009,,,,20-Aug-26,,,,,,,,,,,1647
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39373,73308,Candu,1,RT-87250-70092-01-DD-C,0,Cindy Weng,7/8/2026,1,Large Clamp Block,$657.50 ,216-02123-PN-T214,,,,13-Aug-26,,,,,,,,,,,1648
+,,,,,,,,,,,,,,,,,,,,,,,,,,
+39374,73309,Woodbridge,16,MZ2x2-D-N-S7N,D,Bobby Borshanpour,7/9/2026,1,S7 Nozzles 4pc@  1.3/1.6/2.1 & 2.3mm,$660.00 ,20033210,,,,12-Aug-26,,,,,,,,,,,1649

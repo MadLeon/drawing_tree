@@ -1,0 +1,219 @@
+<Window x:Class="DrawingTree.Dialogs.OeSyncDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:DrawingTree.Models"
+        xmlns:controls="clr-namespace:DrawingTree.Controls"
+        Title="OE Sync"
+        Width="960" Height="680"
+        MinWidth="640" MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        ShowInTaskbar="False">
+
+    <Window.Resources>
+        <Geometry x:Key="CheckCircleGeo">M382-240 154-468l57-57 171 171 367-367 57 57-424 424Zm98 160q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z</Geometry>
+        <Geometry x:Key="CancelGeo">M336-280 480-424l144 144 56-56-144-144 144-144-56-56-144 144-144-144-56 56 144 144-144 144 56 56ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z</Geometry>
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="8"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ── Header: title/summary + select-all + Update ─────────────────── -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                <TextBlock Text="OE Sync" FontWeight="Bold" FontSize="15"/>
+                <TextBlock x:Name="SummaryLabel" FontSize="11" Foreground="#666" Margin="0,2,0,0"/>
+            </StackPanel>
+
+            <CheckBox Grid.Column="1" x:Name="SelectAllCheckBox"
+                      Content="Select All" VerticalAlignment="Center" Margin="0,0,16,0"
+                      Click="SelectAllCheckBox_Click"/>
+
+            <Button Grid.Column="2" Content="Update" Width="90" Height="30"
+                    Click="UpdateAllButton_Click"/>
+        </Grid>
+
+        <!-- ── Body: change list ─────────────────────────────────────────── -->
+        <Border Grid.Row="2" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="3">
+            <Grid>
+                <ItemsControl x:Name="ChangeList" Margin="4"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              VirtualizingPanel.ScrollUnit="Pixel"
+                              ScrollViewer.CanContentScroll="True"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <ItemsControl.Template>
+                        <ControlTemplate TargetType="ItemsControl">
+                            <ScrollViewer Padding="{TemplateBinding Padding}"
+                                          VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}"
+                                          CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}">
+                                <ItemsPresenter/>
+                            </ScrollViewer>
+                        </ControlTemplate>
+                    </ItemsControl.Template>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type models:OeSyncChange}">
+                                <Border x:Name="RowBorder" BorderBrush="#EEEEEE" BorderThickness="0,0,0,1" Padding="6,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="28"/>
+                                            <ColumnDefinition Width="72"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="30"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <CheckBox Grid.Column="0" VerticalAlignment="Top" Margin="0,2,0,0"
+                                                  IsChecked="{Binding IsSelected}"/>
+
+                                        <Border Grid.Column="1" x:Name="KindBadge" VerticalAlignment="Top"
+                                                CornerRadius="3" Padding="6,2" Margin="0,1,8,0">
+                                            <TextBlock x:Name="KindLabel" FontSize="10" FontWeight="SemiBold"
+                                                       HorizontalAlignment="Center"/>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="{Binding HeaderText}" FontSize="12" FontWeight="SemiBold" Foreground="#333"/>
+
+                                            <!-- Add -->
+                                            <StackPanel x:Name="AddPanel" Visibility="Collapsed" Margin="0,4,0,0">
+                                                <TextBlock FontSize="11" Foreground="#444" TextWrapping="Wrap">
+                                                    <Run Text="Qty: "/><Run Text="{Binding ExcelRow.Quantity, Mode=OneWay}"/>
+                                                    <Run Text="   Price: "/><Run Text="{Binding ExcelRow.Price, Mode=OneWay}"/>
+                                                    <Run Text="   Rev: "/><Run Text="{Binding ExcelRow.Revision, Mode=OneWay}"/>
+                                                    <Run Text="   PO: "/><Run Text="{Binding ExcelRow.PoNumber, Mode=OneWay}"/>
+                                                    <Run Text="   Customer: "/><Run Text="{Binding ExcelRow.Customer, Mode=OneWay}"/>
+                                                </TextBlock>
+                                                <TextBlock Text="{Binding ExcelRow.Description, Mode=OneWay}"
+                                                           FontSize="11" Foreground="#777" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                            </StackPanel>
+
+                                            <!-- Modify -->
+                                            <ItemsControl x:Name="ModifyPanel" Visibility="Collapsed"
+                                                          ItemsSource="{Binding FieldChanges}" Margin="0,4,0,0">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="{x:Type models:OeFieldChange}">
+                                                        <Grid Margin="0,1">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="100"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="20"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="{Binding FieldLabel}" FontSize="11" Foreground="#555"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding OldValue}" FontSize="11" Foreground="#E53935" TextWrapping="Wrap"/>
+                                                            <TextBlock Grid.Column="2" Text="→" FontSize="11" Foreground="#999" HorizontalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="3" Text="{Binding NewValue}" FontSize="11" Foreground="#1976D2" TextWrapping="Wrap"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <!-- Deactivate -->
+                                            <StackPanel x:Name="DeactivatePanel" Visibility="Collapsed" Margin="0,4,0,0">
+                                                <TextBlock Text="Shipped — all rows under this PO are no longer in the OE file" FontSize="11" Foreground="#777"/>
+                                            </StackPanel>
+
+                                            <!-- Anomaly -->
+                                            <StackPanel x:Name="AnomalyPanel" Visibility="Collapsed" Margin="0,4,0,0">
+                                                <TextBlock Text="{Binding AnomalyReason}" FontSize="11" Foreground="#B26A00" TextWrapping="Wrap"/>
+                                                <TextBlock x:Name="AnomalyExcelText" Text="{Binding ExcelRow, StringFormat='OE file: {0}'}" FontSize="11" Foreground="#444" Margin="0,2,0,0"/>
+                                                <TextBlock x:Name="AnomalyDbText" Text="{Binding DbRow, StringFormat='Database: {0}'}" FontSize="11" Foreground="#444" Margin="0,2,0,0"/>
+                                                <ItemsControl ItemsSource="{Binding SiblingExcelRows}" Margin="0,2,0,0">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate DataType="{x:Type models:OeExcelRow}">
+                                                            <TextBlock FontSize="11" Foreground="#777">
+                                                                <Run Text="Other row still in the OE file under this PO: Job #"/><Run Text="{Binding JobNumber, Mode=OneWay}"/>
+                                                                <Run Text=" / M"/><Run Text="{Binding LineNumber, Mode=OneWay}"/>
+                                                                <Run Text=" / "/><Run Text="{Binding PartNumber, Mode=OneWay}"/>
+                                                            </TextBlock>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+
+                                            <TextBlock x:Name="ErrorText" Text="{Binding ErrorMessage}" FontSize="11" Foreground="#E53935"
+                                                       TextWrapping="Wrap" Margin="0,4,0,0" Visibility="Collapsed"/>
+                                        </StackPanel>
+
+                                        <Button Grid.Column="3" Content="Update" Height="26" FontSize="11"
+                                                VerticalAlignment="Top" Margin="4,0,4,0"
+                                                Click="RowUpdateButton_Click"/>
+
+                                        <Grid Grid.Column="4" VerticalAlignment="Top" Margin="0,2,0,0">
+                                            <Path x:Name="CheckCirclePath" Data="{StaticResource CheckCircleGeo}"
+                                                  Stretch="Uniform" Fill="#43A047" Width="18" Height="18" Visibility="Collapsed"/>
+                                            <Path x:Name="CancelPath" Data="{StaticResource CancelGeo}"
+                                                  Stretch="Uniform" Fill="#E53935" Width="18" Height="18" Visibility="Collapsed"/>
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsSuccess}" Value="True">
+                                        <Setter TargetName="CheckCirclePath" Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsError}" Value="True">
+                                        <Setter TargetName="CancelPath" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="ErrorText" Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ExcelRow}" Value="{x:Null}">
+                                        <Setter TargetName="AnomalyExcelText" Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding DbRow}" Value="{x:Null}">
+                                        <Setter TargetName="AnomalyDbText" Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Add">
+                                        <Setter TargetName="AddPanel" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="KindLabel" Property="Text" Value="Add"/>
+                                        <Setter TargetName="KindBadge" Property="Background" Value="#E3F2FD"/>
+                                        <Setter TargetName="KindLabel" Property="Foreground" Value="#1976D2"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Modify">
+                                        <Setter TargetName="ModifyPanel" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="KindLabel" Property="Text" Value="Modify"/>
+                                        <Setter TargetName="KindBadge" Property="Background" Value="#FFF3E0"/>
+                                        <Setter TargetName="KindLabel" Property="Foreground" Value="#B26A00"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Deactivate">
+                                        <Setter TargetName="DeactivatePanel" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="KindLabel" Property="Text" Value="Shipped"/>
+                                        <Setter TargetName="KindBadge" Property="Background" Value="#F5F5F5"/>
+                                        <Setter TargetName="KindLabel" Property="Foreground" Value="#666666"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Anomaly">
+                                        <Setter TargetName="AnomalyPanel" Property="Visibility" Value="Visible"/>
+                                        <Setter TargetName="KindLabel" Property="Text" Value="Anomaly"/>
+                                        <Setter TargetName="KindBadge" Property="Background" Value="#FFEBEE"/>
+                                        <Setter TargetName="KindLabel" Property="Foreground" Value="#E53935"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <controls:LoadingOverlayControl x:Name="LoadingOverlay" Visibility="Collapsed" Panel.ZIndex="10"/>
+            </Grid>
+        </Border>
+
+        <!-- ── Footer: Cancel ────────────────────────────────────────────── -->
+        <Button Grid.Row="4" Content="Cancel" Width="80" Height="28" FontSize="11"
+                HorizontalAlignment="Right" IsCancel="True" Click="Cancel_Click"/>
+    </Grid>
+</Window>
