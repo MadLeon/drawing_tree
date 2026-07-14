@@ -4,8 +4,8 @@
         xmlns:models="clr-namespace:DrawingTree.Models"
         xmlns:controls="clr-namespace:DrawingTree.Controls"
         Title="OE Sync"
-        Width="960" Height="680"
-        MinWidth="640" MinHeight="420"
+        Width="1080" Height="680"
+        MinWidth="720" MinHeight="420"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
         ShowInTaskbar="False">
@@ -17,6 +17,8 @@
 
     <Grid Margin="16">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="6"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="8"/>
             <RowDefinition Height="*"/>
@@ -45,8 +47,22 @@
                     Click="UpdateAllButton_Click"/>
         </Grid>
 
+        <!-- ── Category filters: only checked categories are shown below ───── -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <CheckBox x:Name="ShowHandledCheckBox" Content="Show Handled" Margin="0,0,24,0"
+                      Click="ShowHandledCheckBox_Click"/>
+            <CheckBox x:Name="CategoryAddCheckBox" Content="Add" IsChecked="True" Margin="0,0,16,0"
+                      Click="CategoryFilterCheckBox_Click"/>
+            <CheckBox x:Name="CategoryModifyCheckBox" Content="Modify" IsChecked="True" Margin="0,0,16,0"
+                      Click="CategoryFilterCheckBox_Click"/>
+            <CheckBox x:Name="CategoryDeactivateCheckBox" Content="Shipped" IsChecked="True" Margin="0,0,16,0"
+                      Click="CategoryFilterCheckBox_Click"/>
+            <CheckBox x:Name="CategoryAnomalyCheckBox" Content="Anomaly" IsChecked="True"
+                      Click="CategoryFilterCheckBox_Click"/>
+        </StackPanel>
+
         <!-- ── Body: change list ─────────────────────────────────────────── -->
-        <Border Grid.Row="2" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="3">
+        <Border Grid.Row="4" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="3">
             <Grid>
                 <ItemsControl x:Name="ChangeList" Margin="4"
                               VirtualizingPanel.IsVirtualizing="True"
@@ -76,7 +92,9 @@
                                             <ColumnDefinition Width="28"/>
                                             <ColumnDefinition Width="72"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="60"/>
+                                            <ColumnDefinition Width="50"/>
+                                            <ColumnDefinition Width="50"/>
                                             <ColumnDefinition Width="30"/>
                                         </Grid.ColumnDefinitions>
 
@@ -128,7 +146,7 @@
 
                                             <!-- Deactivate -->
                                             <StackPanel x:Name="DeactivatePanel" Visibility="Collapsed" Margin="0,4,0,0">
-                                                <TextBlock Text="Shipped — all rows under this PO are no longer in the OE file" FontSize="11" Foreground="#777"/>
+                                                <TextBlock Text="{Binding DeactivateSummary}" FontSize="11" Foreground="#777"/>
                                             </StackPanel>
 
                                             <!-- Anomaly -->
@@ -147,6 +165,8 @@
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
+                                                <TextBlock x:Name="HandledSummaryText" Text="{Binding HandledSummary}" FontSize="11"
+                                                           FontStyle="Italic" Foreground="#43A047" Margin="0,2,0,0" Visibility="Collapsed"/>
                                             </StackPanel>
 
                                             <TextBlock x:Name="ErrorText" Text="{Binding ErrorMessage}" FontSize="11" Foreground="#E53935"
@@ -154,14 +174,27 @@
                                         </StackPanel>
 
                                         <Button Grid.Column="3" Content="Update" Height="26" FontSize="11"
-                                                VerticalAlignment="Top" Margin="4,0,4,0"
+                                                VerticalAlignment="Top" Margin="0,0,4,0"
+                                                IsEnabled="{Binding CanUpdate}"
                                                 Click="RowUpdateButton_Click"/>
 
-                                        <Grid Grid.Column="4" VerticalAlignment="Top" Margin="0,2,0,0">
+                                        <Button Grid.Column="4" Content="Undo" Height="26" FontSize="11"
+                                                VerticalAlignment="Top" Margin="0,0,4,0"
+                                                IsEnabled="{Binding CanUndo}"
+                                                Click="RowUndoButton_Click"/>
+
+                                        <Button Grid.Column="5" Content="Ignore" Height="26" FontSize="11"
+                                                VerticalAlignment="Top" Margin="0,0,4,0"
+                                                IsEnabled="{Binding CanIgnore}"
+                                                Click="RowIgnoreButton_Click"/>
+
+                                        <Grid Grid.Column="6" VerticalAlignment="Top" Margin="0,2,0,0">
                                             <Path x:Name="CheckCirclePath" Data="{StaticResource CheckCircleGeo}"
                                                   Stretch="Uniform" Fill="#43A047" Width="18" Height="18" Visibility="Collapsed"/>
                                             <Path x:Name="CancelPath" Data="{StaticResource CancelGeo}"
                                                   Stretch="Uniform" Fill="#E53935" Width="18" Height="18" Visibility="Collapsed"/>
+                                            <TextBlock x:Name="IgnoredText" Text="Ignored" FontSize="9" Foreground="#999"
+                                                       TextAlignment="Center" TextWrapping="Wrap" Visibility="Collapsed"/>
                                         </Grid>
                                     </Grid>
                                 </Border>
@@ -173,11 +206,20 @@
                                         <Setter TargetName="CancelPath" Property="Visibility" Value="Visible"/>
                                         <Setter TargetName="ErrorText" Property="Visibility" Value="Visible"/>
                                     </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsIgnored}" Value="True">
+                                        <Setter TargetName="IgnoredText" Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
                                     <DataTrigger Binding="{Binding ExcelRow}" Value="{x:Null}">
                                         <Setter TargetName="AnomalyExcelText" Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding DbRow}" Value="{x:Null}">
                                         <Setter TargetName="AnomalyDbText" Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding HandledAt}" Value="{x:Null}">
+                                        <Setter TargetName="HandledSummaryText" Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding HasFieldChanges}" Value="True">
+                                        <Setter TargetName="ModifyPanel" Property="Visibility" Value="Visible"/>
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding Kind}" Value="Add">
                                         <Setter TargetName="AddPanel" Property="Visibility" Value="Visible"/>
@@ -213,7 +255,7 @@
         </Border>
 
         <!-- ── Footer: Cancel ────────────────────────────────────────────── -->
-        <Button Grid.Row="4" Content="Cancel" Width="80" Height="28" FontSize="11"
+        <Button Grid.Row="6" Content="Cancel" Width="80" Height="28" FontSize="11"
                 HorizontalAlignment="Right" IsCancel="True" Click="Cancel_Click"/>
     </Grid>
 </Window>

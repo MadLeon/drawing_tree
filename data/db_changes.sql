@@ -191,3 +191,45 @@ SET is_active = COALESCE((
     JOIN purchase_order po ON po.id = j.po_id
     WHERE j.id = order_item.job_id
 ), 1);
+
+-- 2026-07-13: OE sync anomaly "handled" memory (Issue #44 follow-up)
+-- Records that a human already reviewed a given (job_number, line_number) Modify/Anomaly change
+-- (via Ignore, or a corrected Update) so a future OE sync run can recognize the exact same
+-- proposed change and suppress it instead of re-nagging from scratch. Matching is by
+-- `fingerprint` (a hash of the specific field values being proposed — see
+-- OeSyncService.ComputeFingerprint), not by job/line alone, so a genuinely new/different change
+-- on the same (job_number, line_number) still surfaces for review. Deleted automatically once
+-- the order_item ships (is_active -> 0), since it can never resurface in a diff again at that
+-- point.
+-- Deactivate ("Shipped") rows are a PO-level group of order_items, not a single (job, line) — so
+-- a Deactivate Ignore writes one row PER item in the group, all sharing the same
+-- ComputeDeactivateFingerprint (a hash of the whole group's membership, not a value pair). If the
+-- group's membership changes next sync (an item joins or leaves), at least one item's row stops
+-- matching and the whole group resurfaces for review.
+CREATE TABLE IF NOT EXISTS oe_anomaly_handled (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_number     TEXT NOT NULL,
+    line_number    TEXT NOT NULL,
+    anomaly_reason TEXT NOT NULL,   -- human-readable summary, for debugging only (not matched on)
+    fingerprint    TEXT NOT NULL,   -- hash of the proposed field value(s); the actual match key
+    action         TEXT NOT NULL,   -- 'ignored' | 'corrected'
+    handled_at     TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+    UNIQUE(job_number, line_number)
+);
+
+-- 2026-07-14: order_item.description (Issue #44 follow-up)
+-- The OE file's "Descriptions:" column is per-order text, not a physical-part attribute — two
+-- order_items can legitimately share the same part (drawing_number + revision), even the same
+-- purchase_order, and still carry different Description text (e.g. job #73158/#73159, same part,
+-- same PO 19741, different work-order/destination text baked into each line's description).
+-- Storing it on the shared `part` row caused OE sync to overwrite one job's description with
+-- another's on every run. order_item.description is per-line, so no row is ever shared and no
+-- overwrite conflict is possible. part.description remains as the part's own default/canonical
+-- text (set once on first creation, never overwritten by OE sync afterward).
+ALTER TABLE order_item ADD COLUMN description TEXT;
+
+-- Backfill from the currently-linked part's description as a reasonable starting point, so
+-- existing rows don't show blank Description until their next OE sync Modify.
+UPDATE order_item
+SET description = (SELECT p.description FROM part p WHERE p.id = order_item.part_id)
+WHERE description IS NULL;
