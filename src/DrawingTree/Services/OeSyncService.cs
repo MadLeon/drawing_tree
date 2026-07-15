@@ -188,12 +188,18 @@ public static class OeSyncService
 
         var matchedDbKeys = new HashSet<(string, string)>();
         var pendingAddRows = new List<(OeExcelRow Row, (string Job, string Line) Key)>();
+        // Every (excelRow, dbRow) pair matched below, regardless of whether TryAddModify actually
+        // surfaced a change — needed by DetectContactConflicts, which must see what EVERY job under
+        // a P.O. proposes for Contact, not just whichever one currently disagrees with the DB (see
+        // that method's doc comment for why).
+        var matchedPairs = new List<(OeExcelRow ExcelRow, OeDbRow DbRow)>();
 
         foreach (var (key, excelRow) in excelByKey)
         {
             if (dbByKey.TryGetValue(key, out var dbRow))
             {
                 matchedDbKeys.Add(key);
+                matchedPairs.Add((excelRow, dbRow));
                 TryAddModify(changes, excelRow, dbRow, handledAnomalies);
             }
             else if (allOrderItems.TryGetValue(key, out var archived))
@@ -205,6 +211,7 @@ public static class OeSyncService
                 // automatic, not a judgment call: fold it into a normal Modify (reactivateItem/
                 // reactivatePo) so Update/Update-All apply it exactly like any other field change,
                 // with no separate Anomaly review step.
+                matchedPairs.Add((excelRow, archived.Row));
                 TryAddModify(changes, excelRow, archived.Row, handledAnomalies,
                     reactivateItem: archived.ItemInactive, reactivatePo: archived.PoInactive);
             }
@@ -214,14 +221,16 @@ public static class OeSyncService
             }
         }
 
-        // A row that fails full-diff eligibility (a parse warning, e.g. an unparseable Price cell)
-        // or collides with a sibling under the same Job#+M (duplicate-key anomaly) is excluded from
-        // excelByKey above, but it is still physically present in the OE file — its own anomaly is
-        // already raised separately. Without this, the matching DB row would wrongly look "missing
-        // from the OE file" and get misclassified as shipped/Deactivate below.
+        // A row that fails full-diff eligibility (a parse warning, e.g. an unparseable Price cell or
+        // a blank "M" column — see ParseLineNumber) or collides with a sibling under the same Job#+M
+        // (duplicate-key anomaly) is excluded from excelByKey above, but it is still physically
+        // present in the OE file — its own anomaly is already raised separately. Without this, the
+        // matching DB row would wrongly look "missing from the OE file" and get misclassified as
+        // shipped/Deactivate below. Only the job number needs to be non-blank here: a blank Line is
+        // itself a legitimate (job, "") key — excluding it would defeat the whole point of this set.
         var allExcelPresenceKeys = excelRows
             .Select(MatchKeyOf)
-            .Where(k => k.Job.Length > 0 && k.Line.Length > 0)
+            .Where(k => k.Job.Length > 0)
             .ToHashSet();
         foreach (var d in dbRows)
         {
@@ -342,10 +351,75 @@ public static class OeSyncService
             }
         }
 
+        // purchase_order stores Contact and O.E. # as single columns shared by every job under it,
+        // but the OE file can legitimately list a different value per job for the same P.O.
+        // (different people/orders sharing one P.O.). See DetectPoLevelFieldConflicts's doc comment.
+        DetectPoLevelFieldConflicts(changes, matchedPairs, handledAnomalies,
+            fieldLabel: "Contact:", fieldDescription: "Contact", proposedValueOf: r => r.Contact);
+        DetectPoLevelFieldConflicts(changes, matchedPairs, handledAnomalies,
+            fieldLabel: "O.E.:", fieldDescription: "OE Number", proposedValueOf: r => r.OeNumber);
+
         for (int i = 0; i < changes.Count; i++)
             changes[i].SequenceIndex = i;
 
         return changes;
+    }
+
+    /// <summary>
+    /// Detects when different jobs matched under the same P.O. propose different values for a field
+    /// that purchase_order only has room to store once (Contact, O.E. #). Left alone, that's an
+    /// endless back-and-forth that never converges: applying job A's proposed value makes the DB
+    /// agree with A and disagree with B, so next sync run B's row now looks "changed" and proposes
+    /// flipping it back — which then makes A look changed again, forever, because the data model has
+    /// no room for two simultaneously-correct answers.
+    ///
+    /// Detecting this from this run's Modify diffs alone doesn't work: diffing is always against the
+    /// single current DB value, so on any given run only whichever job currently disagrees shows a
+    /// diff at all — there's never two conflicting diffs visible at once to compare. Detection instead
+    /// uses <paramref name="matchedPairs"/> — every job matched to an order_item this run, regardless
+    /// of whether it produced a diff — so it sees what EVERY job under a P.O. independently proposes
+    /// and can tell those proposals disagree with EACH OTHER, not just with the DB.
+    ///
+    /// Stopgap (see Issue #47 follow-up discussion) until this field is demoted to job-level: strip
+    /// the field's diff from every Modify under a conflicted P.O. so it stops being silently
+    /// re-proposed/re-applied, and raise a companion Anomaly explaining why — informational, not
+    /// really "resolvable" through the app, but dismissible via the same Ignore/fingerprint memory as
+    /// any other Anomaly.
+    /// </summary>
+    private static void DetectPoLevelFieldConflicts(List<OeSyncChange> changes,
+        List<(OeExcelRow ExcelRow, OeDbRow DbRow)> matchedPairs,
+        IReadOnlyDictionary<(string Job, string Line), OeAnomalyHandled> handledAnomalies,
+        string fieldLabel, string fieldDescription, Func<OeExcelRow, string> proposedValueOf)
+    {
+        var conflictedPoPairs = matchedPairs
+            .Where(p => !string.IsNullOrWhiteSpace(proposedValueOf(p.ExcelRow)))
+            .GroupBy(p => p.DbRow.PoId)
+            .Where(g => g.Select(p => proposedValueOf(p.ExcelRow).Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Count() > 1)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        if (conflictedPoPairs.Count == 0) return;
+
+        foreach (var change in changes.Where(c => c.Kind == OeSyncChangeKind.Modify
+                     && c.PoId.HasValue && conflictedPoPairs.ContainsKey(c.PoId.Value)).ToList())
+        {
+            var fieldChange = change.FieldChanges.FirstOrDefault(f => f.FieldLabel == fieldLabel);
+            if (fieldChange == null) continue;
+
+            change.FieldChanges.Remove(fieldChange);
+            bool removeChange = change.FieldChanges.Count == 0 && !change.NeedsItemReactivation && !change.NeedsPoReactivation;
+
+            var jobNumber = change.ExcelRow?.JobNumber ?? change.DbRow?.JobNumber ?? "";
+            var others = string.Join("; ", conflictedPoPairs[change.PoId!.Value]
+                .Where(p => !string.Equals(p.ExcelRow.JobNumber, jobNumber, StringComparison.OrdinalIgnoreCase))
+                .Select(p => $"Job #{p.ExcelRow.JobNumber} -> \"{proposedValueOf(p.ExcelRow).Trim()}\"")
+                .Distinct());
+            AddAnomaly(changes, change.ExcelRow, change.DbRow,
+                $"Conflicting {fieldDescription} under the same P.O.: Job #{jobNumber} proposes \"{fieldChange.NewValue}\", " +
+                $"but {others} — a purchase_order has only one {fieldDescription}, needs manual review",
+                handledAnomalies);
+
+            if (removeChange) changes.Remove(change);
+        }
     }
 
     /// <summary>

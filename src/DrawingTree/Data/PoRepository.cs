@@ -277,7 +277,10 @@ public class PoRepository
                     PoNumber:      reader.GetString(1),
                     OeNumber:      reader.IsDBNull(2)  ? null : reader.GetString(2),
                     JobNumber:     reader.GetString(3),
-                    LineNumber:    reader.GetInt32(4),
+                    // GetValue().ToString(), not GetInt32(): line_number is TEXT-affinity enough
+                    // that some rows hold non-numeric values (e.g. "10A") — GetInt32 would silently
+                    // truncate those instead of preserving them (see OeSyncRepository.GetActiveSnapshot).
+                    LineNumber:    reader.GetValue(4)?.ToString() ?? "",
                     CustomerName:  reader.IsDBNull(5)  ? null : reader.GetString(5),
                     ContactName:   reader.IsDBNull(6)  ? null : reader.GetString(6),
                     Quantity:      reader.GetInt32(7),
@@ -963,6 +966,30 @@ public class PoRepository
             using var conn = DatabaseConnectionFactory.OpenDevConnection();
             using var tx = conn.BeginTransaction();
 
+            // Pre-flight duplicate check: order_item has UNIQUE(job_id, line_number), so writing a
+            // line_number already used by a sibling under the same job throws a raw SQLite exception
+            // instead of a message the user can act on. Check first and fail with a clear reason.
+            using (var jobCmd = conn.CreateCommand())
+            {
+                jobCmd.Transaction = tx;
+                jobCmd.CommandText = "SELECT job_id FROM order_item WHERE id = @id";
+                jobCmd.Parameters.AddWithValue("@id", input.OrderItemId);
+                var jobIdResult = jobCmd.ExecuteScalar();
+                if (jobIdResult != null)
+                {
+                    using var dupCmd = conn.CreateCommand();
+                    dupCmd.Transaction = tx;
+                    dupCmd.CommandText = "SELECT id FROM order_item WHERE job_id = @jid AND line_number = @ln AND id <> @id";
+                    dupCmd.Parameters.AddWithValue("@jid", jobIdResult);
+                    dupCmd.Parameters.AddWithValue("@ln",  input.LineNumber);
+                    dupCmd.Parameters.AddWithValue("@id",  input.OrderItemId);
+                    var conflictId = dupCmd.ExecuteScalar();
+                    if (conflictId != null)
+                        return new EditItemResult(false,
+                            $"Line number '{input.LineNumber}' is already used by another item (order_item id={conflictId}) in this job.");
+                }
+            }
+
             bool partUpdated = false;
             long partId = 0;
 
@@ -1267,7 +1294,7 @@ public record PoOrderItemRow(
 /// <param name="PoDescription">purchase_order.description; null if not set</param>
 public record PoListRow(
     int PoId, string PoNumber, string? OeNumber,
-    string JobNumber, int LineNumber,
+    string JobNumber, string LineNumber,
     string? CustomerName, string? ContactName,
     int Quantity, string? DrawingNumber, string? Revision, string? Description,
     string? ReleaseDate, string? DueDate,
@@ -1358,7 +1385,7 @@ public class EditItemInput
     public string Description   { get; set; } = string.Empty;
     public string UnitPrice     { get; set; } = string.Empty;
     public int    Quantity      { get; set; } = 1;
-    public int    LineNumber    { get; set; } = 1;
+    public string LineNumber    { get; set; } = string.Empty;
     public string DeliveryDate  { get; set; } = string.Empty;
     public string ContactName   { get; set; } = string.Empty;
     public string CustomerName  { get; set; } = string.Empty;

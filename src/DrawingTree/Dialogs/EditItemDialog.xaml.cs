@@ -49,7 +49,7 @@ public partial class EditItemDialog : Window
         RevBox.Text       = _row.Revision      ?? string.Empty;
         DescBox.Text      = _row.Description   ?? string.Empty;
         QtyBox.Text       = _row.Quantity.ToString();
-        LnBox.Text        = _row.LineNumber.ToString();
+        LnBox.Text        = _row.LineNumber;
         DelPicker.Text    = _row.DueDate       ?? string.Empty;
     }
 
@@ -71,7 +71,8 @@ public partial class EditItemDialog : Window
     private void SaveButton_Click(object sender, RoutedEventArgs e)
     {
         if (!int.TryParse(QtyBox.Text, out int qty)) qty = _row.Quantity;
-        if (!int.TryParse(LnBox.Text,  out int ln))  ln  = _row.LineNumber;
+        string ln = LnBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(ln)) ln = _row.LineNumber;
 
         var input = new EditItemInput
         {
@@ -98,9 +99,11 @@ public partial class EditItemDialog : Window
         var editResult = _repository.UpdateOrderItemCascade(input);
         if (!editResult.Success)
         {
-            MessageBox.Show("Failed to save changes. Check the log for details.", "Error",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-            Logger.Instance.Error($"EditItemDialog: UpdateOrderItemCascade failed for orderItemId={_row.OrderItemId}");
+            string message = string.IsNullOrWhiteSpace(editResult.ErrorMessage)
+                ? "Failed to save changes. Check the log for details."
+                : editResult.ErrorMessage;
+            MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            Logger.Instance.Error($"EditItemDialog: UpdateOrderItemCascade failed for orderItemId={_row.OrderItemId}: {editResult.ErrorMessage}");
             return;
         }
 

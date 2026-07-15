@@ -185,7 +185,7 @@ public class OeRowItem : INotifyPropertyChanged
     public string  PoNumberDisplay => Row.PoNumberDisplay;
     public string? OeNumber     => Row.OeNumber;
     public string  JobNumber    => Row.JobNumber;
-    public int     LineNumber   => Row.LineNumber;
+    public string  LineNumber   => Row.LineNumber;
     public string? CustomerName => Row.CustomerName;
     public string? ContactName  => Row.ContactName;
     public int     Quantity     => Row.Quantity;

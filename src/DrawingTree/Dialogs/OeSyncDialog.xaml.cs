@@ -149,7 +149,9 @@ public partial class OeSyncDialog : Window
     /// already resolved via the M-column-rename auto-detection or a saved OeAnomalyEditDialog edit
     /// (EffectiveKind routes those to Add/Modify). A plain unresolved Anomaly must go through
     /// OeAnomalyEditDialog instead — see the NeedsEditDialog guard in RowUpdateButton_Click/
-    /// UpdateAllButton_Click that keeps such rows out of this method entirely.
+    /// UpdateAllButton_Click that keeps such rows out of this method entirely. A Modify row that
+    /// reactivates an archived item/PO alongside real field changes is kept out the same way — see
+    /// NeedsReactivationReview.
     /// </summary>
     private void ApplyOne(OeSyncChange change)
     {
@@ -227,13 +229,25 @@ public partial class OeSyncDialog : Window
     private static bool NeedsEditDialog(OeSyncChange change)
         => change.Kind == OeSyncChangeKind.Anomaly && change.EffectiveKind == OeSyncChangeKind.Anomaly;
 
+    /// <summary>True for a Modify row that reactivates an archived item/PO AND also carries real
+    /// field changes — such a row needs human review before applying, since the diff engine only
+    /// folds reactivation into an automatic Modify when there's nothing else to reconcile. A pure
+    /// reactivation (no other field diffs) is still automatic — see NeedsEditDialog/ApplyOne.</summary>
+    private static bool NeedsReactivationReview(OeSyncChange change)
+        => change.Kind == OeSyncChangeKind.Modify
+           && (change.NeedsItemReactivation || change.NeedsPoReactivation)
+           && change.FieldChanges.Count > 0;
+
     private void UpdateAllButton_Click(object sender, RoutedEventArgs e)
     {
         // A natural-key match to an archived order_item (NeedsItemReactivation/NeedsPoReactivation)
-        // is a normal Modify — reactivation is automatic per business rule, not a judgment call —
-        // so it's intentionally NOT excluded here and applies via bulk Update-All like any other row.
+        // with no other field diffs is a normal Modify — reactivation alone is automatic per business
+        // rule, not a judgment call — so it's intentionally NOT excluded here and applies via bulk
+        // Update-All like any other row. But when the same match ALSO carries real field changes,
+        // NeedsReactivationReview routes it through RowUpdateButton_Click's review dialog instead, so
+        // it's excluded from the bulk batch here too.
         var pending = _changesView.Cast<OeSyncChange>()
-            .Where(c => c.IsSelected && c.CanUpdate && !NeedsEditDialog(c))
+            .Where(c => c.IsSelected && c.CanUpdate && !NeedsEditDialog(c) && !NeedsReactivationReview(c))
             .ToList();
         if (pending.Count == 0) return;
 
@@ -278,6 +292,24 @@ public partial class OeSyncDialog : Window
                     change.WasResolvedViaEditForm = true;
                     _syncRepository.RecordAnomalyHandled(change, "corrected");
                 }
+                change.Status = OeSyncRowStatus.Success;
+                change.ErrorMessage = "";
+                UpdateSummary();
+            }
+            return;
+        }
+
+        if (NeedsReactivationReview(change))
+        {
+            // Reuse OeAnomalyEditDialog rather than a new dialog: it already prefills from
+            // change.ExcelRow/DbRow (both set for a Modify) and its DbRow-present save path calls
+            // ApplyModify(reactivateItem, reactivatePo) exactly like this review needs. Unlike the
+            // Anomaly branch above, this change's Kind stays Modify — WasResolvedViaEditForm/
+            // RecordAnomalyHandled only matter for Kind == Anomaly (see EffectiveKind/ApplyOne), so
+            // neither is set here.
+            var reviewDialog = new OeAnomalyEditDialog(_syncRepository, change) { Owner = this };
+            if (reviewDialog.ShowDialog() == true)
+            {
                 change.Status = OeSyncRowStatus.Success;
                 change.ErrorMessage = "";
                 UpdateSummary();
