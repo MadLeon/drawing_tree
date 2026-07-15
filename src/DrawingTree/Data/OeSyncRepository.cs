@@ -558,6 +558,23 @@ public class OeSyncRepository
                 lineCmd.ExecuteNonQuery();
             }
 
+            if (fieldLabels.Contains("Job #:"))
+            {
+                // A corrected Job # (see OeSyncService.ComputeDiff's cross-job rename-candidate
+                // pass) — reassign this order_item to the corrected/looked-up job, same PO as
+                // before (targetPoId hasn't been reassigned yet at this point; this pass never
+                // proposes a simultaneous P.O. change alongside a Job # correction — see its doc
+                // comment). The old job row, even if it now has zero order_items, is left in place,
+                // same as a PO reassignment leaves the old purchase_order row in place.
+                var targetJobId = PoRepository.UpsertJob(conn, tx, excelRow.JobNumber.Trim(), targetPoId);
+                using var jobMoveCmd = conn.CreateCommand();
+                jobMoveCmd.Transaction = tx;
+                jobMoveCmd.CommandText = "UPDATE order_item SET job_id = @jid, updated_at = datetime('now','localtime') WHERE id = @id";
+                jobMoveCmd.Parameters.AddWithValue("@jid", targetJobId);
+                jobMoveCmd.Parameters.AddWithValue("@id", dbRow.OrderItemId);
+                jobMoveCmd.ExecuteNonQuery();
+            }
+
             if (fieldLabels.Contains("P.O. :"))
             {
                 using var lookupCmd = conn.CreateCommand();
@@ -699,6 +716,18 @@ public class OeSyncRepository
                 lineCmd.Parameters.AddWithValue("@ln", dbRow.LineNumber);
                 lineCmd.Parameters.AddWithValue("@id", dbRow.OrderItemId);
                 lineCmd.ExecuteNonQuery();
+            }
+
+            if (fieldLabels.Contains("Job #:"))
+            {
+                // Restores the original job_id from the pre-change snapshot — no upsert needed,
+                // the original job row was never touched by ApplyModify.
+                using var jobMoveCmd = conn.CreateCommand();
+                jobMoveCmd.Transaction = tx;
+                jobMoveCmd.CommandText = "UPDATE order_item SET job_id = @jid, updated_at = datetime('now','localtime') WHERE id = @id";
+                jobMoveCmd.Parameters.AddWithValue("@jid", dbRow.JobId);
+                jobMoveCmd.Parameters.AddWithValue("@id", dbRow.OrderItemId);
+                jobMoveCmd.ExecuteNonQuery();
             }
 
             bool poChanged = fieldLabels.Contains("P.O. :");

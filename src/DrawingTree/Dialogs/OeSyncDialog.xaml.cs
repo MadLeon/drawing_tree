@@ -154,7 +154,7 @@ public partial class OeSyncDialog : Window
     private void ApplyOne(OeSyncChange change)
     {
         bool wasCorrectedAnomaly = change.Kind == OeSyncChangeKind.Anomaly &&
-            (change.WasResolvedViaEditForm || change.IsLineNumberRenameCandidate);
+            (change.WasResolvedViaEditForm || change.IsLineNumberRenameCandidate || change.IsJobNumberCorrectionCandidate);
         bool success;
         string? error;
 
@@ -295,7 +295,7 @@ public partial class OeSyncDialog : Window
         if (!change.CanUndo) return;
 
         bool wasCorrectedAnomaly = change.Kind == OeSyncChangeKind.Anomaly &&
-            (change.WasResolvedViaEditForm || change.IsLineNumberRenameCandidate);
+            (change.WasResolvedViaEditForm || change.IsLineNumberRenameCandidate || change.IsJobNumberCorrectionCandidate);
 
         try
         {
@@ -345,14 +345,11 @@ public partial class OeSyncDialog : Window
 
         change.Status = OeSyncRowStatus.Ignored;
 
-        // Persisted so the same proposed value doesn't keep re-nagging every sync run (matched by
-        // Fingerprint, not just job/line — see OeSyncService.ComputeFingerprint). Add stays
-        // session-only: its fingerprint would just be "the whole new row," which isn't a
-        // meaningful thing to remember ignoring (an ignored Add is either handled by Anomaly's
-        // "already exists" path, or the reviewer will just re-ignore the genuinely-new row next
-        // time anyway).
-        if (change.Kind != OeSyncChangeKind.Add)
-            _syncRepository.RecordAnomalyHandled(change, "ignored");
+        // Persisted so the same proposed value doesn't keep re-nagging every sync run — matched by
+        // Fingerprint, not just job/line (see OeSyncService.ComputeFingerprint/ComputeAddFingerprint),
+        // so an ignored Add stays suppressed only as long as the Excel row's own content doesn't
+        // change; edit any field and it resurfaces as a new proposal.
+        _syncRepository.RecordAnomalyHandled(change, "ignored");
 
         UpdateSummary();
     }

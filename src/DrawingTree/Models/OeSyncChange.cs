@@ -97,6 +97,17 @@ public class OeSyncChange : INotifyPropertyChanged
     public bool IsLineNumberRenameCandidate { get; init; }
 
     /// <summary>
+    /// True when this Anomaly pairs one newly-added-looking Excel row with one apparently-missing DB
+    /// row under a DIFFERENT job_number, matched by an exact PO/part/line/quantity "secondary key" —
+    /// a likely Job # correction (typo fix) rather than a shipped item plus an unrelated new one. See
+    /// OeSyncService.ComputeDiff's cross-job rename-candidate pass. Unlike
+    /// IsLineNumberRenameCandidate, FieldChanges here carries only the Job # field — any other field
+    /// difference is deliberately left for the next sync run to pick up as an ordinary Modify, once
+    /// the corrected key resolves ApplyModify's target PO correctly (see the pass's doc comment).
+    /// </summary>
+    public bool IsJobNumberCorrectionCandidate { get; init; }
+
+    /// <summary>
     /// True when this Modify's target order_item (or its owning PO) was archived (is_active = 0)
     /// before this natural-key match — a purchase_order's active status is fully derived from its
     /// order_items, so reactivating a natural-key match is automatic, not a judgment call (see
@@ -193,7 +204,7 @@ public class OeSyncChange : INotifyPropertyChanged
     /// </summary>
     public OeSyncChangeKind EffectiveKind =>
         Kind == OeSyncChangeKind.Anomaly &&
-            (IsLineNumberRenameCandidate || WasResolvedViaEditForm)
+            (IsLineNumberRenameCandidate || IsJobNumberCorrectionCandidate || WasResolvedViaEditForm)
             ? (DbRow == null ? OeSyncChangeKind.Add : OeSyncChangeKind.Modify)
             : Kind;
 

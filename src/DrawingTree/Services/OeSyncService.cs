@@ -60,6 +60,20 @@ public static class OeSyncService
     }
 
     /// <summary>
+    /// Fingerprint for an Add row: a full snapshot of the proposed Excel row, same field set as
+    /// ComputeAnomalyFingerprint's excelRow branch (minus the reason). Lets a reviewer's Ignore on a
+    /// genuinely-new row stay suppressed across sync runs as long as the row's own content doesn't
+    /// change — see TryAddAdd.
+    /// </summary>
+    private static string ComputeAddFingerprint(OeExcelRow r)
+        => ComputeFingerprint("Add", new[]
+        {
+            r.OeNumber, r.JobNumber, r.Customer, r.Quantity, r.PartNumber, r.Revision, r.Contact,
+            r.DrawingReleaseDate, r.LineNumber, r.Description, r.Price?.ToString(CultureInfo.InvariantCulture),
+            r.PoNumber, r.DeliveryRequiredDate,
+        });
+
+    /// <summary>
     /// Fingerprint for a Deactivate row: there's no old/new value pair to hash (the "proposal" is
     /// just "mark this set of order_items inactive") — so this hashes the group's *membership*
     /// instead: the PO number plus every item's (job_number, line_number), order-independent. Same
@@ -249,6 +263,52 @@ public static class OeSyncService
             matchedDbKeys.Add(DbMatchKeyOf(dbRow));
         }
 
+        // A second, stricter pairing pass for a corrected Job # itself (a typo fix), not just a
+        // renumbered line — the pass above only pairs within the SAME job_number, so a whole-job
+        // rename falls outside it entirely (the old key vanishes under the old job, the new key
+        // appears under a different job — "same job" never holds). Because there's no shared job to
+        // anchor the match, this pairs across the WHOLE remaining candidate set instead, so it
+        // requires a much stronger signal than uniqueness alone: PO/part/line/quantity must all be
+        // exactly equal (an "NPO" placeholder counts as equal to any other "NPO" placeholder,
+        // regardless of which job number it embeds). One (job, line) row moving to a new job number
+        // with everything else unchanged is exactly what this catches; multiple candidates sharing a
+        // secondary key still means "don't guess," same as above.
+        var remainingAddCandidates = pendingAddRows.Where(p => !consumedAddKeys.Contains(p.Key)).ToList();
+        var remainingMissingRows = unmatchedDbRowsForRename.Where(d => !matchedDbKeys.Contains(DbMatchKeyOf(d))).ToList();
+        var addsBySecondaryKey = remainingAddCandidates.GroupBy(p => SecondaryKeyOfExcel(p.Row)).ToDictionary(g => g.Key, g => g.ToList());
+        var missingBySecondaryKey = remainingMissingRows.GroupBy(SecondaryKeyOfDb).ToDictionary(g => g.Key, g => g.ToList());
+
+        foreach (var (secondaryKey, addCandidates) in addsBySecondaryKey)
+        {
+            if (secondaryKey.Length == 0) continue; // a blank component (e.g. no part #) is too weak a signal to pair on
+            if (addCandidates.Count != 1) continue;
+            if (!missingBySecondaryKey.TryGetValue(secondaryKey, out var missingCandidates) || missingCandidates.Count != 1) continue;
+
+            var excelRow = addCandidates[0].Row;
+            var dbRow = missingCandidates[0];
+            if (OeNormalization.NormalizeJobNumber(excelRow.JobNumber) == DbMatchKeyOf(dbRow).Job) continue; // same job -> the pass above already owns this case
+
+            // Only the Job # itself is carried here — not BuildNonQuantityFieldChanges' full diff.
+            // The secondary key guarantees PO/part/line/quantity match, but says nothing about
+            // Customer/Contact/O.E./Price/dates/Description; ApplyModify's O.E./Customer/Contact
+            // branches write against `targetPoId`, which only gets re-resolved when "P.O. :" itself
+            // is one of the FieldChanges. Mixing in those other fields here could silently apply them
+            // against the OLD job's PO instead of the corrected job's real PO. Any such other-field
+            // difference is left for the next sync run to pick up as an ordinary Modify, once the
+            // corrected key matches normally and targetPoId resolves against the right PO.
+            var fieldChanges = new List<OeFieldChange>
+            {
+                new() { FieldLabel = "Job #:", OldValue = dbRow.JobNumber, NewValue = excelRow.JobNumber },
+            };
+
+            AddAnomaly(changes, excelRow, dbRow,
+                $"Job # may have changed from \"{dbRow.JobNumber}\" to \"{excelRow.JobNumber}\" — P.O./part/line/qty all match exactly; confirm this is a Job # correction, not a shipped item plus a new unrelated one",
+                handledAnomalies, fieldChanges: fieldChanges, isJobNumberCorrectionCandidate: true);
+
+            consumedAddKeys.Add(addCandidates[0].Key);
+            matchedDbKeys.Add(DbMatchKeyOf(dbRow));
+        }
+
         foreach (var (row, key) in pendingAddRows)
         {
             if (consumedAddKeys.Contains(key)) continue;
@@ -311,6 +371,29 @@ public static class OeSyncService
 
     private static (string Job, string Line) DbMatchKeyOf(OeDbRow d)
         => (OeNormalization.NormalizeJobNumber(d.JobNumber), OeNormalization.NormalizeLineNumber(d.LineNumber));
+
+    /// <summary>
+    /// A PO/part/line/quantity identity key used only by the cross-job Job#-correction pairing pass
+    /// (see ComputeDiff) — deliberately excludes job_number itself, since that's the one field this
+    /// pass expects to differ. An "NPO" placeholder (blank/"NPO" cell on the Excel side, "NPO-"
+    /// prefix on the DB side — see OeNormalization) collapses to the same sentinel on both sides
+    /// regardless of which job number it embeds, so a no-PO order still pairs correctly.
+    /// </summary>
+    private static string SecondaryKeyOfExcel(OeExcelRow r)
+    {
+        if (string.IsNullOrWhiteSpace(r.PartNumber)) return "";
+        var po = OeNormalization.IsBlankOrNpoMarker(r.PoNumber) ? "NPO" : OeNormalization.GetPoBase(r.PoNumber);
+        var (qty, _) = OeNormalization.ResolveQuantity(r.Quantity);
+        return string.Join("\x1F", po, r.PartNumber.Trim().ToUpperInvariant(), OeNormalization.NormalizeLineNumber(r.LineNumber), qty);
+    }
+
+    private static string SecondaryKeyOfDb(OeDbRow d)
+    {
+        if (string.IsNullOrWhiteSpace(d.DrawingNumber)) return "";
+        var po = d.PoNumber.Trim().StartsWith("NPO-", StringComparison.OrdinalIgnoreCase) ? "NPO" : OeNormalization.GetPoBase(d.PoNumber);
+        var (qty, _) = OeNormalization.ResolveQuantity(d.Quantity);
+        return string.Join("\x1F", po, d.DrawingNumber.Trim().ToUpperInvariant(), OeNormalization.NormalizeLineNumber(d.LineNumber), qty);
+    }
 
     /// <summary>internal so OeAnomalyEditDialog can reuse the same field-diff logic when the reviewer
     /// hand-corrects an Anomaly row's data.</summary>
@@ -381,11 +464,31 @@ public static class OeSyncService
         // upstream in ComputeDiff's main matching loop before a row ever reaches pendingAddRows —
         // see the allOrderItems lookup there — so by this point the key is guaranteed free.
 
+        var key = MatchKeyOf(excelRow);
+        var fingerprint = ComputeAddFingerprint(excelRow);
+
+        DateTime? handledAt = null;
+        string? handledAction = null;
+        bool wasPreHandled = false;
+        if (handledAnomalies.TryGetValue(key, out var handled) && handled.Fingerprint == fingerprint)
+        {
+            handledAt = handled.HandledAt;
+            handledAction = handled.Action;
+            wasPreHandled = true;
+        }
+
         changes.Add(new OeSyncChange
         {
             Kind = OeSyncChangeKind.Add,
             HeaderText = $"Job #{excelRow.JobNumber} / M{excelRow.LineNumber} / {excelRow.PartNumber}",
             ExcelRow = excelRow,
+            Fingerprint = fingerprint,
+            HandledJobNumber = key.Job,
+            HandledLineNumber = key.Line,
+            WasPreHandled = wasPreHandled,
+            Status = wasPreHandled ? OeSyncRowStatus.Ignored : OeSyncRowStatus.None,
+            HandledAt = handledAt,
+            HandledAction = handledAction,
         });
     }
 
@@ -460,7 +563,7 @@ public static class OeSyncService
     private static void AddAnomaly(List<OeSyncChange> changes, OeExcelRow? excelRow, OeDbRow? dbRow,
         string reason, IReadOnlyDictionary<(string Job, string Line), OeAnomalyHandled> handledAnomalies,
         List<OeExcelRow>? siblings = null, List<OeFieldChange>? fieldChanges = null,
-        bool isLineNumberRenameCandidate = false,
+        bool isLineNumberRenameCandidate = false, bool isJobNumberCorrectionCandidate = false,
         bool needsItemReactivation = false, bool needsPoReactivation = false)
     {
         var header = excelRow != null
@@ -492,6 +595,7 @@ public static class OeSyncService
             AnomalyReason = reason,
             FieldChanges = fieldChanges ?? new List<OeFieldChange>(),
             IsLineNumberRenameCandidate = isLineNumberRenameCandidate,
+            IsJobNumberCorrectionCandidate = isJobNumberCorrectionCandidate,
             NeedsItemReactivation = needsItemReactivation,
             NeedsPoReactivation = needsPoReactivation,
             Fingerprint = fingerprint,
