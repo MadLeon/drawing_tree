@@ -28,5 +28,5 @@ JOIN order_item oi             ON oi.job_id = j.id
 LEFT JOIN part p                ON p.id = oi.part_id
 LEFT JOIN customer_contact cc   ON cc.id = po.contact_id
 LEFT JOIN customer cust         ON cust.id = cc.customer_id
-WHERE j.job_number="72942"
+WHERE j.job_number="72906" OR j.job_number="72517"
 ORDER BY po.po_number, j.job_number, oi.line_number;
