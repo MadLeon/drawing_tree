@@ -32,6 +32,7 @@ public partial class PartDetailControl : UserControl
     private int       _partId;
     private int       _orderItemId;
     private MpContext? _mpContext;
+    private PartHeader? _header;
 
     public event EventHandler? BackRequested;
     public event EventHandler<int>? ViewTreeRequested;
@@ -56,6 +57,7 @@ public partial class PartDetailControl : UserControl
             _mpContext = _poRepository.GetMpContext(_orderItemId);
 
         var header = _partRepository.GetPartHeader(partId);
+        _header = header;
         TitleLabel.Text = header == null
             ? $"Drawing Number: (part #{partId} not found)"
             : $"Drawing Number: {header.DrawingNumber}";
@@ -80,6 +82,7 @@ public partial class PartDetailControl : UserControl
         LoadPdfFiles();
         LoadMpSection();
         LoadDirSection();
+        LoadBubbleSection();
         LoadProcessSteps();
         LoadNotes();
 
@@ -330,6 +333,131 @@ public partial class PartDetailControl : UserControl
             MessageBox.Show($"Failed to open file: {ex.Message}", "Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    // ── Bubble Drawing ───────────────────────────────────────────────────
+
+    private static readonly int[] BubbleColumnWidths = { 300, 60, 140, 28 };
+
+    private void LoadBubbleSection()
+    {
+        BubbleFilesPanel.Children.Clear();
+        if (_header == null) return;
+
+        var attachments = _partRepository.GetBubbleAttachmentsByDrawingNumber(_header.DrawingNumber);
+        if (attachments.Count == 0)
+        {
+            BubbleFilesPanel.Children.Add(new TextBlock
+            {
+                Text = "(no bubble drawing files yet)", FontSize = 12, Foreground = Brushes.Gray
+            });
+            return;
+        }
+
+        BubbleFilesPanel.Children.Add(BuildBubbleFilesHeader());
+        foreach (var attachment in attachments)
+            BubbleFilesPanel.Children.Add(BuildBubbleFileRow(attachment));
+    }
+
+    private static Grid BuildBubbleFilesHeader()
+    {
+        var grid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
+        foreach (var w in BubbleColumnWidths)
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(w) });
+
+        var headers = new[] { "File Name", "Rev", "Created at", "" };
+        for (int i = 0; i < headers.Length; i++)
+        {
+            var block = new TextBlock
+            {
+                Text = headers[i], FontWeight = FontWeights.SemiBold, FontSize = 11, Foreground = Brushes.Gray
+            };
+            Grid.SetColumn(block, i);
+            grid.Children.Add(block);
+        }
+        return grid;
+    }
+
+    private Grid BuildBubbleFileRow(BubbleAttachmentRow attachment)
+    {
+        var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
+        foreach (var w in BubbleColumnWidths)
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(w) });
+
+        var nameText = new TextBlock
+        {
+            Text = attachment.FileName, FontSize = 12, VerticalAlignment = VerticalAlignment.Center,
+            TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = attachment.FilePath
+        };
+        Grid.SetColumn(nameText, 0);
+        grid.Children.Add(nameText);
+
+        var revText = new TextBlock
+        {
+            Text = ExtractRevisionFromFileName(attachment.FileName), FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        Grid.SetColumn(revText, 1);
+        grid.Children.Add(revText);
+
+        var createdText = new TextBlock
+        {
+            Text = attachment.CreatedAt, FontSize = 12, Foreground = Brushes.Gray,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        Grid.SetColumn(createdText, 2);
+        grid.Children.Add(createdText);
+
+        var openBtn = new Button
+        {
+            Style = (Style)FindResource("IconLinkBtn"), Padding = new Thickness(2, 0, 2, 0), ToolTip = "Open",
+            Content = new Path
+            {
+                Data = (Geometry)FindResource("OpenInNewGeo"), Stretch = Stretch.Uniform,
+                Fill = Brushes.DodgerBlue, Width = 13, Height = 13
+            }
+        };
+        openBtn.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+        openBtn.Click += (_, _) => OpenBubbleFile(attachment);
+        Grid.SetColumn(openBtn, 3);
+        grid.Children.Add(openBtn);
+
+        return grid;
+    }
+
+    private void OpenBubbleFile(BubbleAttachmentRow attachment)
+    {
+        if (!File.Exists(attachment.FilePath))
+        {
+            var choice = MessageBox.Show(
+                $"File not found:\n{attachment.FilePath}\n\nRemove this entry from the database?",
+                "File Not Found", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (choice == MessageBoxResult.Yes)
+            {
+                _partRepository.RemoveBubbleAttachment(attachment.AttachmentId);
+                LoadBubbleSection();
+            }
+            return;
+        }
+        try { Process.Start(new ProcessStartInfo { FileName = attachment.FilePath, UseShellExecute = true }); }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Failed to open file: {ex.Message}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private static string ExtractRevisionFromFileName(string fileName)
+    {
+        var match = System.Text.RegularExpressions.Regex.Match(fileName, @"Rev([^\s]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        return match.Success ? match.Groups[1].Value : string.Empty;
+    }
+
+    private void CopyBubbleNameButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_header == null) return;
+        var text = $"{_header.DrawingNumber} Rev{_header.Revision} {_header.Description}";
+        System.Windows.Clipboard.SetText(text);
     }
 
     // ── Drawing PDF ──────────────────────────────────────────────────────

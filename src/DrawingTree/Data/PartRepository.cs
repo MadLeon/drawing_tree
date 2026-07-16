@@ -469,6 +469,58 @@ public class PartRepository
     }
 
     /// <summary>
+    /// Returns all bubble drawing attachments recorded for every part sharing the given
+    /// drawing_number, regardless of revision.
+    /// </summary>
+    /// <param name="drawingNumber">part.drawing_number</param>
+    public List<BubbleAttachmentRow> GetBubbleAttachmentsByDrawingNumber(string drawingNumber)
+    {
+        var results = new List<BubbleAttachmentRow>();
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT pa.id, pa.file_name, pa.file_path, pa.created_at
+                FROM part_attachment pa
+                WHERE pa.file_type = 'bubble' COLLATE NOCASE
+                  AND pa.part_id IN (SELECT id FROM part WHERE drawing_number = @dn COLLATE NOCASE)
+                ORDER BY pa.created_at DESC
+                """;
+            cmd.Parameters.AddWithValue("@dn", drawingNumber);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+                results.Add(new BubbleAttachmentRow(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3)));
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.GetBubbleAttachmentsByDrawingNumber failed for drawingNumber={drawingNumber}: {ex.Message}");
+        }
+        return results;
+    }
+
+    /// <summary>
+    /// Deletes a bubble drawing attachment record from the database.
+    /// </summary>
+    /// <param name="attachmentId">part_attachment.id</param>
+    public void RemoveBubbleAttachment(int attachmentId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "DELETE FROM part_attachment WHERE id = @id";
+            cmd.Parameters.AddWithValue("@id", attachmentId);
+            cmd.ExecuteNonQuery();
+            Logger.Instance.Info($"PartRepository.RemoveBubbleAttachment: removed attachment id={attachmentId}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.RemoveBubbleAttachment failed for id={attachmentId}: {ex.Message}");
+        }
+    }
+
+    /// <summary>
     /// Updates the status field of a part_attachment record.
     /// </summary>
     /// <param name="attachmentId">part_attachment.id</param>
@@ -546,3 +598,9 @@ public record DirAttachmentRow(int AttachmentId, string FileName, string FilePat
 /// <param name="FilePath">Full file path</param>
 /// <param name="Status">part_attachment.status</param>
 public record PartAttachmentRow(int AttachmentId, string FileName, string FilePath, string Status);
+
+/// <param name="AttachmentId">part_attachment.id</param>
+/// <param name="FileName">File name (without path)</param>
+/// <param name="FilePath">Full file path</param>
+/// <param name="CreatedAt">part_attachment.created_at</param>
+public record BubbleAttachmentRow(int AttachmentId, string FileName, string FilePath, string CreatedAt);
