@@ -248,10 +248,12 @@
                               HorizontalScrollBarVisibility="Auto"
                               CanContentScroll="True"
                               ScrollChanged="OeGroupsScroll_ScrollChanged">
+                <!-- VirtualizingStackPanel here does not actually virtualize (see the same note on
+                     SimpleViewList above) — every PO group/row is realized up front. Loading
+                     performance is handled by incremental mounting in AllPosControl.xaml.cs
+                     (ApplySearchAsync/MountIncrementallyAsync) instead. -->
                 <ItemsControl x:Name="OeGroupsList" Background="#F4F5F6"
-                              AlternationCount="100000"
-                              VirtualizingPanel.IsVirtualizing="True"
-                              VirtualizingPanel.VirtualizationMode="Recycling">
+                              AlternationCount="100000">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <VirtualizingStackPanel/>
@@ -576,9 +578,13 @@
                           HorizontalScrollBarVisibility="Auto"
                           CanContentScroll="True"
                           Visibility="Collapsed">
-                <ItemsControl x:Name="SimpleViewList" Background="White"
-                              VirtualizingPanel.IsVirtualizing="True"
-                              VirtualizingPanel.VirtualizationMode="Recycling">
+                <!-- VirtualizingStackPanel here does not actually virtualize: this ScrollViewer wraps
+                     the ItemsControl from the outside instead of living inside its control template
+                     (as ListBox's does), so the panel never gets a real IScrollInfo viewport and every
+                     group/row is realized up front. Kept only because VirtualizingStackPanel avoids the
+                     layout overhead of a plain StackPanel; loading performance is instead handled by
+                     incremental mounting in AllPosControl.xaml.cs (ApplySearchAsync/MountIncrementallyAsync). -->
+                <ItemsControl x:Name="SimpleViewList" Background="White">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <VirtualizingStackPanel/>

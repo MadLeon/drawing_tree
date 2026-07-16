@@ -283,6 +283,9 @@ public partial class AllPosControl : UserControl
     private bool _isDataLoaded;
     private readonly DispatcherTimer _debounceTimer;
 
+    /// <summary>Bumped on every load/search/filter/toggle trigger; stale async work checks this to bail out.</summary>
+    private int _loadGeneration;
+
     // ── Filter panel state (Customer / Contact / Due Date range) ────────────
     private string? _filterCustomer;
     private string? _filterContact;
@@ -332,7 +335,7 @@ public partial class AllPosControl : UserControl
             _debounceTimer.Stop();
             var term = PoSearchBox.Text.Trim();
             SearchTerm = term;
-            ApplySearch(term);
+            _ = ApplySearchAsync(term);
         };
 
         Loaded += OnLoaded;
@@ -354,64 +357,178 @@ public partial class AllPosControl : UserControl
 
     private async Task LoadDataAsync()
     {
+        int gen = ++_loadGeneration;
         LoadingOverlay.Visibility = Visibility.Visible;
-        bool activeOnly = !ShowHistoryOnly;
-
-        (_allRows, _pdfPartIds, _mpPartIds, _dirPartIds, _childrenByPartId) = await Task.Run(() =>
+        try
         {
-            var rows = _repository.GetAllPoLines(activeOnly: activeOnly);
+            bool activeOnly = !ShowHistoryOnly;
 
-            // Prefetch children for every top-level part that has any, up front — shared by
-            // both OE and Simple views so expanding/switching never queries the database again.
-            var rootPartIds = rows.Where(r => r.HasChildren && r.PartId.HasValue)
-                                   .Select(r => r.PartId!.Value).Distinct().ToList();
-            var childrenByPartId = _repository.GetAllChildDrawings(rootPartIds);
+            var result = await Task.Run(() =>
+            {
+                var rows = _repository.GetAllPoLines(activeOnly: activeOnly);
 
-            var allPartIds = rows.Where(r => r.PartId.HasValue).Select(r => r.PartId!.Value)
-                .Concat(childrenByPartId.Values.SelectMany(list => list.Select(c => c.PartId)))
-                .Distinct().ToList();
+                // Prefetch children for every top-level part that has any, up front — shared by
+                // both OE and Simple views so expanding/switching never queries the database again.
+                var rootPartIds = rows.Where(r => r.HasChildren && r.PartId.HasValue)
+                                       .Select(r => r.PartId!.Value).Distinct().ToList();
+                var childrenByPartId = _repository.GetAllChildDrawings(rootPartIds);
 
-            var pdfSet = _repository.GetPartIdsWithPdf(allPartIds);
-            var mpSet  = _repository.GetPartIdsWithMp(allPartIds);
-            var dirSet = _repository.GetPartIdsWithDir(allPartIds);
+                var allPartIds = rows.Where(r => r.PartId.HasValue).Select(r => r.PartId!.Value)
+                    .Concat(childrenByPartId.Values.SelectMany(list => list.Select(c => c.PartId)))
+                    .Distinct().ToList();
 
-            return (rows, pdfSet, mpSet, dirSet, childrenByPartId);
-        });
+                var pdfSet = _repository.GetPartIdsWithPdf(allPartIds);
+                var mpSet  = _repository.GetPartIdsWithMp(allPartIds);
+                var dirSet = _repository.GetPartIdsWithDir(allPartIds);
 
-        int poCount = _allRows.Select(r => r.PoId).Distinct().Count();
-        PoCountLabel.Text = $"({poCount})";
+                return (rows, pdfSet, mpSet, dirSet, childrenByPartId);
+            });
+            if (gen != _loadGeneration) return; // superseded by a newer Reload()
 
-        ApplySearch(SearchTerm);
+            (_allRows, _pdfPartIds, _mpPartIds, _dirPartIds, _childrenByPartId) = result;
 
-        _isDataLoaded = true;
-        LoadingOverlay.Visibility = Visibility.Collapsed;
-        Logger.Instance.Info($"AllPosControl: loaded {_allRows.Count} PO line(s), " +
-            $"{_childrenByPartId.Count} part(s) with children (historyMode={ShowHistoryOnly})");
+            int poCount = _allRows.Select(r => r.PoId).Distinct().Count();
+            PoCountLabel.Text = $"({poCount})";
+            _isDataLoaded = true;
+
+            // ApplySearchAsync owns the overlay from here — it mounts the first screen's worth of
+            // rows, drops the mask once that's rendered, then trickles the rest in the background.
+            await ApplySearchAsync(SearchTerm);
+
+            Logger.Instance.Info($"AllPosControl: loaded {_allRows.Count} PO line(s), " +
+                $"{_childrenByPartId.Count} part(s) with children (historyMode={ShowHistoryOnly})");
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error("AllPosControl: failed to load PO data", ex);
+            if (gen == _loadGeneration)
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+        }
     }
 
     // ── Search / filter ───────────────────────────────────────────────────────
 
-    private void ApplySearch(string term)
+    /// <summary>
+    /// Rebuilds the current view (OE or Simple) for the given search term.
+    /// Row filtering and group construction run on a background thread; the resulting groups are
+    /// then mounted onto the UI thread in small batches (see MountIncrementallyAsync) so the
+    /// LoadingOverlay's spinner keeps animating and the UI thread never blocks for more than a
+    /// batch's worth of work at a time. Every await is followed by a generation check so a newer
+    /// search/filter/toggle/reload trigger silently supersedes this one.
+    /// </summary>
+    private async Task ApplySearchAsync(string term)
     {
-        bool hasFilter = _filterCustomer != null || _filterContact != null
-            || _filterDueFrom.HasValue || _filterDueTo.HasValue;
+        int gen = ++_loadGeneration;
 
-        List<PoListRow> filtered;
+        // Snapshot everything this build needs up front — background code must never touch
+        // DependencyProperties (SearchTerm) or fields that another UI-thread call could reassign.
+        var allRows          = _allRows;
+        var filterCustomer   = _filterCustomer;
+        var filterContact    = _filterContact;
+        var filterDueFrom    = _filterDueFrom;
+        var filterDueTo      = _filterDueTo;
+        var pdfPartIds       = _pdfPartIds;
+        var mpPartIds        = _mpPartIds;
+        var dirPartIds       = _dirPartIds;
+        var childrenByPartId = _childrenByPartId;
+        bool simple = _isSimpleView;
+
+        LoadingOverlay.Visibility = Visibility.Visible;
+        try
+        {
+            if (simple)
+            {
+                var groups = await Task.Run(() =>
+                {
+                    var filtered = FilterRows(allRows, term, filterCustomer, filterContact, filterDueFrom, filterDueTo);
+                    return BuildSimpleGroupsFull(filtered, term, pdfPartIds, mpPartIds, dirPartIds, childrenByPartId);
+                });
+                if (gen != _loadGeneration) return;
+
+                SwitchViewVisibility(simple: true);
+                await MountIncrementallyAsync(SimpleViewList, groups, g => g.Items.Count, gen);
+            }
+            else
+            {
+                var groups = await Task.Run(() =>
+                {
+                    var filtered = FilterRows(allRows, term, filterCustomer, filterContact, filterDueFrom, filterDueTo);
+                    return BuildOeGroups(filtered, term, pdfPartIds);
+                });
+                if (gen != _loadGeneration) return;
+
+                SwitchViewVisibility(simple: false);
+                await MountIncrementallyAsync(OeGroupsList, groups, g => g.Items.Count, gen);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error("AllPosControl: failed to apply search/filter", ex);
+            if (gen == _loadGeneration)
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    /// <summary>
+    /// Mounts <paramref name="groups"/> onto <paramref name="target"/>'s ItemsSource incrementally:
+    /// the first screen's worth of rows (~30) is added synchronously, the overlay is dropped once
+    /// that has actually rendered, then the remaining groups trickle in at Background dispatcher
+    /// priority so animation and input keep preempting between batches.
+    /// </summary>
+    private async Task MountIncrementallyAsync<T>(ItemsControl target, List<T> groups, Func<T, int> rowCountOf, int gen)
+    {
+        var collection = new ObservableCollection<T>();
+        target.ItemsSource = collection;
+
+        int i = 0, rowBudget = 30;
+        while (i < groups.Count && rowBudget > 0)
+        {
+            rowBudget -= rowCountOf(groups[i]);
+            collection.Add(groups[i]);
+            i++;
+        }
+
+        // Wait for the first screen to actually be laid out and rendered before dropping the mask,
+        // otherwise the user briefly sees a half-empty list instead of a spinner.
+        await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Loaded);
+        if (gen != _loadGeneration) return;
+        LoadingOverlay.Visibility = Visibility.Collapsed;
+
+        while (i < groups.Count)
+        {
+            await Dispatcher.InvokeAsync(() =>
+            {
+                for (int n = 0; n < 15 && i < groups.Count; n++, i++)
+                    collection.Add(groups[i]);
+            }, DispatcherPriority.Background);
+            if (gen != _loadGeneration) return;
+        }
+    }
+
+    private void SwitchViewVisibility(bool simple)
+    {
+        OeViewRoot.Visibility       = simple ? Visibility.Collapsed : Visibility.Visible;
+        SimpleViewScroll.Visibility = simple ? Visibility.Visible   : Visibility.Collapsed;
+        ToggleViewButton.Content    = simple ? "OE View" : "Simple View";
+        FilterButton.Visibility     = simple ? Visibility.Collapsed : Visibility.Visible;
+        ColumnsButton.Visibility    = simple ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private static List<PoListRow> FilterRows(List<PoListRow> allRows, string term,
+        string? filterCustomer, string? filterContact, DateTime? filterDueFrom, DateTime? filterDueTo)
+    {
+        bool hasFilter = filterCustomer != null || filterContact != null
+            || filterDueFrom.HasValue || filterDueTo.HasValue;
+
         if (string.IsNullOrEmpty(term) && !hasFilter)
-        {
-            filtered = _allRows;
-        }
-        else
-        {
-            var matchingPoIds = _allRows
-                .Where(r => (string.IsNullOrEmpty(term) || RowMatchesTerm(r, term)) && RowMatchesFilters(r))
-                .Select(r => r.PoId)
-                .ToHashSet();
-            filtered = _allRows.Where(r => matchingPoIds.Contains(r.PoId)).ToList();
-        }
+            return allRows;
 
-        if (_isSimpleView) ApplySimpleView(filtered);
-        else               ApplyOeView(filtered);
+        var matchingPoIds = allRows
+            .Where(r => (string.IsNullOrEmpty(term) || RowMatchesTerm(r, term))
+                        && RowMatchesFilters(r, filterCustomer, filterContact, filterDueFrom, filterDueTo))
+            .Select(r => r.PoId)
+            .ToHashSet();
+        return allRows.Where(r => matchingPoIds.Contains(r.PoId)).ToList();
     }
 
     private static bool RowMatchesTerm(PoListRow r, string term) =>
@@ -422,17 +539,18 @@ public partial class AllPosControl : UserControl
     private static bool Contains(string? text, string term) =>
         text != null && text.Contains(term, StringComparison.OrdinalIgnoreCase);
 
-    private bool RowMatchesFilters(PoListRow r)
+    private static bool RowMatchesFilters(PoListRow r,
+        string? filterCustomer, string? filterContact, DateTime? filterDueFrom, DateTime? filterDueTo)
     {
-        if (_filterCustomer != null && !string.Equals(r.CustomerName, _filterCustomer, StringComparison.OrdinalIgnoreCase))
+        if (filterCustomer != null && !string.Equals(r.CustomerName, filterCustomer, StringComparison.OrdinalIgnoreCase))
             return false;
-        if (_filterContact != null && !string.Equals(r.ContactName, _filterContact, StringComparison.OrdinalIgnoreCase))
+        if (filterContact != null && !string.Equals(r.ContactName, filterContact, StringComparison.OrdinalIgnoreCase))
             return false;
-        if (_filterDueFrom.HasValue || _filterDueTo.HasValue)
+        if (filterDueFrom.HasValue || filterDueTo.HasValue)
         {
             if (!DateTime.TryParse(r.DueDate, out var due)) return false;
-            if (_filterDueFrom.HasValue && due.Date < _filterDueFrom.Value.Date) return false;
-            if (_filterDueTo.HasValue   && due.Date > _filterDueTo.Value.Date)   return false;
+            if (filterDueFrom.HasValue && due.Date < filterDueFrom.Value.Date) return false;
+            if (filterDueTo.HasValue   && due.Date > filterDueTo.Value.Date)   return false;
         }
         return true;
     }
@@ -505,7 +623,7 @@ public partial class AllPosControl : UserControl
         _filterDueTo    = FilterDueToPicker.SelectedDate;
 
         FilterPopup.IsOpen = false;
-        ApplySearch(SearchTerm);
+        _ = ApplySearchAsync(SearchTerm);
     }
 
     private void CancelFilterButton_Click(object sender, RoutedEventArgs e)
@@ -523,38 +641,30 @@ public partial class AllPosControl : UserControl
     // ── OE View ──────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Rebuilds the OE view's PO groups from scratch, mirroring BuildSimpleGroups/ApplySimpleView.
-    /// Expand state is not preserved across search/reload, matching the simple view's existing behavior.
+    /// Builds the OE view's PO groups from scratch, mirroring BuildSimpleGroupsFull. Pure data
+    /// construction (no UI element touched) so it can run on a background thread — see
+    /// ApplySearchAsync. Expand state is not preserved across search/reload, matching Simple View.
     /// </summary>
-    private void ApplyOeView(List<PoListRow>? rows = null)
+    private static List<OePoGroup> BuildOeGroups(List<PoListRow> rows, string term, HashSet<int> pdfPartIds)
     {
         var groups = new List<OePoGroup>();
-        foreach (var g in (rows ?? _allRows)
-                     .GroupBy(r => r.PoId)
-                     .OrderBy(g => g.First().OeNumber ?? g.First().PoNumber))
+        foreach (var g in rows.GroupBy(r => r.PoId).OrderBy(g => g.First().OeNumber ?? g.First().PoNumber))
         {
             var group = new OePoGroup { PoId = g.Key };
             bool isFirst = true;
             foreach (var row in g.OrderBy(r => r.JobNumber).ThenBy(r => r.LineNumber))
             {
-                group.Items.Add(new OeRowItem(row, SearchTerm)
+                group.Items.Add(new OeRowItem(row, term)
                 {
                     IsFirstInPoGroup = isFirst,
-                    HasPdf = row.PartId.HasValue && _pdfPartIds.Contains(row.PartId.Value),
+                    HasPdf = row.PartId.HasValue && pdfPartIds.Contains(row.PartId.Value),
                     ParentList = group.Items
                 });
                 isFirst = false;
             }
             groups.Add(group);
         }
-
-        OeGroupsList.ItemsSource = groups;
-
-        OeViewRoot.Visibility     = Visibility.Visible;
-        SimpleViewScroll.Visibility = Visibility.Collapsed;
-        ToggleViewButton.Content   = "Simple View";
-        FilterButton.Visibility   = Visibility.Visible;
-        ColumnsButton.Visibility  = Visibility.Visible;
+        return groups;
     }
 
     /// <summary>Keeps the OE view's global sticky header in horizontal lockstep with the content below it.</summary>
@@ -566,18 +676,25 @@ public partial class AllPosControl : UserControl
 
     // ── Simple View ───────────────────────────────────────────────────────────
 
-    private void ApplySimpleView(List<PoListRow>? rows = null)
+    /// <summary>
+    /// Builds Simple View's PO groups plus each row's HasMp/HasDir/HasPdf flags and expandable
+    /// child-drawing rows. Pure data construction — safe to run on a background thread since none
+    /// of these POCOs are bound to any UI element until ApplySearchAsync mounts them.
+    /// </summary>
+    private static List<PoSimpleGroup> BuildSimpleGroupsFull(List<PoListRow> rows, string term,
+        HashSet<int> pdfPartIds, HashSet<int> mpPartIds, HashSet<int> dirPartIds,
+        Dictionary<int, List<ChildDrawingRow>> childrenByPartId)
     {
-        var groups = BuildSimpleGroups(rows ?? _allRows, SearchTerm);
+        var groups = BuildSimpleGroups(rows, term);
 
         foreach (var item in groups.SelectMany(g => g.Items))
         {
-            item.HasMp  = item.Row.PartId.HasValue && _mpPartIds.Contains(item.Row.PartId.Value);
-            item.HasDir = item.Row.PartId.HasValue && _dirPartIds.Contains(item.Row.PartId.Value);
-            item.HasPdf = item.Row.PartId.HasValue && _pdfPartIds.Contains(item.Row.PartId.Value);
+            item.HasMp  = item.Row.PartId.HasValue && mpPartIds.Contains(item.Row.PartId.Value);
+            item.HasDir = item.Row.PartId.HasValue && dirPartIds.Contains(item.Row.PartId.Value);
+            item.HasPdf = item.Row.PartId.HasValue && pdfPartIds.Contains(item.Row.PartId.Value);
 
             if (item.Row.HasChildren && item.Row.PartId.HasValue &&
-                _childrenByPartId.TryGetValue(item.Row.PartId.Value, out var children))
+                childrenByPartId.TryGetValue(item.Row.PartId.Value, out var children))
             {
                 foreach (var c in children)
                     item.Children.Add(new ChildDrawingItem
@@ -587,21 +704,15 @@ public partial class AllPosControl : UserControl
                         Description   = c.Description,
                         PartId        = c.PartId,
                         OrderItemId   = item.Row.OrderItemId,
-                        SearchTerm    = SearchTerm,
-                        HasMp  = _mpPartIds.Contains(c.PartId),
-                        HasDir = _dirPartIds.Contains(c.PartId),
-                        HasPdf = _pdfPartIds.Contains(c.PartId)
+                        SearchTerm    = term,
+                        HasMp  = mpPartIds.Contains(c.PartId),
+                        HasDir = dirPartIds.Contains(c.PartId),
+                        HasPdf = pdfPartIds.Contains(c.PartId)
                     });
             }
         }
 
-        SimpleViewList.ItemsSource = groups;
-
-        OeViewRoot.Visibility     = Visibility.Collapsed;
-        SimpleViewScroll.Visibility = Visibility.Visible;
-        ToggleViewButton.Content    = "OE View";
-        FilterButton.Visibility    = Visibility.Collapsed;
-        ColumnsButton.Visibility   = Visibility.Collapsed;
+        return groups;
     }
 
     private static List<PoSimpleGroup> BuildSimpleGroups(List<PoListRow> rows, string term = "")
@@ -633,7 +744,7 @@ public partial class AllPosControl : UserControl
         _isSimpleView = !_isSimpleView;
         FilterPopup.IsOpen = false;
         ColumnsPopup.IsOpen = false;
-        ApplySearch(SearchTerm);
+        _ = ApplySearchAsync(SearchTerm);
     }
 
     private void NewJobButton_Click(object sender, RoutedEventArgs e)
@@ -969,7 +1080,7 @@ public partial class AllPosControl : UserControl
             _allRows[i] = updated;
         }
 
-        ApplySearch(SearchTerm);
+        _ = ApplySearchAsync(SearchTerm);
         Logger.Instance.Info($"AllPosControl: patched cache after edit of order_item id={input.OrderItemId}");
     }
 
