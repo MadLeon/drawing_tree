@@ -45,6 +45,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Customer Name -->
@@ -68,6 +69,12 @@
             <TextBox   Grid.Row="3" Grid.Column="1" x:Name="BubbleFolderBox" Style="{StaticResource Field}"/>
             <Button    Grid.Row="3" Grid.Column="2" Content="Browse" Width="70" Height="28" Margin="8,4,0,4"
                        Click="BrowseBubbleFolder_Click"/>
+
+            <!-- DIR Folder -->
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="DIR Folder:" Style="{StaticResource Label}"/>
+            <TextBox   Grid.Row="4" Grid.Column="1" x:Name="DirFolderBox" Style="{StaticResource Field}"/>
+            <Button    Grid.Row="4" Grid.Column="2" Content="Browse" Width="70" Height="28" Margin="8,4,0,4"
+                       Click="BrowseDirFolder_Click"/>
         </Grid>
 
         <!-- Buttons -->

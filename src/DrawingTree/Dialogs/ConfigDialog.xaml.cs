@@ -57,7 +57,8 @@ public partial class ConfigDialog : Window
             Name          = c.Name,
             DrawingFolder = _repository.GetFolderMapping(c.Id) ?? string.Empty,
             MpFolder      = MpConfig.GetFolderName(c.Name) ?? string.Empty,
-            BubbleFolder  = BubbleConfig.GetBubbleFolder(c.Name) ?? string.Empty
+            BubbleFolder  = BubbleConfig.GetBubbleFolder(c.Name) ?? string.Empty,
+            DirFolder     = DirConfig.GetDirFolder(c.Name) ?? string.Empty
         }).ToList();
         CustomerList.ItemsSource = cards;
     }
@@ -115,6 +116,15 @@ public partial class ConfigDialog : Window
         string? path = BrowseFolder();
         if (path == null) return;
         BubbleConfig.SetBubbleFolder(vm.Name, path);
+        LoadCustomerTab();
+    }
+
+    private void BrowseCustomerDirFolder_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn || btn.Tag is not CustomerCardVm vm) return;
+        string? path = BrowseFolder();
+        if (path == null) return;
+        DirConfig.SetDirFolder(vm.Name, path);
         LoadCustomerTab();
     }
 
@@ -208,6 +218,7 @@ public class CustomerCardVm
     public string DrawingFolder { get; set; } = string.Empty;
     public string MpFolder { get; set; } = string.Empty;
     public string BubbleFolder { get; set; } = string.Empty;
+    public string DirFolder { get; set; } = string.Empty;
 }
 
 /// <summary>Display model for a customer's contact card in the Config dialog's Contact tab.</summary>

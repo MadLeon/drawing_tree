@@ -33,6 +33,9 @@ public partial class NewCustomerDialog : Window
     private void BrowseBubbleFolder_Click(object sender, RoutedEventArgs e)
         => BrowseInto(BubbleFolderBox);
 
+    private void BrowseDirFolder_Click(object sender, RoutedEventArgs e)
+        => BrowseInto(DirFolderBox);
+
     private static void BrowseInto(System.Windows.Controls.TextBox box)
     {
         using var dialog = new FolderBrowserDialog { ShowNewFolderButton = false };
@@ -69,6 +72,10 @@ public partial class NewCustomerDialog : Window
         string bubbleFolder = BubbleFolderBox.Text.Trim();
         if (!string.IsNullOrWhiteSpace(bubbleFolder))
             BubbleConfig.SetBubbleFolder(name, bubbleFolder);
+
+        string dirFolder = DirFolderBox.Text.Trim();
+        if (!string.IsNullOrWhiteSpace(dirFolder))
+            DirConfig.SetDirFolder(name, dirFolder);
 
         Logger.Instance.Info($"NewCustomerDialog: created customer id={customerId} name='{name}'");
         DialogResult = true;

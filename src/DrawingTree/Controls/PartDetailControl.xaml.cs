@@ -260,12 +260,19 @@ public partial class PartDetailControl : UserControl
 
     // ── DIR ─────────────────────────────────────────────────────────────
 
+    private static readonly int[] DirColumnWidths = { 340, 50, 170, 110, 140, 28 };
+
     private void LoadDirSection()
     {
         DirFilesPanel.Children.Clear();
 
-        var attachments = _partRepository.GetDirAttachments(_partId);
+        var hasOrderItemDir = _mpContext != null && _partRepository.GetDirAttachmentForOrderItem(_partId, _orderItemId) != null;
+        NewDirButton.Visibility = _mpContext != null && !hasOrderItemDir ? Visibility.Visible : Visibility.Collapsed;
+        OpenDirFolderButton.Visibility = _orderItemId > 0 ? Visibility.Visible : Visibility.Collapsed;
 
+        if (_header == null) return;
+
+        var attachments = _partRepository.GetDirAttachmentsByDrawingNumber(_header.DrawingNumber);
         if (attachments.Count == 0)
         {
             DirFilesPanel.Children.Add(new TextBlock
@@ -275,26 +282,73 @@ public partial class PartDetailControl : UserControl
             return;
         }
 
-        DirFilesPanel.Children.Add(BuildMpFilesHeader());
+        DirFilesPanel.Children.Add(BuildDirFilesHeader());
         foreach (var attachment in attachments)
             DirFilesPanel.Children.Add(BuildDirFileRow(attachment));
+    }
+
+    private static Grid BuildDirFilesHeader()
+    {
+        var grid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
+        foreach (var w in DirColumnWidths)
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(w) });
+
+        var headers = new[] { "File Name", "Rev", "Status", "Type", "Created at", "" };
+        for (int i = 0; i < headers.Length; i++)
+        {
+            var block = new TextBlock
+            {
+                Text = headers[i], FontWeight = FontWeights.SemiBold, FontSize = 11, Foreground = Brushes.Gray
+            };
+            Grid.SetColumn(block, i);
+            grid.Children.Add(block);
+        }
+        return grid;
     }
 
     private Grid BuildDirFileRow(DirAttachmentRow attachment)
     {
         var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.5, GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        foreach (var w in DirColumnWidths)
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(w) });
 
         var nameText = new TextBlock
         {
-            Text = attachment.FileName, FontSize = 12,
-            VerticalAlignment = VerticalAlignment.Center,
+            Text = attachment.FileName, FontSize = 12, VerticalAlignment = VerticalAlignment.Center,
             TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = attachment.FilePath
         };
         Grid.SetColumn(nameText, 0);
         grid.Children.Add(nameText);
+
+        var revText = new TextBlock
+        {
+            Text = attachment.Revision, FontSize = 12, VerticalAlignment = VerticalAlignment.Center
+        };
+        Grid.SetColumn(revText, 1);
+        grid.Children.Add(revText);
+
+        var statusCell = BuildDirStatusCell(attachment);
+        Grid.SetColumn(statusCell, 2);
+        grid.Children.Add(statusCell);
+
+        var isCurrentOrder = attachment.OrderItemId.HasValue && attachment.OrderItemId.Value == _orderItemId;
+        var typeText = new TextBlock
+        {
+            Text = isCurrentOrder ? "current order" : "archived", FontSize = 12,
+            FontWeight = isCurrentOrder ? FontWeights.SemiBold : FontWeights.Normal,
+            Foreground = isCurrentOrder ? Brushes.SeaGreen : Brushes.Black,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        Grid.SetColumn(typeText, 3);
+        grid.Children.Add(typeText);
+
+        var createdText = new TextBlock
+        {
+            Text = attachment.CreatedAt, FontSize = 12, Foreground = Brushes.Gray,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        Grid.SetColumn(createdText, 4);
+        grid.Children.Add(createdText);
 
         var openBtn = new Button
         {
@@ -307,10 +361,38 @@ public partial class PartDetailControl : UserControl
         };
         openBtn.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
         openBtn.Click += (_, _) => OpenDirFile(attachment);
-        Grid.SetColumn(openBtn, 1);
+        Grid.SetColumn(openBtn, 5);
         grid.Children.Add(openBtn);
 
         return grid;
+    }
+
+    private StackPanel BuildDirStatusCell(DirAttachmentRow attachment)
+    {
+        var statusPanel = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+
+        statusPanel.Children.Add(new TextBlock
+        {
+            Text = attachment.Status, FontSize = 12, VerticalAlignment = VerticalAlignment.Center
+        });
+
+        if (string.Equals(attachment.Status, "in progress", StringComparison.OrdinalIgnoreCase))
+        {
+            var attachmentId = attachment.AttachmentId;
+            var completeBtn = new Button
+            {
+                Content = "Complete", FontSize = 11, Height = 22,
+                Margin = new Thickness(6, 0, 0, 0), Padding = new Thickness(6, 0, 6, 0)
+            };
+            completeBtn.Click += (_, _) =>
+            {
+                _partRepository.UpdateAttachmentStatus(attachmentId, "completed");
+                LoadDirSection();
+            };
+            statusPanel.Children.Add(completeBtn);
+        }
+
+        return statusPanel;
     }
 
     private void OpenDirFile(DirAttachmentRow attachment)
@@ -331,6 +413,100 @@ public partial class PartDetailControl : UserControl
         catch (Exception ex)
         {
             MessageBox.Show($"Failed to open file: {ex.Message}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void OpenDirFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_mpContext == null)
+        {
+            MessageBox.Show("Could not resolve order item information for this part.", "Order Item Not Found",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            var folder = DirFileService.ResolveFolder(_mpContext);
+            if (!Directory.Exists(folder))
+            {
+                MessageBox.Show($"Folder does not exist yet:\n{folder}", "Folder Not Found",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            Process.Start(new ProcessStartInfo { FileName = folder, UseShellExecute = true });
+        }
+        catch (DirFolderNotConfiguredException ex)
+        {
+            Logger.Instance.Warning($"PartDetailControl: DIR folder not configured for '{ex.CustomerName}'");
+            MessageBox.Show(
+                $"No DIR folder configured for customer '{ex.CustomerName}'.\n\n" +
+                $"Please open config.txt and set the folder path under [DirFolderMappings]:\n" +
+                $"  {ex.CustomerName}=\n\n" +
+                $"Config file:\n{ex.ConfigFilePath}",
+                "DIR Folder Not Configured", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartDetailControl: failed to open DIR folder: {ex.Message}");
+            MessageBox.Show($"Failed to open folder:\n{ex.Message}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void NewDirButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_mpContext == null) return;
+
+        if (!DirFileService.TemplateExists())
+        {
+            MessageBox.Show($"DIR template not found:\n{DirFileService.TemplatePath}", "Template Not Found",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        string folder;
+        try
+        {
+            folder = DirFileService.ResolveFolder(_mpContext);
+        }
+        catch (DirFolderNotConfiguredException ex)
+        {
+            Logger.Instance.Warning($"PartDetailControl: DIR folder not configured for '{ex.CustomerName}'");
+            MessageBox.Show(
+                $"No DIR folder configured for customer '{ex.CustomerName}'.\n\n" +
+                $"Please open config.txt and set the folder path under [DirFolderMappings]:\n" +
+                $"  {ex.CustomerName}=\n\n" +
+                $"Config file:\n{ex.ConfigFilePath}",
+                "DIR Folder Not Configured", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (!Directory.Exists(folder))
+        {
+            var choice = MessageBox.Show(
+                $"Folder does not exist yet:\n{folder}\n\nCreate it now?",
+                "Folder Not Found", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (choice != MessageBoxResult.Yes) return;
+            Directory.CreateDirectory(folder);
+        }
+
+        try
+        {
+            DirFileService.CreateAndOpen(_mpContext, folder);
+            LoadDirSection();
+        }
+        catch (InvalidOperationException ex)
+        {
+            Logger.Instance.Warning($"PartDetailControl: DIR file already exists: {ex.Message}");
+            MessageBox.Show(ex.Message, "File Already Exists",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartDetailControl: failed to create DIR file: {ex.Message}");
+            MessageBox.Show($"Failed to create DIR file:\n{ex.Message}", "Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }

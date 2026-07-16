@@ -351,10 +351,11 @@ public class PartRepository
     }
 
     /// <summary>
-    /// Returns all DIR file attachments recorded for the given part.
+    /// Returns all DIR file attachments recorded for every part sharing the given
+    /// drawing_number, regardless of revision or order.
     /// </summary>
-    /// <param name="partId">part.id</param>
-    public List<DirAttachmentRow> GetDirAttachments(int partId)
+    /// <param name="drawingNumber">part.drawing_number</param>
+    public List<DirAttachmentRow> GetDirAttachmentsByDrawingNumber(string drawingNumber)
     {
         var results = new List<DirAttachmentRow>();
         try
@@ -362,21 +363,57 @@ public class PartRepository
             using var conn = DatabaseConnectionFactory.OpenDevConnection();
             using var cmd = conn.CreateCommand();
             cmd.CommandText = """
-                SELECT id, file_name, file_path
-                FROM part_attachment
-                WHERE part_id = @pid AND file_type = 'DIR' COLLATE NOCASE
-                ORDER BY created_at DESC
+                SELECT pa.id, pa.file_name, pa.file_path, pa.status, pa.order_item_id, pa.created_at, p.revision
+                FROM part_attachment pa
+                JOIN part p ON p.id = pa.part_id
+                WHERE pa.file_type = 'DIR' COLLATE NOCASE
+                  AND pa.part_id IN (SELECT id FROM part WHERE drawing_number = @dn COLLATE NOCASE)
+                ORDER BY pa.created_at DESC
                 """;
-            cmd.Parameters.AddWithValue("@pid", partId);
+            cmd.Parameters.AddWithValue("@dn", drawingNumber);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
-                results.Add(new DirAttachmentRow(reader.GetInt32(0), reader.GetString(1), reader.GetString(2)));
+            {
+                results.Add(new DirAttachmentRow(
+                    reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+                    reader.IsDBNull(4) ? null : reader.GetInt32(4), reader.GetString(5), reader.GetString(6)));
+            }
         }
         catch (Exception ex)
         {
-            Logger.Instance.Error($"PartRepository.GetDirAttachments failed for partId={partId}: {ex.Message}");
+            Logger.Instance.Error($"PartRepository.GetDirAttachmentsByDrawingNumber failed for drawingNumber={drawingNumber}: {ex.Message}");
         }
         return results;
+    }
+
+    /// <summary>
+    /// Inserts a new DIR file attachment record.
+    /// </summary>
+    /// <param name="partId">part.id (0 if no part linked)</param>
+    /// <param name="orderItemId">order_item.id</param>
+    /// <param name="fileName">File name (without path)</param>
+    /// <param name="filePath">Full file path</param>
+    public void AddDirAttachment(int partId, int orderItemId, string fileName, string filePath)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                INSERT INTO part_attachment (part_id, order_item_id, file_type, file_name, file_path, is_active)
+                VALUES (@partId, @oid, 'DIR', @name, @path, 1)
+                """;
+            cmd.Parameters.AddWithValue("@partId", partId > 0 ? partId : DBNull.Value);
+            cmd.Parameters.AddWithValue("@oid",    orderItemId);
+            cmd.Parameters.AddWithValue("@name",   fileName);
+            cmd.Parameters.AddWithValue("@path",   filePath);
+            cmd.ExecuteNonQuery();
+            Logger.Instance.Info($"PartRepository.AddDirAttachment: recorded '{filePath}'");
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.AddDirAttachment failed for '{filePath}': {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -591,7 +628,13 @@ public record MpAttachmentRow(int AttachmentId, string FileName, string FilePath
 /// <param name="AttachmentId">part_attachment.id</param>
 /// <param name="FileName">File name (without path)</param>
 /// <param name="FilePath">Full file path</param>
-public record DirAttachmentRow(int AttachmentId, string FileName, string FilePath);
+/// <param name="Status">part_attachment.status</param>
+/// <param name="OrderItemId">part_attachment.order_item_id; null if not linked to an order item</param>
+/// <param name="CreatedAt">part_attachment.created_at</param>
+/// <param name="Revision">part.revision of the attachment's part</param>
+public record DirAttachmentRow(
+    int AttachmentId, string FileName, string FilePath, string Status,
+    int? OrderItemId, string CreatedAt, string Revision);
 
 /// <param name="AttachmentId">part_attachment.id</param>
 /// <param name="FileName">File name (without path)</param>

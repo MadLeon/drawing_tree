@@ -75,6 +75,7 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="120"/>
@@ -101,6 +102,11 @@
                                         <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding BubbleFolder}" Style="{StaticResource CardValue}" Margin="0,4,0,0"/>
                                         <Button Grid.Row="3" Grid.Column="2" Content="Browse" Width="70" Height="26" Margin="8,4,0,0"
                                                 Tag="{Binding}" Click="BrowseCustomerBubbleFolder_Click"/>
+
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="DIR Folder:" Style="{StaticResource CardLabel}" Margin="0,4,8,0"/>
+                                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding DirFolder}" Style="{StaticResource CardValue}" Margin="0,4,0,0"/>
+                                        <Button Grid.Row="4" Grid.Column="2" Content="Browse" Width="70" Height="26" Margin="8,4,0,0"
+                                                Tag="{Binding}" Click="BrowseCustomerDirFolder_Click"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>

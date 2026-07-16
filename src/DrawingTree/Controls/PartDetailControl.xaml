@@ -138,7 +138,18 @@
                 <!-- DIR -->
                 <Border BorderBrush="#CCCCCC" BorderThickness="1" Margin="0,0,0,12" Padding="10" Background="White">
                     <StackPanel>
-                        <TextBlock Text="DIR" FontWeight="Bold" FontSize="13" Margin="0,0,0,8"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="DIR" FontWeight="Bold" FontSize="13"
+                                       VerticalAlignment="Center"/>
+                            <Button x:Name="OpenDirFolderButton" Content="Open Folder"
+                                    Height="24" FontSize="11" Padding="8,0"
+                                    Margin="8,0,0,0" VerticalAlignment="Center"
+                                    Click="OpenDirFolderButton_Click"/>
+                            <Button x:Name="NewDirButton" Content="New DIR"
+                                    Height="24" FontSize="11" Padding="8,0"
+                                    Margin="8,0,0,0" VerticalAlignment="Center"
+                                    Click="NewDirButton_Click"/>
+                        </StackPanel>
                         <StackPanel x:Name="DirFilesPanel"/>
                     </StackPanel>
                 </Border>
