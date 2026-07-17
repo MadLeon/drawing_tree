@@ -1,0 +1,57 @@
+<UserControl x:Class="DrawingTree.Controls.DirLogControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:DrawingTree.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1100">
+
+    <UserControl.Resources>
+        <Geometry x:Key="OpenInNewGeo">M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z</Geometry>
+    </UserControl.Resources>
+
+    <Grid>
+        <DockPanel Background="White">
+
+            <!-- Top toolbar -->
+            <Border DockPanel.Dock="Top" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1"
+                    Background="#F0F0F0" Padding="8,6" Height="40">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="BackButton"
+                                Style="{StaticResource IconBtn}"
+                                Width="28" Height="28" Margin="0,0,8,0"
+                                ToolTip="Back"
+                                Click="BackButton_Click">
+                            <Path Data="{StaticResource ChevronLeftGeo}"
+                                  Stretch="Uniform" Fill="#333333" Width="14" Height="14"/>
+                        </Button>
+                        <TextBlock Text="DIR Log" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#333333" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <RadioButton x:Name="DayRadio" Content="Day"
+                                     FontSize="11" Margin="0,0,8,0"
+                                     VerticalContentAlignment="Center"
+                                     IsChecked="True"
+                                     Checked="ViewMode_Checked"/>
+                        <RadioButton x:Name="MonthRadio" Content="Month"
+                                     FontSize="11"
+                                     VerticalContentAlignment="Center"
+                                     Checked="ViewMode_Checked"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Scrollable per-day sections -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel x:Name="LogSectionsPanel" Margin="16"/>
+            </ScrollViewer>
+
+        </DockPanel>
+
+        <local:LoadingOverlayControl x:Name="LoadingOverlay" Visibility="Collapsed" Panel.ZIndex="10"/>
+    </Grid>
+</UserControl>
