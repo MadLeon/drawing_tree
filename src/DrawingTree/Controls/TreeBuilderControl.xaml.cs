@@ -607,6 +607,13 @@ public partial class TreeBuilderControl : UserControl
             SelectDrawing(node.Drawing, node);
     }
 
+    private void ExpandButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement el && el.DataContext is DrawingNode node)
+            node.IsExpanded = !node.IsExpanded;
+        e.Handled = true;
+    }
+
     private void RemoveFromTree_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement el && el.DataContext is DrawingNode node)
@@ -661,6 +668,21 @@ public partial class TreeBuilderControl : UserControl
         _selectedDrawings.Remove(info);
         Logger.Instance.Info($"Removed '{info.DrawingNumber}' from left list");
         Snackbar.Show($"Removed: {info.DrawingNumber}");
+    }
+
+    private void LeftItemMakeNode_Click(object sender, RoutedEventArgs e)
+    {
+        if (GetContextMenuDataContext<DrawingInfo>(sender) is not DrawingInfo info) return;
+
+        _leftDrawings.Remove(info);
+        if (_selectedDrawing == info) ClearInfoPanel();
+        _selectedDrawings.Remove(info);
+
+        _rootNodes.Add(new DrawingNode(info));
+        _hasUnsavedChanges = true;
+
+        Logger.Instance.Info($"Made '{info.DrawingNumber}' a root node in the tree");
+        Snackbar.Show($"Added as root node: {info.DrawingNumber}");
     }
 
     // ── Tree panel context menu ───────────────────────────────────────────
