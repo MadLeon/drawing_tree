@@ -233,3 +233,9 @@ ALTER TABLE order_item ADD COLUMN description TEXT;
 UPDATE order_item
 SET description = (SELECT p.description FROM part p WHERE p.id = order_item.part_id)
 WHERE description IS NULL;
+
+-- 2026-07-17: Add part.previous_drawing_number (Issue #60)
+-- Records the drawing number a part carried before a rename, as plain historical text —
+-- distinct from previous_id/next_id, which are self-referencing FKs to other part rows
+-- forming the revision chain. No backfill: existing rows have no derivable prior name.
+ALTER TABLE part ADD COLUMN previous_drawing_number TEXT;
