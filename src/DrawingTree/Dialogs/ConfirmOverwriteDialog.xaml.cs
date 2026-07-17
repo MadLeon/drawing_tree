@@ -34,6 +34,8 @@ public partial class ConfirmOverwriteDialog : Window
             diffs.Add(new DiffItem("File Path", current.PdfPath, db.PdfPath));
 
         DiffList.ItemsSource = diffs;
+
+        Loaded += (_, _) => OverwriteButton.Focus();
     }
 
     private void OverwriteButton_Click(object sender, RoutedEventArgs e) => DialogResult = true;

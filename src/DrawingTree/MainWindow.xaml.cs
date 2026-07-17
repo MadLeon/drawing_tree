@@ -410,7 +410,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Fired after PartEditorControl Save All.
+    /// Fired when PartEditorControl's Next button is clicked.
     /// Auto-navigates to TreeBuilderControl.
     /// </summary>
     private void OnPartEditorSaveAllCompleted(object? sender, string importFilePath)

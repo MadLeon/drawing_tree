@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using DrawingTree.Data;
 using DrawingTree.Dialogs;
 using DrawingTree.Logging;
@@ -16,6 +18,7 @@ using UserControl = System.Windows.Controls.UserControl;
 using MessageBox = System.Windows.MessageBox;
 using MessageBoxButton = System.Windows.MessageBoxButton;
 using MessageBoxImage = System.Windows.MessageBoxImage;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 
 namespace DrawingTree.Controls;
 
@@ -28,11 +31,12 @@ public partial class PartEditorControl : UserControl
 {
     private readonly DrawingRepository _drawingRepository = new();
     private readonly ObservableCollection<PartEditorRow> _rows = new();
+    private readonly Dictionary<PartEditorRow, Process> _openPdfProcesses = new();
     private string _poName = string.Empty;
     private string _jsonFilePath = string.Empty;
 
     public event EventHandler? ReturnRequested;
-    /// <summary>Fired after Save All completes. Argument is the import JSON file path.</summary>
+    /// <summary>Fired when Next is clicked. Argument is the import JSON file path.</summary>
     public event EventHandler<string>? SaveAllCompleted;
 
     public PartEditorControl()
@@ -175,20 +179,16 @@ public partial class PartEditorControl : UserControl
 
     private void RowSaveButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement el && el.DataContext is PartEditorRow row)
-            SaveRow(row);
+        if (sender is not FrameworkElement el || el.DataContext is not PartEditorRow row) return;
+
+        CloseOpenPdf(row);
+        SaveRow(row);
+        FocusNextRowOpenPdfButton(row);
     }
 
-    private void SaveAllButton_Click(object sender, RoutedEventArgs e)
+    private void NextButton_Click(object sender, RoutedEventArgs e)
     {
-        var pending = _rows.Where(r => r.Status != SaveStatus.Success).ToList();
-        foreach (var row in pending)
-            SaveRow(row);
-
-        int saved = _rows.Count(r => r.Status == SaveStatus.Success);
-        Snackbar.Show($"Saved {saved} / {_rows.Count} parts");
-        Logger.Instance.Info($"PartEditor Save All: {saved}/{_rows.Count} succeeded for PO: {_poName}");
-
+        Logger.Instance.Info($"PartEditor: Next clicked, navigating from PO: {_poName}");
         SaveAllCompleted?.Invoke(this, _jsonFilePath);
     }
 
@@ -252,23 +252,27 @@ public partial class PartEditorControl : UserControl
         Logger.Instance.Info($"PartEditor: Drawing Number changed to '{newNumber}', row refreshed from DB (PartId={row.PartId})");
     }
 
-    private void RowBrowseButton_Click(object sender, RoutedEventArgs e)
+    private void RowOpenPdfButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement el || el.DataContext is not PartEditorRow row) return;
 
-        using var dialog = new System.Windows.Forms.OpenFileDialog
-        {
-            Title  = "Select PDF File",
-            Filter = "PDF Files (*.pdf)|*.pdf|All Files (*.*)|*.*"
-        };
-        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            row.PdfPath = dialog.FileName;
+        Process? proc = OpenPdf(row.PdfPath);
+        if (proc != null)
+            _openPdfProcesses[row] = proc;
+
+        // Move focus off the Open PDF button so switching back from the PDF viewer
+        // lands the user directly in Revision, ready to type.
+        if (el.Parent is DependencyObject rowGrid)
+            FindTaggedElement(rowGrid, "RevisionTextBox")?.Focus();
     }
 
-    private void RowOpenPdfButton_Click(object sender, RoutedEventArgs e)
+    private void Description_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (sender is FrameworkElement el && el.DataContext is PartEditorRow row)
-            OpenPdf(row.PdfPath);
+        if (e.Key != Key.Enter) return;
+        if (sender is not FrameworkElement el || el.Parent is not DependencyObject rowGrid) return;
+
+        FindTaggedElement(rowGrid, "SaveButton")?.Focus();
+        e.Handled = true;
     }
 
     private void ReturnButton_Click(object sender, RoutedEventArgs e)
@@ -303,22 +307,69 @@ public partial class PartEditorControl : UserControl
 
     // ── Helpers ───────────────────────────────────────────────────────────
 
-    private static void OpenPdf(string path)
+    private static Process? OpenPdf(string path)
     {
         if (string.IsNullOrEmpty(path) || !File.Exists(path))
         {
             MessageBox.Show("PDF file not found.", "File Not Found",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
+            return null;
         }
         try
         {
-            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+            return Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
         }
         catch (Exception ex)
         {
             MessageBox.Show($"Failed to open PDF: {ex.Message}", "Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
+            return null;
         }
+    }
+
+    /// <summary>
+    /// Best-effort close of the PDF viewer window opened for this row via Open PDF.
+    /// Does not force-kill the process, since a PDF reader may have other documents open.
+    /// </summary>
+    private void CloseOpenPdf(PartEditorRow row)
+    {
+        if (!_openPdfProcesses.TryGetValue(row, out Process? proc)) return;
+        _openPdfProcesses.Remove(row);
+
+        try
+        {
+            if (!proc.HasExited)
+                proc.CloseMainWindow();
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Warning($"PartEditor: failed to close PDF for '{row.DrawingNumber}': {ex.Message}");
+        }
+    }
+
+    private void FocusNextRowOpenPdfButton(PartEditorRow row)
+    {
+        int index = _rows.IndexOf(row);
+        if (index < 0 || index + 1 >= _rows.Count) return;
+
+        var container = PartList.ItemContainerGenerator.ContainerFromItem(_rows[index + 1]);
+        if (container == null) return;
+
+        FindTaggedElement(container, "OpenPdfButton")?.Focus();
+    }
+
+    private static FrameworkElement? FindTaggedElement(DependencyObject parent, string tag)
+    {
+        int count = VisualTreeHelper.GetChildrenCount(parent);
+        for (int i = 0; i < count; i++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+            if (child is FrameworkElement fe && Equals(fe.Tag, tag))
+                return fe;
+
+            FrameworkElement? found = FindTaggedElement(child, tag);
+            if (found != null) return found;
+        }
+        return null;
     }
 }

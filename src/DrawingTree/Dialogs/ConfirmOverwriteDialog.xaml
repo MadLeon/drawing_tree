@@ -67,8 +67,8 @@
 
         <!-- Buttons -->
         <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Overwrite" Width="90" Height="28"
-                    Margin="0,0,8,0" Click="OverwriteButton_Click"/>
+            <Button x:Name="OverwriteButton" Content="Overwrite" Width="90" Height="28"
+                    Margin="0,0,8,0" IsDefault="True" Click="OverwriteButton_Click"/>
             <Button Content="Cancel" Width="80" Height="28"
                     Click="CancelButton_Click"/>
         </StackPanel>
