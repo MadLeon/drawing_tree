@@ -54,5 +54,17 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Read-only, borderless TextBox used for page/section titles so their text can be mouse-selected -->
+        <Style x:Key="SelectableTitleText" TargetType="TextBox">
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="IsUndoEnabled" Value="False"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="IBeam"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        </Style>
     </Application.Resources>
 </Application>
