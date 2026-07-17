@@ -70,6 +70,7 @@
                         <ColumnDefinition Width="240"/>
                         <ColumnDefinition Width="80"/>
                         <ColumnDefinition Width="36"/>
+                        <ColumnDefinition Width="140"/>
                         <ColumnDefinition Width="80"/>
                         <ColumnDefinition Width="440"/>
                         <ColumnDefinition Width="70"/>
@@ -77,8 +78,9 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="1"  Text="Drawing Number"  FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
                     <TextBlock Grid.Column="2"  Text="Is Assembly"     FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
-                    <TextBlock Grid.Column="4"  Text="Revision"        FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
-                    <TextBlock Grid.Column="5"  Text="Description"     FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    <TextBlock Grid.Column="4"  Text="Previous Drawing #" FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    <TextBlock Grid.Column="5"  Text="Revision"        FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    <TextBlock Grid.Column="6"  Text="Description"     FontWeight="SemiBold" FontSize="11" Foreground="#555" VerticalAlignment="Center" Margin="4,0,0,0"/>
                 </Grid>
             </Border>
 
@@ -93,12 +95,13 @@
                                     BorderBrush="#EEEEEE"
                                     BorderThickness="0,0,0,1"
                                     Padding="4,2">
-                                <Grid MinWidth="1022">
+                                <Grid MinWidth="1162">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="40"/>
                                         <ColumnDefinition Width="240"/>
                                         <ColumnDefinition Width="80"/>
                                         <ColumnDefinition Width="36"/>
+                                        <ColumnDefinition Width="140"/>
                                         <ColumnDefinition Width="80"/>
                                         <ColumnDefinition Width="440"/>
                                         <ColumnDefinition Width="70"/>
@@ -131,26 +134,31 @@
                                               Width="14" Height="14"/>
                                     </Button>
 
-                                    <!-- Col 4: Revision -->
+                                    <!-- Col 4: Previous Drawing Number (optional) -->
                                     <TextBox Grid.Column="4"
+                                             Text="{Binding PreviousDrawingNumber, UpdateSourceTrigger=PropertyChanged}"
+                                             Height="26" Padding="4,3" FontSize="12" Margin="2,1"/>
+
+                                    <!-- Col 5: Revision -->
+                                    <TextBox Grid.Column="5"
                                              Text="{Binding Revision, UpdateSourceTrigger=PropertyChanged}"
                                              Height="26" Padding="4,3" FontSize="12" Margin="2,1"
                                              Tag="RevisionTextBox"/>
 
-                                    <!-- Col 5: Description -->
-                                    <TextBox Grid.Column="5"
+                                    <!-- Col 6: Description -->
+                                    <TextBox Grid.Column="6"
                                              Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
                                              Height="26" Padding="4,3" FontSize="12" Margin="2,1"
                                              PreviewKeyDown="Description_PreviewKeyDown"/>
 
-                                    <!-- Col 6: Save -->
-                                    <Button Grid.Column="6" Content="Save"
+                                    <!-- Col 7: Save -->
+                                    <Button Grid.Column="7" Content="Save"
                                             Height="26" FontSize="11" Margin="2,1"
                                             Tag="SaveButton"
                                             Click="RowSaveButton_Click"/>
 
-                                    <!-- Col 7: Status icon -->
-                                    <Grid Grid.Column="7" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <!-- Col 8: Status icon -->
+                                    <Grid Grid.Column="8" HorizontalAlignment="Center" VerticalAlignment="Center">
                                         <Path x:Name="CheckCirclePath"
                                               Data="{StaticResource CheckCircleGeo}"
                                               Stretch="Uniform"

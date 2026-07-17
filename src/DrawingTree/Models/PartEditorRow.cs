@@ -15,6 +15,7 @@ public class PartEditorRow : INotifyPropertyChanged
     private int?  _partId;
     private string _revision = string.Empty;
     private string _description = string.Empty;
+    private string _previousDrawingNumber = string.Empty;
     private string _quantityInAssembly = string.Empty;
     private bool _isAssembly;
     private string _pdfPath = string.Empty;
@@ -46,6 +47,13 @@ public class PartEditorRow : INotifyPropertyChanged
     {
         get => _description;
         set { if (_description != value) { _description = value; OnPropertyChanged(); } }
+    }
+
+    /// <summary>Drawing number this part carried before a rename, as plain historical text (optional)</summary>
+    public string PreviousDrawingNumber
+    {
+        get => _previousDrawingNumber;
+        set { if (_previousDrawingNumber != value) { _previousDrawingNumber = value; OnPropertyChanged(); } }
     }
 
     /// <summary>Display only. Quantity is stored in part_tree and managed by the Tree Builder.</summary>

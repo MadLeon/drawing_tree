@@ -393,7 +393,8 @@ public partial class TreeBuilderControl : UserControl
             partId,
             InfoRevision.Text.Trim(),
             InfoDescription.Text.Trim(),
-            InfoIsAssembly.IsChecked == true);
+            InfoIsAssembly.IsChecked == true,
+            _selectedDrawing.PreviousDrawingNumber);
 
         if (!partOk)
         {

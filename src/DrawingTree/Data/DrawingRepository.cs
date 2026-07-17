@@ -37,7 +37,8 @@ public class DrawingRepository
                        p.description,
                        p.is_assembly,
                        p.has_parent,
-                       df.file_path
+                       df.file_path,
+                       p.previous_drawing_number
                 FROM part p
                 LEFT JOIN drawing_file df ON df.part_id = p.id AND df.is_active = 1
                 WHERE p.drawing_number = @dn
@@ -56,7 +57,8 @@ public class DrawingRepository
                 Revision      = reader.GetString(2),
                 Description   = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
                 IsAssembly    = !reader.IsDBNull(4) && reader.GetInt32(4) != 0,
-                PdfPath       = reader.IsDBNull(6) ? string.Empty : reader.GetString(6)
+                PdfPath       = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                PreviousDrawingNumber = reader.IsDBNull(7) ? string.Empty : reader.GetString(7)
             };
         }
         catch (Exception ex)
@@ -84,7 +86,8 @@ public class DrawingRepository
                        p.description,
                        p.is_assembly,
                        p.has_parent,
-                       df.file_path
+                       df.file_path,
+                       p.previous_drawing_number
                 FROM part p
                 LEFT JOIN drawing_file df ON df.part_id = p.id AND df.is_active = 1
                 WHERE p.id = @pid
@@ -102,7 +105,8 @@ public class DrawingRepository
                 Revision      = reader.GetString(2),
                 Description   = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
                 IsAssembly    = !reader.IsDBNull(4) && reader.GetInt32(4) != 0,
-                PdfPath       = reader.IsDBNull(6) ? string.Empty : reader.GetString(6)
+                PdfPath       = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                PreviousDrawingNumber = reader.IsDBNull(7) ? string.Empty : reader.GetString(7)
             };
         }
         catch (Exception ex)
@@ -143,13 +147,14 @@ public class DrawingRepository
     }
 
     /// <summary>
-    /// Updates description, revision, and is_assembly for an existing part.
+    /// Updates description, revision, is_assembly, and previous_drawing_number for an existing part.
     /// </summary>
     /// <param name="partId">part.id to update</param>
     /// <param name="revision">New revision value</param>
     /// <param name="description">New description</param>
     /// <param name="isAssembly">New is_assembly flag</param>
-    public bool UpdatePart(int partId, string revision, string description, bool isAssembly)
+    /// <param name="previousDrawingNumber">Drawing number the part carried before a rename (optional)</param>
+    public bool UpdatePart(int partId, string revision, string description, bool isAssembly, string previousDrawingNumber)
     {
         try
         {
@@ -157,15 +162,17 @@ public class DrawingRepository
             using var cmd = conn.CreateCommand();
             cmd.CommandText = """
                 UPDATE part
-                SET revision    = @rev,
-                    description = @desc,
-                    is_assembly = @asm,
-                    updated_at  = datetime('now', 'localtime')
+                SET revision                = @rev,
+                    description              = @desc,
+                    is_assembly              = @asm,
+                    previous_drawing_number  = @pdn,
+                    updated_at               = datetime('now', 'localtime')
                 WHERE id = @id
                 """;
             cmd.Parameters.AddWithValue("@rev",  revision);
             cmd.Parameters.AddWithValue("@desc", description);
             cmd.Parameters.AddWithValue("@asm",  isAssembly ? 1 : 0);
+            cmd.Parameters.AddWithValue("@pdn",  previousDrawingNumber);
             cmd.Parameters.AddWithValue("@id",   partId);
             cmd.ExecuteNonQuery();
             return true;

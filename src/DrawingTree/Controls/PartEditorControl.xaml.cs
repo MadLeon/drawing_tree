@@ -85,6 +85,7 @@ public partial class PartEditorControl : UserControl
                     Description        = dbInfo?.Description ?? string.Empty,
                     IsAssembly         = dbInfo?.IsAssembly  ?? false,
                     PdfPath            = dbInfo?.PdfPath.Length > 0 ? dbInfo.PdfPath : pdfPath,
+                    PreviousDrawingNumber = dbInfo?.PreviousDrawingNumber ?? string.Empty,
                 });
             }
 
@@ -111,7 +112,7 @@ public partial class PartEditorControl : UserControl
                 return;
             }
             row.PartId = newId;
-            _drawingRepository.UpdatePart(newId, row.Revision, row.Description, row.IsAssembly);
+            _drawingRepository.UpdatePart(newId, row.Revision, row.Description, row.IsAssembly, row.PreviousDrawingNumber);
             if (!string.IsNullOrEmpty(row.PdfPath))
                 _drawingRepository.UpsertDrawingFile(newId, Path.GetFileName(row.PdfPath), row.PdfPath, row.Revision);
             if (!string.IsNullOrEmpty(_poName))
@@ -134,10 +135,11 @@ public partial class PartEditorControl : UserControl
             return;
         }
 
-        bool same = row.Revision    == dbInfo.Revision   &&
-                    row.Description == dbInfo.Description &&
-                    row.IsAssembly  == dbInfo.IsAssembly  &&
-                    row.PdfPath     == dbInfo.PdfPath;
+        bool same = row.Revision              == dbInfo.Revision              &&
+                    row.Description           == dbInfo.Description           &&
+                    row.IsAssembly            == dbInfo.IsAssembly            &&
+                    row.PdfPath               == dbInfo.PdfPath               &&
+                    row.PreviousDrawingNumber == dbInfo.PreviousDrawingNumber;
 
         if (same)
         {
@@ -149,7 +151,7 @@ public partial class PartEditorControl : UserControl
         if (dialog.ShowDialog() != true) return;
 
         bool ok = _drawingRepository.UpdatePart(
-            row.PartId.Value, row.Revision, row.Description, row.IsAssembly);
+            row.PartId.Value, row.Revision, row.Description, row.IsAssembly, row.PreviousDrawingNumber);
 
         if (ok && !string.IsNullOrEmpty(row.PdfPath))
         {
@@ -246,6 +248,7 @@ public partial class PartEditorControl : UserControl
         row.Revision    = dbInfo?.Revision    ?? string.Empty;
         row.Description = dbInfo?.Description ?? string.Empty;
         row.IsAssembly  = dbInfo?.IsAssembly  ?? false;
+        row.PreviousDrawingNumber = dbInfo?.PreviousDrawingNumber ?? string.Empty;
         if (!string.IsNullOrEmpty(dbInfo?.PdfPath)) row.PdfPath = dbInfo.PdfPath;
         row.Status      = SaveStatus.None;
 

@@ -33,6 +33,9 @@ public partial class ConfirmOverwriteDialog : Window
         if (current.PdfPath != db.PdfPath)
             diffs.Add(new DiffItem("File Path", current.PdfPath, db.PdfPath));
 
+        if (current.PreviousDrawingNumber != db.PreviousDrawingNumber)
+            diffs.Add(new DiffItem("Previous Drawing #", current.PreviousDrawingNumber, db.PreviousDrawingNumber));
+
         DiffList.ItemsSource = diffs;
 
         Loaded += (_, _) => OverwriteButton.Focus();

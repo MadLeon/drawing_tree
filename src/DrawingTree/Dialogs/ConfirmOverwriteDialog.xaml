@@ -51,7 +51,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0"
                                    Text="{Binding Field}"
-                                   FontSize="12" Foreground="#444"/>
+                                   FontSize="12" Foreground="#444" TextWrapping="Wrap"/>
                         <TextBlock Grid.Column="1"
                                    Text="{Binding Current}"
                                    FontSize="12" Foreground="#1976D2"

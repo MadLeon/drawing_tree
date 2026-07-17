@@ -402,7 +402,8 @@ public partial class DrawingViewerControl : UserControl
             partId,
             InfoRevision.Text.Trim(),
             InfoDescription.Text.Trim(),
-            InfoIsAssembly.IsChecked == true);
+            InfoIsAssembly.IsChecked == true,
+            info.PreviousDrawingNumber);
 
         if (!partOk)
         {
