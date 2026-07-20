@@ -23,6 +23,8 @@ public static class DirFileService
 
     /// <summary>
     /// Resolves the DIR target folder for the given context without creating any files.
+    /// The PO revision suffix (e.g. "-R.1", "-R01") is stripped via <see cref="OeNormalization.GetPoBase"/>
+    /// so that different revisions of the same order share one target folder.
     /// Throws <see cref="DirFolderNotConfiguredException"/> when the customer has no configured folder.
     /// </summary>
     public static string ResolveFolder(MpContext ctx)
@@ -31,7 +33,7 @@ public static class DirFileService
         var baseFolder = DirConfig.GetDirFolder(customerName)
             ?? throw new DirFolderNotConfiguredException(customerName, DirConfig.ConfigFilePath);
 
-        var po = SanitizeFolderName(ctx.PoNumber);
+        var po = SanitizeFolderName(OeNormalization.GetPoBase(ctx.PoNumber));
         return string.IsNullOrEmpty(po) ? baseFolder : Path.Combine(baseFolder, po);
     }
 
@@ -113,7 +115,7 @@ public static class DirFileService
             SetCell(ws, "C11", "INCH");
             SetCell(ws, "H6",  ctx.JobNumber);
             SetCell(ws, "H7",  ctx.OeNumber);
-            SetCell(ws, "H8",  ctx.PoNumber);
+            SetCell(ws, "H8",  OeNormalization.GetPoBase(ctx.PoNumber));
 
             wb.Save();
         }
