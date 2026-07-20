@@ -111,15 +111,20 @@
                                                 <MenuItem Header="Remove" Click="LeftItemRemove_Click"/>
                                             </ContextMenu>
                                         </Border.ContextMenu>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding DrawingNumber}" FontSize="12"
-                                                       VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                            <Button Style="{StaticResource IconBtn}" Width="20" Height="20"
-                                                    ToolTip="Open PDF" Click="LeftOpenPdfButton_Click">
-                                                <Path Data="{StaticResource OpenInNewGeo}"
-                                                      Stretch="Uniform"
-                                                      Fill="#1976D2" Width="13" Height="13"/>
-                                            </Button>
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding DrawingNumber}" FontSize="12"
+                                                           VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                                <Button Style="{StaticResource IconBtn}" Width="20" Height="20"
+                                                        ToolTip="Open PDF" Click="LeftOpenPdfButton_Click">
+                                                    <Path Data="{StaticResource OpenInNewGeo}"
+                                                          Stretch="Uniform"
+                                                          Fill="#1976D2" Width="13" Height="13"/>
+                                                </Button>
+                                            </StackPanel>
+                                            <TextBlock x:Name="PreviousDrawingNumberText"
+                                                       Text="{Binding PreviousDrawingNumber}"
+                                                       FontSize="10" Foreground="#888888" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </Border>
                                     <DataTemplate.Triggers>
@@ -130,6 +135,9 @@
                                         <DataTrigger Binding="{Binding IsSelected}" Value="True">
                                             <Setter TargetName="LeftItemBorder" Property="Background" Value="#E3F2FD"/>
                                             <Setter TargetName="LeftItemBorder" Property="BorderBrush" Value="#1976D2"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding PreviousDrawingNumber}" Value="">
+                                            <Setter TargetName="PreviousDrawingNumberText" Property="Visibility" Value="Collapsed"/>
                                         </DataTrigger>
                                     </DataTemplate.Triggers>
                                 </DataTemplate>
@@ -226,7 +234,7 @@
                                                     </Button>
                                                 </StackPanel>
                                                 <TextBlock x:Name="PreviousDrawingNumberText"
-                                                           Text="{Binding Drawing.PreviousDrawingNumber, StringFormat='Previous Drawing #: {0}'}"
+                                                           Text="{Binding Drawing.PreviousDrawingNumber}"
                                                            FontSize="10" Foreground="#888888" Margin="0,2,0,0"/>
                                             </StackPanel>
                                         </Border>

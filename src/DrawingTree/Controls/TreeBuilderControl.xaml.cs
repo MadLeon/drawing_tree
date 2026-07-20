@@ -157,6 +157,7 @@ public partial class TreeBuilderControl : UserControl
                 drawing.Revision    = dbInfo.Revision;
                 drawing.Description = dbInfo.Description;
                 drawing.IsAssembly  = dbInfo.IsAssembly;
+                drawing.PreviousDrawingNumber = dbInfo.PreviousDrawingNumber;
                 if (string.IsNullOrEmpty(drawing.PdfPath))
                     drawing.PdfPath = dbInfo.PdfPath;
             }
@@ -239,7 +240,8 @@ public partial class TreeBuilderControl : UserControl
                     Description        = dbChild.Drawing.Description,
                     IsAssembly         = dbChild.Drawing.IsAssembly,
                     PdfPath            = dbChild.Drawing.PdfPath,
-                    QuantityInAssembly = dbChild.Drawing.QuantityInAssembly
+                    QuantityInAssembly = dbChild.Drawing.QuantityInAssembly,
+                    PreviousDrawingNumber = dbChild.Drawing.PreviousDrawingNumber
                 };
                 var dupeNode = new DrawingNode(copy) { PartTreeId = dbChild.PartTreeId };
                 if (dbChild.Children.Count > 0)
@@ -254,6 +256,7 @@ public partial class TreeBuilderControl : UserControl
             leftMatch.Description          = dbChild.Drawing.Description;
             leftMatch.IsAssembly           = dbChild.Drawing.IsAssembly;
             leftMatch.QuantityInAssembly   = dbChild.Drawing.QuantityInAssembly;
+            leftMatch.PreviousDrawingNumber = dbChild.Drawing.PreviousDrawingNumber;
             if (string.IsNullOrEmpty(leftMatch.PdfPath))
                 leftMatch.PdfPath = dbChild.Drawing.PdfPath;
 

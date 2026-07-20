@@ -119,7 +119,8 @@ public class PoRepository
     public List<DrawingNode> GetPartTree(int rootPartId)
     {
         var rows = new List<(int PartTreeId, int PartId, string Drawing, string Revision,
-            string? Description, bool? IsAssembly, int? ParentPartId, int Quantity, string? FilePath)>();
+            string? Description, bool? IsAssembly, int? ParentPartId, int Quantity, string? FilePath,
+            string? PreviousDrawingNumber)>();
 
         try
         {
@@ -160,7 +161,8 @@ public class PoRepository
                        latest.is_assembly,
                        t.parent_part_id,
                        t.quantity,
-                       df.file_path
+                       df.file_path,
+                       latest.previous_drawing_number
                 FROM tree t
                 JOIN part latest ON latest.id = (
                     SELECT id FROM part
@@ -186,7 +188,8 @@ public class PoRepository
                     reader.IsDBNull(5) ? null    : reader.GetInt32(5) != 0,
                     reader.IsDBNull(6) ? null    : (int?)reader.GetInt32(6),
                     reader.GetInt32(7),
-                    reader.IsDBNull(8) ? null    : reader.GetString(8)
+                    reader.IsDBNull(8) ? null    : reader.GetString(8),
+                    reader.IsDBNull(9) ? null    : reader.GetString(9)
                 ));
             }
         }
@@ -210,7 +213,8 @@ public class PoRepository
                     Description = r.Description ?? string.Empty,
                     IsAssembly  = r.IsAssembly ?? false,
                     PdfPath     = r.FilePath ?? string.Empty,
-                    QuantityInAssembly = r.Quantity.ToString()
+                    QuantityInAssembly = r.Quantity.ToString(),
+                    PreviousDrawingNumber = r.PreviousDrawingNumber ?? string.Empty
                 };
                 nodeMap[r.PartId] = new DrawingNode(info) { PartTreeId = r.PartTreeId };
             }
