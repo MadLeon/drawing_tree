@@ -75,6 +75,36 @@ public class DirLogRepository
         }
         return results;
     }
+
+    /// <summary>
+    /// Overwrites the updated_at ("Finish") timestamp of a DIR part_attachment record
+    /// with a user-supplied value.
+    /// </summary>
+    /// <param name="attachmentId">part_attachment.id</param>
+    /// <param name="finishTime">New value for updated_at</param>
+    public bool UpdateFinishTime(int attachmentId, DateTime finishTime)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                UPDATE part_attachment
+                SET updated_at = @updatedAt
+                WHERE id = @id
+                """;
+            cmd.Parameters.AddWithValue("@updatedAt", finishTime.ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@id", attachmentId);
+            cmd.ExecuteNonQuery();
+            Logger.Instance.Info($"DirLogRepository.UpdateFinishTime: attachment id={attachmentId} -> '{finishTime:yyyy-MM-dd HH:mm:ss}'");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"DirLogRepository.UpdateFinishTime failed for id={attachmentId}: {ex.Message}");
+            return false;
+        }
+    }
 }
 
 /// <param name="DirAttachmentId">part_attachment.id (DIR row)</param>

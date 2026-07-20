@@ -80,12 +80,12 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Revision" FontSize="12" Foreground="Gray"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="RevisionText" FontSize="12"/>
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Description" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="DescriptionText" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Is Assembly" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="IsAssemblyText" FontSize="12" Margin="0,4,0,0"/>
+                                <TextBox Grid.Row="0" Grid.Column="0" Text="Revision" Style="{StaticResource SelectableText}" FontSize="12" Foreground="Gray"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" x:Name="RevisionText" Style="{StaticResource SelectableText}" FontSize="12"/>
+                                <TextBox Grid.Row="1" Grid.Column="0" Text="Description" Style="{StaticResource SelectableText}" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="DescriptionText" Style="{StaticResource SelectableText}" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                <TextBox Grid.Row="2" Grid.Column="0" Text="Is Assembly" Style="{StaticResource SelectableText}" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
+                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="IsAssemblyText" Style="{StaticResource SelectableText}" FontSize="12" Margin="0,4,0,0"/>
                             </Grid>
                             <!-- Right: PO / Job / Line (only when context is available) -->
                             <StackPanel Grid.Column="1" x:Name="PoInfoPanel" Visibility="Collapsed" Margin="8,0,0,0">
@@ -99,12 +99,12 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="PO Number" FontSize="12" Foreground="Gray"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="PoNumberText" FontSize="12"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Job Number" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="JobNumberText" FontSize="12" Margin="0,4,0,0"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Line" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="LineText" FontSize="12" Margin="0,4,0,0"/>
+                                    <TextBox Grid.Row="0" Grid.Column="0" Text="PO Number" Style="{StaticResource SelectableText}" FontSize="12" Foreground="Gray"/>
+                                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="PoNumberText" Style="{StaticResource SelectableText}" FontSize="12"/>
+                                    <TextBox Grid.Row="1" Grid.Column="0" Text="Job Number" Style="{StaticResource SelectableText}" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
+                                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="JobNumberText" Style="{StaticResource SelectableText}" FontSize="12" Margin="0,4,0,0"/>
+                                    <TextBox Grid.Row="2" Grid.Column="0" Text="Line" Style="{StaticResource SelectableText}" FontSize="12" Foreground="Gray" Margin="0,4,0,0"/>
+                                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="LineText" Style="{StaticResource SelectableText}" FontSize="12" Margin="0,4,0,0"/>
                                 </Grid>
                             </StackPanel>
                         </Grid>
@@ -172,6 +172,10 @@
                                     Click="CopyBubbleNameButton_Click">
                                 <Path Data="{StaticResource ContentCopyGeo}" Stretch="Uniform" Fill="#555555" Width="14" Height="14"/>
                             </Button>
+                            <Button x:Name="AssociateBubbleButton" Content="Associate"
+                                    Height="24" FontSize="11" Padding="8,0"
+                                    Margin="8,0,0,0" VerticalAlignment="Center"
+                                    Click="AssociateBubbleButton_Click"/>
                         </StackPanel>
                         <StackPanel x:Name="BubbleFilesPanel"/>
                     </StackPanel>

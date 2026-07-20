@@ -9,7 +9,7 @@ namespace DrawingTree.Services;
 
 /// <summary>
 /// Service class for extracting drawing information from PDF files
-/// Scans folders, extracts drawing numbers from filenames, and deduplicates results
+/// Scans folders and extracts drawing numbers from filenames for every PDF found
 /// </summary>
 public class DrawingExtractor
 {
@@ -95,14 +95,14 @@ public class DrawingExtractor
 
     /// <summary>
     /// Scan a folder for PDF files and extract drawing information
-    /// Automatically deduplicates entries (keeps first occurrence)
+    /// Returns an entry for every PDF found; no deduplication is performed here,
+    /// duplicate drawing numbers are left for the UI to flag so the user can decide
     /// </summary>
     /// <param name="folderPath">Path to folder containing PDF files</param>
-    /// <returns>List of unique DrawingInfo objects</returns>
+    /// <returns>List of DrawingInfo objects, one per PDF file found</returns>
     public List<DrawingInfo> ScanFolder(string folderPath)
     {
         var results = new List<DrawingInfo>();
-        var seenDrawingNumbers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         try
         {
@@ -125,27 +125,19 @@ public class DrawingExtractor
                 // Extract drawing number
                 string drawingNumber = ExtractDrawingNumber(fileName);
 
-                // Add to results if not empty and not already present
+                // Add to results if a drawing number was extracted
                 if (!string.IsNullOrEmpty(drawingNumber))
                 {
-                    if (!seenDrawingNumbers.Contains(drawingNumber))
+                    results.Add(new DrawingInfo
                     {
-                        seenDrawingNumbers.Add(drawingNumber);
-                        results.Add(new DrawingInfo
-                        {
-                            DrawingNumber = drawingNumber,
-                            PdfPath = pdfPath
-                        });
-                        Logger.Instance.Debug($"Found drawing: {drawingNumber} at {pdfPath}");
-                    }
-                    else
-                    {
-                        Logger.Instance.Debug($"Skipped duplicate drawing: {drawingNumber} at {pdfPath}");
-                    }
+                        DrawingNumber = drawingNumber,
+                        PdfPath = pdfPath
+                    });
+                    Logger.Instance.Debug($"Found drawing: {drawingNumber} at {pdfPath}");
                 }
             }
 
-            Logger.Instance.Info($"Scan completed with {results.Count} unique drawing entries");
+            Logger.Instance.Info($"Scan completed with {results.Count} drawing entries");
         }
         catch (Exception ex)
         {

@@ -15,8 +15,10 @@ using DrawingTree.Logging;
 
 using UserControl      = System.Windows.Controls.UserControl;
 using Button           = System.Windows.Controls.Button;
+using TextBox          = System.Windows.Controls.TextBox;
 using Path             = System.Windows.Shapes.Path;
 using Brushes          = System.Windows.Media.Brushes;
+using Color            = System.Windows.Media.Color;
 using MessageBox        = System.Windows.MessageBox;
 using MessageBoxButton  = System.Windows.MessageBoxButton;
 using MessageBoxImage   = System.Windows.MessageBoxImage;
@@ -25,7 +27,7 @@ namespace DrawingTree.Controls;
 
 public partial class DirLogControl : UserControl
 {
-    private static readonly int[] ColumnWidths = { 165, 90, 200, 55, 140, 70, 70, 90, 30, 30 };
+    private static readonly int[] ColumnWidths = { 165, 90, 200, 55, 140, 70, 95, 90, 30, 30 };
 
     private readonly DirLogRepository _repository     = new();
     private readonly PartRepository   _partRepository  = new();
@@ -49,6 +51,8 @@ public partial class DirLogControl : UserControl
     }
 
     private void BackButton_Click(object sender, RoutedEventArgs e) => BackRequested?.Invoke(this, EventArgs.Empty);
+
+    private void RefreshButton_Click(object sender, RoutedEventArgs e) => _ = LoadDataAsync();
 
     private void ViewMode_Checked(object sender, RoutedEventArgs e)
     {
@@ -160,9 +164,18 @@ public partial class DirLogControl : UserControl
 
         var start = DateTime.Parse(row.CreatedAt);
         var finish = DateTime.Parse(row.UpdatedAt);
+        var finishDate = DateOnly.FromDateTime(finish);
         AddCell(grid, 5, start.ToString("HH:mm"));
-        AddCell(grid, 6, finish.ToString("HH:mm"));
-        AddCell(grid, 7, FormatDuration(start, finish));
+        var durationBlock = AddCell(grid, 7, FormatDuration(start, finish));
+
+        var finishCell = BuildFinishCell(row.DirAttachmentId, finish, finishDate,
+            onCommitted: newFinish =>
+            {
+                finish = newFinish;
+                durationBlock.Text = FormatDuration(start, finish);
+            });
+        Grid.SetColumn(finishCell, 6);
+        grid.Children.Add(finishCell);
 
         var bubBtn = BuildOpenButton(
             enabled: row.BubAttachmentId.HasValue,
@@ -179,7 +192,7 @@ public partial class DirLogControl : UserControl
         return grid;
     }
 
-    private static void AddCell(Grid grid, int column, string text, bool ellipsis = false)
+    private static TextBlock AddCell(Grid grid, int column, string text, bool ellipsis = false)
     {
         var block = new TextBlock
         {
@@ -192,6 +205,74 @@ public partial class DirLogControl : UserControl
         }
         Grid.SetColumn(block, column);
         grid.Children.Add(block);
+        return block;
+    }
+
+    /// <summary>
+    /// Builds the editable "Finish" cell: a time-only (HH:mm) TextBox that persists edits to
+    /// part_attachment.updated_at on LostFocus, with an inline success indicator.
+    /// </summary>
+    /// <param name="attachmentId">part_attachment.id (DIR row) to update</param>
+    /// <param name="initialFinish">Current Finish value shown in the row</param>
+    /// <param name="finishDate">Date portion kept fixed; only the time-of-day is editable</param>
+    /// <param name="onCommitted">Invoked with the new Finish value after a successful save</param>
+    private Grid BuildFinishCell(int attachmentId, DateTime initialFinish, DateOnly finishDate, Action<DateTime> onCommitted)
+    {
+        var cell = new Grid();
+
+        var textBox = new TextBox
+        {
+            Text = initialFinish.ToString("HH:mm"),
+            FontSize = 12, Padding = new Thickness(2, 1, 2, 1),
+            VerticalContentAlignment = VerticalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Width = 42, HorizontalAlignment = System.Windows.HorizontalAlignment.Left
+        };
+
+        var checkIcon = new Path
+        {
+            Data = (Geometry)FindResource("CheckCircleGeo"), Stretch = Stretch.Uniform,
+            Fill = new SolidColorBrush(Color.FromRgb(0x43, 0xA0, 0x47)), Width = 12, Height = 12,
+            Margin = new Thickness(46, 0, 0, 0),
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Center,
+            Visibility = Visibility.Collapsed
+        };
+
+        textBox.LostFocus += (_, _) =>
+        {
+            if (!DateTime.TryParseExact(textBox.Text.Trim(), "HH:mm",
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out var parsedTime))
+            {
+                MessageBox.Show($"Invalid time: \"{textBox.Text}\". Expected format HH:mm.",
+                    "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Error);
+                textBox.Text = initialFinish.ToString("HH:mm");
+                checkIcon.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            var newFinish = finishDate.ToDateTime(TimeOnly.FromDateTime(parsedTime));
+            if (newFinish == initialFinish) return;
+
+            if (_repository.UpdateFinishTime(attachmentId, newFinish))
+            {
+                initialFinish = newFinish;
+                checkIcon.Visibility = Visibility.Visible;
+                onCommitted(newFinish);
+            }
+            else
+            {
+                MessageBox.Show("Failed to save the new Finish time.",
+                    "Save Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                textBox.Text = initialFinish.ToString("HH:mm");
+                checkIcon.Visibility = Visibility.Collapsed;
+            }
+        };
+
+        cell.Children.Add(textBox);
+        cell.Children.Add(checkIcon);
+        return cell;
     }
 
     private Button BuildOpenButton(bool enabled, string tooltip)

@@ -9,6 +9,8 @@
 
     <UserControl.Resources>
         <Geometry x:Key="OpenInNewGeo">M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z</Geometry>
+        <Geometry x:Key="RefreshGeo">M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-140h80v300H500v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z</Geometry>
+        <Geometry x:Key="CheckCircleGeo">M382-240 154-468l57-57 171 171 367-367 57 57-424 424Zm98 160q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z</Geometry>
     </UserControl.Resources>
 
     <Grid>
@@ -28,7 +30,15 @@
                                   Stretch="Uniform" Fill="#333333" Width="14" Height="14"/>
                         </Button>
                         <TextBlock Text="DIR Log" FontSize="13" FontWeight="SemiBold"
-                                   Foreground="#333333" VerticalAlignment="Center"/>
+                                   Foreground="#333333" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Button x:Name="RefreshButton"
+                                Style="{StaticResource IconBtn}"
+                                Width="28" Height="28"
+                                ToolTip="Refresh"
+                                Click="RefreshButton_Click">
+                            <Path Data="{StaticResource RefreshGeo}"
+                                  Stretch="Uniform" Fill="#333333" Width="14" Height="14"/>
+                        </Button>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">

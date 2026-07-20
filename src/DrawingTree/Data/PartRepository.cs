@@ -314,7 +314,7 @@ public class PartRepository
             using var cmd = conn.CreateCommand();
             cmd.CommandText = """
                 INSERT INTO part_attachment (part_id, order_item_id, file_type, file_name, file_path, is_active)
-                VALUES (@partId, @oid, 'MP', @name, @path, 1)
+                VALUES (@partId, @oid, 'mp', @name, @path, 1)
                 """;
             cmd.Parameters.AddWithValue("@partId", partId > 0 ? partId : DBNull.Value);
             cmd.Parameters.AddWithValue("@oid",    orderItemId);
@@ -401,7 +401,7 @@ public class PartRepository
             using var cmd = conn.CreateCommand();
             cmd.CommandText = """
                 INSERT INTO part_attachment (part_id, order_item_id, file_type, file_name, file_path, is_active)
-                VALUES (@partId, @oid, 'DIR', @name, @path, 1)
+                VALUES (@partId, @oid, 'dir', @name, @path, 1)
                 """;
             cmd.Parameters.AddWithValue("@partId", partId > 0 ? partId : DBNull.Value);
             cmd.Parameters.AddWithValue("@oid",    orderItemId);
@@ -534,6 +534,64 @@ public class PartRepository
             Logger.Instance.Error($"PartRepository.GetBubbleAttachmentsByDrawingNumber failed for drawingNumber={drawingNumber}: {ex.Message}");
         }
         return results;
+    }
+
+    /// <summary>
+    /// Looks up the part.id for an exact drawing_number + revision match.
+    /// </summary>
+    /// <param name="drawingNumber">part.drawing_number</param>
+    /// <param name="revision">part.revision</param>
+    /// <returns>part.id, or null if no matching part exists</returns>
+    public int? GetPartIdByDrawingNumberAndRevision(string drawingNumber, string revision)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                SELECT id FROM part
+                WHERE drawing_number = @dn COLLATE NOCASE AND revision = @rev COLLATE NOCASE
+                LIMIT 1
+                """;
+            cmd.Parameters.AddWithValue("@dn", drawingNumber);
+            cmd.Parameters.AddWithValue("@rev", revision);
+            var result = cmd.ExecuteScalar();
+            return result == null ? null : Convert.ToInt32(result);
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.GetPartIdByDrawingNumberAndRevision failed for '{drawingNumber}' rev '{revision}': {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Inserts a new bubble drawing attachment record. Bubble drawings are associated with
+    /// the part only, so order_item_id is always left NULL.
+    /// </summary>
+    /// <param name="partId">part.id</param>
+    /// <param name="fileName">File name (without path)</param>
+    /// <param name="filePath">Full file path</param>
+    public void AddBubbleAttachment(int partId, string fileName, string filePath)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = """
+                INSERT INTO part_attachment (part_id, order_item_id, file_type, file_name, file_path, is_active)
+                VALUES (@partId, NULL, 'bubble', @name, @path, 1)
+                """;
+            cmd.Parameters.AddWithValue("@partId", partId);
+            cmd.Parameters.AddWithValue("@name",   fileName);
+            cmd.Parameters.AddWithValue("@path",   filePath);
+            cmd.ExecuteNonQuery();
+            Logger.Instance.Info($"PartRepository.AddBubbleAttachment: recorded '{filePath}'");
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.AddBubbleAttachment failed for '{filePath}': {ex.Message}");
+        }
     }
 
     /// <summary>

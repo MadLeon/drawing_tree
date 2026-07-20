@@ -16,6 +16,7 @@ using DrawingTree.Services;
 
 using UserControl      = System.Windows.Controls.UserControl;
 using Button           = System.Windows.Controls.Button;
+using TextBox          = System.Windows.Controls.TextBox;
 using Path             = System.Windows.Shapes.Path;
 using Brushes          = System.Windows.Media.Brushes;
 using MessageBox        = System.Windows.MessageBox;
@@ -103,9 +104,10 @@ public partial class PartDetailControl : UserControl
 
         if (attachments.Count == 0)
         {
-            MpFilesPanel.Children.Add(new TextBlock
+            MpFilesPanel.Children.Add(new TextBox
             {
-                Text = "(no MP files yet)", FontSize = 12, Foreground = Brushes.Gray
+                Text = "(no MP files yet)", Style = (Style)FindResource("SelectableText"),
+                FontSize = 12, Foreground = Brushes.Gray
             });
             return;
         }
@@ -115,16 +117,17 @@ public partial class PartDetailControl : UserControl
             MpFilesPanel.Children.Add(BuildMpFileRow(attachment));
     }
 
-    private static Grid BuildMpFilesHeader()
+    private Grid BuildMpFilesHeader()
     {
         var grid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.5, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-        var header = new TextBlock
+        var header = new TextBox
         {
-            Text = "File Name", FontWeight = FontWeights.SemiBold, FontSize = 11, Foreground = Brushes.Gray
+            Text = "File Name", Style = (Style)FindResource("SelectableText"),
+            FontWeight = FontWeights.SemiBold, FontSize = 11, Foreground = Brushes.Gray
         };
         Grid.SetColumn(header, 0);
         grid.Children.Add(header);
@@ -139,11 +142,10 @@ public partial class PartDetailControl : UserControl
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-        var nameText = new TextBlock
+        var nameText = new TextBox
         {
-            Text = attachment.FileName, FontSize = 12,
-            VerticalAlignment = VerticalAlignment.Center,
-            TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = attachment.FilePath
+            Text = attachment.FileName, Style = (Style)FindResource("SelectableText"), FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center, ToolTip = attachment.FilePath
         };
         Grid.SetColumn(nameText, 0);
         grid.Children.Add(nameText);
@@ -275,9 +277,10 @@ public partial class PartDetailControl : UserControl
         var attachments = _partRepository.GetDirAttachmentsByDrawingNumber(_header.DrawingNumber);
         if (attachments.Count == 0)
         {
-            DirFilesPanel.Children.Add(new TextBlock
+            DirFilesPanel.Children.Add(new TextBox
             {
-                Text = "(no DIR files yet)", FontSize = 12, Foreground = Brushes.Gray
+                Text = "(no DIR files yet)", Style = (Style)FindResource("SelectableText"),
+                FontSize = 12, Foreground = Brushes.Gray
             });
             return;
         }
@@ -287,7 +290,7 @@ public partial class PartDetailControl : UserControl
             DirFilesPanel.Children.Add(BuildDirFileRow(attachment));
     }
 
-    private static Grid BuildDirFilesHeader()
+    private Grid BuildDirFilesHeader()
     {
         var grid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
         foreach (var w in DirColumnWidths)
@@ -296,9 +299,10 @@ public partial class PartDetailControl : UserControl
         var headers = new[] { "File Name", "Rev", "Status", "Type", "Created at", "" };
         for (int i = 0; i < headers.Length; i++)
         {
-            var block = new TextBlock
+            var block = new TextBox
             {
-                Text = headers[i], FontWeight = FontWeights.SemiBold, FontSize = 11, Foreground = Brushes.Gray
+                Text = headers[i], Style = (Style)FindResource("SelectableText"),
+                FontWeight = FontWeights.SemiBold, FontSize = 11, Foreground = Brushes.Gray
             };
             Grid.SetColumn(block, i);
             grid.Children.Add(block);
@@ -312,17 +316,18 @@ public partial class PartDetailControl : UserControl
         foreach (var w in DirColumnWidths)
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(w) });
 
-        var nameText = new TextBlock
+        var nameText = new TextBox
         {
-            Text = attachment.FileName, FontSize = 12, VerticalAlignment = VerticalAlignment.Center,
-            TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = attachment.FilePath
+            Text = attachment.FileName, Style = (Style)FindResource("SelectableText"), FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center, ToolTip = attachment.FilePath
         };
         Grid.SetColumn(nameText, 0);
         grid.Children.Add(nameText);
 
-        var revText = new TextBlock
+        var revText = new TextBox
         {
-            Text = attachment.Revision, FontSize = 12, VerticalAlignment = VerticalAlignment.Center
+            Text = attachment.Revision, Style = (Style)FindResource("SelectableText"), FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center
         };
         Grid.SetColumn(revText, 1);
         grid.Children.Add(revText);
@@ -332,9 +337,10 @@ public partial class PartDetailControl : UserControl
         grid.Children.Add(statusCell);
 
         var isCurrentOrder = attachment.OrderItemId.HasValue && attachment.OrderItemId.Value == _orderItemId;
-        var typeText = new TextBlock
+        var typeText = new TextBox
         {
-            Text = isCurrentOrder ? "current order" : "archived", FontSize = 12,
+            Text = isCurrentOrder ? "current order" : "archived", Style = (Style)FindResource("SelectableText"),
+            FontSize = 12,
             FontWeight = isCurrentOrder ? FontWeights.SemiBold : FontWeights.Normal,
             Foreground = isCurrentOrder ? Brushes.SeaGreen : Brushes.Black,
             VerticalAlignment = VerticalAlignment.Center
@@ -342,10 +348,10 @@ public partial class PartDetailControl : UserControl
         Grid.SetColumn(typeText, 3);
         grid.Children.Add(typeText);
 
-        var createdText = new TextBlock
+        var createdText = new TextBox
         {
-            Text = attachment.CreatedAt, FontSize = 12, Foreground = Brushes.Gray,
-            VerticalAlignment = VerticalAlignment.Center
+            Text = attachment.CreatedAt, Style = (Style)FindResource("SelectableText"), FontSize = 12,
+            Foreground = Brushes.Gray, VerticalAlignment = VerticalAlignment.Center
         };
         Grid.SetColumn(createdText, 4);
         grid.Children.Add(createdText);
@@ -371,9 +377,10 @@ public partial class PartDetailControl : UserControl
     {
         var statusPanel = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
 
-        statusPanel.Children.Add(new TextBlock
+        statusPanel.Children.Add(new TextBox
         {
-            Text = attachment.Status, FontSize = 12, VerticalAlignment = VerticalAlignment.Center
+            Text = attachment.Status, Style = (Style)FindResource("SelectableText"), FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center
         });
 
         if (string.Equals(attachment.Status, "in progress", StringComparison.OrdinalIgnoreCase))
@@ -518,14 +525,16 @@ public partial class PartDetailControl : UserControl
     private void LoadBubbleSection()
     {
         BubbleFilesPanel.Children.Clear();
+        AssociateBubbleButton.Visibility = _mpContext != null ? Visibility.Visible : Visibility.Collapsed;
         if (_header == null) return;
 
         var attachments = _partRepository.GetBubbleAttachmentsByDrawingNumber(_header.DrawingNumber);
         if (attachments.Count == 0)
         {
-            BubbleFilesPanel.Children.Add(new TextBlock
+            BubbleFilesPanel.Children.Add(new TextBox
             {
-                Text = "(no bubble drawing files yet)", FontSize = 12, Foreground = Brushes.Gray
+                Text = "(no bubble drawing files yet)", Style = (Style)FindResource("SelectableText"),
+                FontSize = 12, Foreground = Brushes.Gray
             });
             return;
         }
@@ -535,7 +544,7 @@ public partial class PartDetailControl : UserControl
             BubbleFilesPanel.Children.Add(BuildBubbleFileRow(attachment));
     }
 
-    private static Grid BuildBubbleFilesHeader()
+    private Grid BuildBubbleFilesHeader()
     {
         var grid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
         foreach (var w in BubbleColumnWidths)
@@ -544,9 +553,10 @@ public partial class PartDetailControl : UserControl
         var headers = new[] { "File Name", "Rev", "Created at", "" };
         for (int i = 0; i < headers.Length; i++)
         {
-            var block = new TextBlock
+            var block = new TextBox
             {
-                Text = headers[i], FontWeight = FontWeights.SemiBold, FontSize = 11, Foreground = Brushes.Gray
+                Text = headers[i], Style = (Style)FindResource("SelectableText"),
+                FontWeight = FontWeights.SemiBold, FontSize = 11, Foreground = Brushes.Gray
             };
             Grid.SetColumn(block, i);
             grid.Children.Add(block);
@@ -560,26 +570,26 @@ public partial class PartDetailControl : UserControl
         foreach (var w in BubbleColumnWidths)
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(w) });
 
-        var nameText = new TextBlock
+        var nameText = new TextBox
         {
-            Text = attachment.FileName, FontSize = 12, VerticalAlignment = VerticalAlignment.Center,
-            TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = attachment.FilePath
+            Text = attachment.FileName, Style = (Style)FindResource("SelectableText"), FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center, ToolTip = attachment.FilePath
         };
         Grid.SetColumn(nameText, 0);
         grid.Children.Add(nameText);
 
-        var revText = new TextBlock
+        var revText = new TextBox
         {
-            Text = ExtractRevisionFromFileName(attachment.FileName), FontSize = 12,
-            VerticalAlignment = VerticalAlignment.Center
+            Text = ExtractRevisionFromFileName(attachment.FileName), Style = (Style)FindResource("SelectableText"),
+            FontSize = 12, VerticalAlignment = VerticalAlignment.Center
         };
         Grid.SetColumn(revText, 1);
         grid.Children.Add(revText);
 
-        var createdText = new TextBlock
+        var createdText = new TextBox
         {
-            Text = attachment.CreatedAt, FontSize = 12, Foreground = Brushes.Gray,
-            VerticalAlignment = VerticalAlignment.Center
+            Text = attachment.CreatedAt, Style = (Style)FindResource("SelectableText"), FontSize = 12,
+            Foreground = Brushes.Gray, VerticalAlignment = VerticalAlignment.Center
         };
         Grid.SetColumn(createdText, 2);
         grid.Children.Add(createdText);
@@ -636,6 +646,60 @@ public partial class PartDetailControl : UserControl
         System.Windows.Clipboard.SetText(text);
     }
 
+    private void AssociateBubbleButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_mpContext == null || _header == null) return;
+
+        var folder = BubbleConfig.GetBubbleFolder(_mpContext.CustomerName ?? string.Empty);
+        if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+        {
+            MessageBox.Show(
+                $"No bubble drawing folder configured (or folder missing) for customer '{_mpContext.CustomerName}'.\n\n" +
+                $"Please open config.txt and set the folder under [BubbleDrawingPaths]:\n" +
+                $"  {_mpContext.CustomerName}=\n\n" +
+                $"Config file:\n{BubbleConfig.ConfigFilePath}",
+                "Bubble Folder Not Configured", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var existing = _partRepository.GetBubbleAttachmentsByDrawingNumber(_header.DrawingNumber);
+        var existingPaths = existing.Select(a => a.FilePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var searchPattern = $"{_header.DrawingNumber} Rev* *-ballooned.pdf";
+        var diskFiles = Directory.GetFiles(folder, searchPattern);
+
+        var added = 0;
+        foreach (var filePath in diskFiles)
+        {
+            if (existingPaths.Contains(filePath)) continue;
+
+            var fileName = System.IO.Path.GetFileName(filePath);
+            var revision = ExtractRevisionFromFileName(fileName);
+            var partId = _partRepository.GetPartIdByDrawingNumberAndRevision(_header.DrawingNumber, revision);
+            if (partId == null)
+            {
+                Logger.Instance.Warning($"PartDetailControl: skipped '{fileName}', no part record for drawing '{_header.DrawingNumber}' rev '{revision}'");
+                continue;
+            }
+
+            _partRepository.AddBubbleAttachment(partId.Value, fileName, filePath);
+            added++;
+        }
+
+        var missing = existing.Where(a => !File.Exists(a.FilePath)).ToList();
+        foreach (var attachment in missing)
+        {
+            var choice = MessageBox.Show(
+                $"File not found:\n{attachment.FilePath}\n\nRemove this entry from the database?",
+                "File Not Found", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (choice == MessageBoxResult.Yes)
+                _partRepository.RemoveBubbleAttachment(attachment.AttachmentId);
+        }
+
+        if (added > 0 || missing.Count > 0)
+            LoadBubbleSection();
+    }
+
     // ── Drawing PDF ──────────────────────────────────────────────────────
 
     private void LoadPdfFiles()
@@ -644,9 +708,10 @@ public partial class PartDetailControl : UserControl
         var files = _partRepository.GetDrawingFiles(_partId);
         if (files.Count == 0)
         {
-            PdfListPanel.Children.Add(new TextBlock
+            PdfListPanel.Children.Add(new TextBox
             {
-                Text = "(no PDF files found)", FontSize = 12, Foreground = Brushes.Gray
+                Text = "(no PDF files found)", Style = (Style)FindResource("SelectableText"),
+                FontSize = 12, Foreground = Brushes.Gray
             });
             return;
         }
@@ -658,7 +723,7 @@ public partial class PartDetailControl : UserControl
 
     private static readonly int[] PdfColumnWidths = { 260, 60, 70, 140, 28 };
 
-    private static Grid BuildPdfHeader()
+    private Grid BuildPdfHeader()
     {
         var grid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
         foreach (var w in PdfColumnWidths)
@@ -667,9 +732,10 @@ public partial class PartDetailControl : UserControl
         var headers = new[] { "File Name", "Rev", "Active", "Last Modified", "PDF" };
         for (int i = 0; i < headers.Length; i++)
         {
-            var block = new TextBlock
+            var block = new TextBox
             {
-                Text = headers[i], FontWeight = FontWeights.SemiBold, FontSize = 11, Foreground = Brushes.Gray
+                Text = headers[i], Style = (Style)FindResource("SelectableText"),
+                FontWeight = FontWeights.SemiBold, FontSize = 11, Foreground = Brushes.Gray
             };
             Grid.SetColumn(block, i);
             grid.Children.Add(block);
@@ -683,34 +749,35 @@ public partial class PartDetailControl : UserControl
         foreach (var w in PdfColumnWidths)
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(w) });
 
-        var nameText = new TextBlock
+        var nameText = new TextBox
         {
-            Text = file.FileName, FontSize = 12, VerticalAlignment = VerticalAlignment.Center,
-            TextTrimming = TextTrimming.CharacterEllipsis, ToolTip = file.FilePath
+            Text = file.FileName, Style = (Style)FindResource("SelectableText"), FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center, ToolTip = file.FilePath
         };
         Grid.SetColumn(nameText, 0);
         grid.Children.Add(nameText);
 
-        var revisionText = new TextBlock
+        var revisionText = new TextBox
         {
-            Text = file.Revision, FontSize = 12, VerticalAlignment = VerticalAlignment.Center
+            Text = file.Revision, Style = (Style)FindResource("SelectableText"), FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center
         };
         Grid.SetColumn(revisionText, 1);
         grid.Children.Add(revisionText);
 
-        var activeText = new TextBlock
+        var activeText = new TextBox
         {
-            Text = file.IsActive ? "Active" : string.Empty, FontSize = 12,
-            Foreground = Brushes.SeaGreen, FontWeight = FontWeights.SemiBold,
+            Text = file.IsActive ? "Active" : string.Empty, Style = (Style)FindResource("SelectableText"),
+            FontSize = 12, Foreground = Brushes.SeaGreen, FontWeight = FontWeights.SemiBold,
             VerticalAlignment = VerticalAlignment.Center
         };
         Grid.SetColumn(activeText, 2);
         grid.Children.Add(activeText);
 
-        var modifiedText = new TextBlock
+        var modifiedText = new TextBox
         {
-            Text = file.LastModifiedAt ?? string.Empty, FontSize = 12,
-            Foreground = Brushes.Gray, VerticalAlignment = VerticalAlignment.Center
+            Text = file.LastModifiedAt ?? string.Empty, Style = (Style)FindResource("SelectableText"),
+            FontSize = 12, Foreground = Brushes.Gray, VerticalAlignment = VerticalAlignment.Center
         };
         Grid.SetColumn(modifiedText, 3);
         grid.Children.Add(modifiedText);
@@ -740,9 +807,10 @@ public partial class PartDetailControl : UserControl
         var steps = _partRepository.GetProcessSteps(_partId, _orderItemId);
         if (steps.Count == 0)
         {
-            ProcessStepsPanel.Children.Add(new TextBlock
+            ProcessStepsPanel.Children.Add(new TextBox
             {
-                Text = "(no process template defined)", FontSize = 12, Foreground = Brushes.Gray
+                Text = "(no process template defined)", Style = (Style)FindResource("SelectableText"),
+                FontSize = 12, Foreground = Brushes.Gray
             });
             return;
         }
@@ -752,7 +820,7 @@ public partial class PartDetailControl : UserControl
             ProcessStepsPanel.Children.Add(BuildProcessStepRow(step));
     }
 
-    private static Grid BuildProcessStepsHeader()
+    private Grid BuildProcessStepsHeader()
     {
         var grid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
         foreach (var width in StepColumnWidths)
@@ -760,9 +828,10 @@ public partial class PartDetailControl : UserControl
 
         void AddHeader(int col, string text)
         {
-            var block = new TextBlock
+            var block = new TextBox
             {
-                Text = text, FontWeight = FontWeights.SemiBold, FontSize = 11, Foreground = Brushes.Gray
+                Text = text, Style = (Style)FindResource("SelectableText"),
+                FontWeight = FontWeights.SemiBold, FontSize = 11, Foreground = Brushes.Gray
             };
             Grid.SetColumn(block, col);
             grid.Children.Add(block);
@@ -788,7 +857,7 @@ public partial class PartDetailControl : UserControl
         new GridLength(110)
     };
 
-    private static Grid BuildProcessStepRow(ProcessStepRow step)
+    private Grid BuildProcessStepRow(ProcessStepRow step)
     {
         var grid = new Grid { Margin = new Thickness(0, 1, 0, 1) };
         foreach (var width in StepColumnWidths)
@@ -803,10 +872,10 @@ public partial class PartDetailControl : UserControl
 
         for (int i = 0; i < values.Length; i++)
         {
-            var block = new TextBlock
+            var block = new TextBox
             {
-                Text = values[i], FontSize = 12, VerticalAlignment = VerticalAlignment.Center,
-                TextTrimming = TextTrimming.CharacterEllipsis
+                Text = values[i], Style = (Style)FindResource("SelectableText"),
+                FontSize = 12, VerticalAlignment = VerticalAlignment.Center
             };
             Grid.SetColumn(block, i);
             grid.Children.Add(block);
@@ -823,18 +892,20 @@ public partial class PartDetailControl : UserControl
         var notes = _partRepository.GetPartNotes(_partId);
         if (notes.Count == 0)
         {
-            NotesListPanel.Children.Add(new TextBlock
+            NotesListPanel.Children.Add(new TextBox
             {
-                Text = "(no notes yet)", FontSize = 12, Foreground = Brushes.Gray
+                Text = "(no notes yet)", Style = (Style)FindResource("SelectableText"),
+                FontSize = 12, Foreground = Brushes.Gray
             });
             return;
         }
 
         foreach (var note in notes)
         {
-            NotesListPanel.Children.Add(new TextBlock
+            NotesListPanel.Children.Add(new TextBox
             {
                 Text = $"[{note.CreatedAt}] {note.Author ?? "unknown"}: {note.Content}",
+                Style = (Style)FindResource("SelectableText"),
                 FontSize = 12, Margin = new Thickness(0, 0, 0, 4), TextWrapping = TextWrapping.Wrap
             });
         }
