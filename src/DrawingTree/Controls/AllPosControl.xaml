@@ -218,6 +218,8 @@
                                 <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowQty, Converter={StaticResource BoolToWidth}, ConverterParameter=60}"/>
                                 <ColumnDefinition Width="220"/>
                                 <ColumnDefinition Width="50"/>
+                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="40"/>
                                 <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowRev, Converter={StaticResource BoolToWidth}, ConverterParameter=60}"/>
                                 <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowDescription, Converter={StaticResource BoolToWidth}, ConverterParameter=*}"/>
                                 <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowRlsDate, Converter={StaticResource BoolToWidth}, ConverterParameter=100}"/>
@@ -235,10 +237,12 @@
                             <TextBlock Grid.Column="7"  Text="Qty"              FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
                             <TextBlock Grid.Column="8"  Text="Drawing Number"   FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
                             <TextBlock Grid.Column="9"  Text="PDF"              FontSize="11" FontWeight="SemiBold" Foreground="#555555" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="10" Text="Rev."             FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                            <TextBlock Grid.Column="11" Text="Description"      FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                            <TextBlock Grid.Column="12" Text="Rls Date"         FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
-                            <TextBlock Grid.Column="13" Text="Due Date"         FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="10" Text="MP"              FontSize="11" FontWeight="SemiBold" Foreground="#555555" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="11" Text="DIR"             FontSize="11" FontWeight="SemiBold" Foreground="#555555" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="12" Text="Rev."             FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="13" Text="Description"      FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="14" Text="Rls Date"         FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
+                            <TextBlock Grid.Column="15" Text="Due Date"         FontSize="11" FontWeight="SemiBold" Foreground="#555555" VerticalAlignment="Center" Margin="8,0"/>
                         </Grid>
                     </Border>
                 </ScrollViewer>
@@ -311,6 +315,8 @@
                                                             <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowQty, Converter={StaticResource BoolToWidth}, ConverterParameter=60}"/>
                                                             <ColumnDefinition Width="220"/>
                                                             <ColumnDefinition Width="50"/>
+                                                            <ColumnDefinition Width="40"/>
+                                                            <ColumnDefinition Width="40"/>
                                                             <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowRev, Converter={StaticResource BoolToWidth}, ConverterParameter=60}"/>
                                                             <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowDescription, Converter={StaticResource BoolToWidth}, ConverterParameter=*}"/>
                                                             <ColumnDefinition Width="{Binding Source={StaticResource OeColCfg}, Path=ShowRlsDate, Converter={StaticResource BoolToWidth}, ConverterParameter=100}"/>
@@ -465,22 +471,52 @@
                                                         <!-- Qty — plain TextBox -->
                                                         <TextBox Grid.Column="7" Text="{Binding Quantity, Mode=OneWay}" Style="{StaticResource SelectableCell}"/>
 
-                                                        <!-- Drawing Number — hyperlink to Drawing/Part Detail, searchable via highlight -->
-                                                        <TextBlock Grid.Column="8" FontSize="12" VerticalAlignment="Center" Margin="8,0"
-                                                                   HorizontalAlignment="Left"
-                                                                   Foreground="{Binding DrawingLinkForeground}"
-                                                                   TextDecorations="{Binding DrawingLinkDecorations}"
-                                                                   Cursor="{Binding DrawingLinkCursor}"
-                                                                   Tag="{Binding}"
-                                                                   MouseLeftButtonDown="OeDrawingNumber_Click"
-                                                                   local:HighlightBehavior.FullText="{Binding DrawingNumber}"
-                                                                   local:HighlightBehavior.SearchTerm="{Binding SearchTerm}">
-                                                            <TextBlock.ContextMenu>
-                                                                <ContextMenu>
-                                                                    <MenuItem Header="Copy" Click="CopyText_Click"/>
-                                                                </ContextMenu>
-                                                            </TextBlock.ContextMenu>
-                                                        </TextBlock>
+                                                        <!-- Drawing Number — hyperlink to Drawing/Part Detail, searchable via highlight.
+                                                             Toggles between a selectable TextBox (no search term, text can be
+                                                             drag-selected) and a highlighted TextBlock (active search term),
+                                                             mirroring the P.O./O.E./Job No columns above. -->
+                                                        <Grid Grid.Column="8">
+                                                            <TextBox Text="{Binding DrawingNumber, Mode=OneWay}"
+                                                                     Foreground="{Binding DrawingLinkForeground}"
+                                                                     Cursor="{Binding DrawingLinkCursor}"
+                                                                     Tag="{Binding}" PreviewMouseLeftButtonDown="OeDrawingNumber_Click">
+                                                                <TextBox.Style>
+                                                                    <Style TargetType="TextBox" BasedOn="{StaticResource SelectableCell}">
+                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding SearchTerm}" Value="">
+                                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBox.Style>
+                                                            </TextBox>
+                                                            <TextBlock FontSize="12" VerticalAlignment="Center" Margin="8,0"
+                                                                       HorizontalAlignment="Left"
+                                                                       Foreground="{Binding DrawingLinkForeground}"
+                                                                       TextDecorations="{Binding DrawingLinkDecorations}"
+                                                                       Cursor="{Binding DrawingLinkCursor}"
+                                                                       Tag="{Binding}"
+                                                                       MouseLeftButtonDown="OeDrawingNumber_Click"
+                                                                       local:HighlightBehavior.FullText="{Binding DrawingNumber}"
+                                                                       local:HighlightBehavior.SearchTerm="{Binding SearchTerm}">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding SearchTerm}" Value="">
+                                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                                <TextBlock.ContextMenu>
+                                                                    <ContextMenu>
+                                                                        <MenuItem Header="Copy" Click="CopyText_Click"/>
+                                                                    </ContextMenu>
+                                                                </TextBlock.ContextMenu>
+                                                            </TextBlock>
+                                                        </Grid>
 
                                                         <!-- PDF — open the linked drawing file -->
                                                         <Button Grid.Column="9"
@@ -495,14 +531,28 @@
                                                             </Viewbox>
                                                         </Button>
 
+                                                        <!-- MP icon -->
+                                                        <Viewbox Grid.Column="10" Width="14" Height="14"
+                                                                 Visibility="{Binding MpIconVisibility}"
+                                                                 HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                            <Path Data="{StaticResource CheckCircleGeo}" Stretch="Uniform" Fill="#2E7D32"/>
+                                                        </Viewbox>
+
+                                                        <!-- DIR icon -->
+                                                        <Viewbox Grid.Column="11" Width="14" Height="14"
+                                                                 Visibility="{Binding DirIconVisibility}"
+                                                                 HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                            <Path Data="{StaticResource CheckCircleGeo}" Stretch="Uniform" Fill="#2E7D32"/>
+                                                        </Viewbox>
+
                                                         <!-- Rev. — plain TextBox. Explicit Foreground so it stays full-contrast on child
                                                              rows, overriding the dimmed color inherited from the row Border (this is the
                                                              child's own data, not duplicated from the parent). -->
-                                                        <TextBox Grid.Column="10" Text="{Binding Revision, Mode=OneWay}" Style="{StaticResource SelectableCell}" Foreground="#212121"/>
+                                                        <TextBox Grid.Column="12" Text="{Binding Revision, Mode=OneWay}" Style="{StaticResource SelectableCell}" Foreground="#212121"/>
 
                                                         <!-- Description — searchable, with trimming/tooltip. Explicit Foreground for the
                                                              same reason as Rev. above — this is child-specific data. -->
-                                                        <Grid Grid.Column="11">
+                                                        <Grid Grid.Column="13">
                                                             <TextBox Text="{Binding DescriptionDisplay, Mode=OneWay}"
                                                                      ToolTip="{Binding DescriptionDisplay}"
                                                                      Foreground="#212121">
@@ -537,13 +587,13 @@
                                                         </Grid>
 
                                                         <!-- Rls Date — plain TextBox -->
-                                                        <TextBox Grid.Column="12" Text="{Binding ReleaseDate, Mode=OneWay}" Style="{StaticResource SelectableCell}"/>
+                                                        <TextBox Grid.Column="14" Text="{Binding ReleaseDate, Mode=OneWay}" Style="{StaticResource SelectableCell}"/>
 
                                                         <!-- Due Date — plain TextBox -->
-                                                        <TextBox Grid.Column="13" Text="{Binding DueDate, Mode=OneWay}" Style="{StaticResource SelectableCell}"/>
+                                                        <TextBox Grid.Column="15" Text="{Binding DueDate, Mode=OneWay}" Style="{StaticResource SelectableCell}"/>
 
                                                         <!-- Row menu -->
-                                                        <Button Grid.Column="14" Content="⋮" FontSize="14" Style="{StaticResource IconLinkBtn}"
+                                                        <Button Grid.Column="16" Content="⋮" FontSize="14" Style="{StaticResource IconLinkBtn}"
                                                                 Tag="{Binding}" Click="OeRowMenu_Click">
                                                             <Button.ContextMenu>
                                                                 <ContextMenu>

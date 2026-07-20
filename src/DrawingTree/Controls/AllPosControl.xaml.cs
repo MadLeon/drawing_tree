@@ -223,10 +223,15 @@ public class OeRowItem : INotifyPropertyChanged
         }
     }
 
+    public bool HasMp  { get; set; }
+    public bool HasDir { get; set; }
+
     public Geometry   ExpandIconGeometry     => _isExpanded ? ExpandIcons.IndeterminateBoxGeo : ExpandIcons.AddBoxGeo;
     public Visibility ExpandButtonVisibility => HasChildren ? Visibility.Visible : Visibility.Hidden;
     public Visibility PdfButtonVisibility    => PartId.HasValue ? Visibility.Visible : Visibility.Collapsed;
     public Brush      PdfIconFill            => HasPdf ? Brushes.DodgerBlue : PdfMissingFill.Value;
+    public Visibility MpIconVisibility       => HasMp  ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility DirIconVisibility      => HasDir ? Visibility.Visible : Visibility.Collapsed;
 
     public Brush DrawingLinkForeground => PartId.HasValue ? Brushes.DodgerBlue : Brushes.Black;
     public TextDecorationCollection? DrawingLinkDecorations => PartId.HasValue ? TextDecorations.Underline : null;
@@ -274,6 +279,7 @@ public class OeColumnConfig : INotifyPropertyChanged
 public partial class AllPosControl : UserControl
 {
     private readonly PoRepository _repository = new();
+    private readonly DrawingRepository _drawingRepository = new();
     private List<PoListRow> _allRows = new();
     private HashSet<int> _pdfPartIds = new();
     private HashSet<int> _mpPartIds = new();
@@ -453,7 +459,7 @@ public partial class AllPosControl : UserControl
                 var groups = await Task.Run(() =>
                 {
                     var filtered = FilterRows(allRows, term, filterCustomer, filterContact, filterDueFrom, filterDueTo);
-                    return BuildOeGroups(filtered, term, pdfPartIds);
+                    return BuildOeGroups(filtered, term, pdfPartIds, mpPartIds, dirPartIds);
                 });
                 if (gen != _loadGeneration) return;
 
@@ -645,7 +651,8 @@ public partial class AllPosControl : UserControl
     /// construction (no UI element touched) so it can run on a background thread — see
     /// ApplySearchAsync. Expand state is not preserved across search/reload, matching Simple View.
     /// </summary>
-    private static List<OePoGroup> BuildOeGroups(List<PoListRow> rows, string term, HashSet<int> pdfPartIds)
+    private static List<OePoGroup> BuildOeGroups(List<PoListRow> rows, string term,
+        HashSet<int> pdfPartIds, HashSet<int> mpPartIds, HashSet<int> dirPartIds)
     {
         var groups = new List<OePoGroup>();
         foreach (var g in rows.GroupBy(r => r.PoId).OrderBy(g => g.First().OeNumber ?? g.First().PoNumber))
@@ -658,6 +665,8 @@ public partial class AllPosControl : UserControl
                 {
                     IsFirstInPoGroup = isFirst,
                     HasPdf = row.PartId.HasValue && pdfPartIds.Contains(row.PartId.Value),
+                    HasMp  = row.PartId.HasValue && mpPartIds.Contains(row.PartId.Value),
+                    HasDir = row.PartId.HasValue && dirPartIds.Contains(row.PartId.Value),
                     ParentList = group.Items
                 });
                 isFirst = false;
@@ -966,6 +975,8 @@ public partial class AllPosControl : UserControl
                 IsChildRow = true,
                 ChildData  = c,
                 HasPdf     = _pdfPartIds.Contains(c.PartId),
+                HasMp      = _mpPartIds.Contains(c.PartId),
+                HasDir     = _dirPartIds.Contains(c.PartId),
                 ParentList = list
             };
             list.Insert(insertAt++, childItem);
@@ -1031,12 +1042,49 @@ public partial class AllPosControl : UserControl
 
     private void EditItem_ContextMenu_Click(object sender, RoutedEventArgs e)
     {
+        // Child drawing rows (expanded assembly components) need to edit ChildData's own part,
+        // not the parent order_item — intercept before falling through to the shared PoListRow
+        // path, since GetPoListRowFromMenuSender always resolves an OeRowItem to its parent Row.
+        if (sender is MenuItem mi && mi.Parent is ContextMenu cm && cm.PlacementTarget is Button btn
+            && btn.Tag is OeRowItem oeChild && oeChild.IsChildRow)
+        {
+            EditChildPart(oeChild);
+            return;
+        }
+
         PoListRow? row = GetPoListRowFromMenuSender(sender);
         if (row == null) return;
 
         var dlg = new EditItemDialog(_repository, row) { Owner = Window.GetWindow(this) };
         if (dlg.ShowDialog() == true)
             PatchAfterEdit(row, dlg.SavedInput!, dlg.Result!);
+    }
+
+    private void EditChildPart(OeRowItem childItem)
+    {
+        var childData = childItem.ChildData!;
+        var dlg = new EditChildPartDialog(_drawingRepository, childData) { Owner = Window.GetWindow(this) };
+        if (dlg.ShowDialog() == true)
+            PatchAfterChildPartEdit(childData.PartId, dlg.SavedRevision!, dlg.SavedDescription!);
+    }
+
+    /// <summary>
+    /// Applies an EditChildPartDialog save to the in-memory _childrenByPartId cache and re-renders
+    /// the current view, mirroring PatchAfterEdit. Revision/Description live on the part table, so
+    /// every occurrence of this partId across parent parts' child lists must be patched.
+    /// </summary>
+    private void PatchAfterChildPartEdit(int partId, string revision, string description)
+    {
+        foreach (var key in _childrenByPartId.Keys.ToList())
+        {
+            var list = _childrenByPartId[key];
+            for (int i = 0; i < list.Count; i++)
+                if (list[i].PartId == partId)
+                    list[i] = list[i] with { Revision = revision, Description = description };
+        }
+
+        _ = ApplySearchAsync(SearchTerm);
+        Logger.Instance.Info($"AllPosControl: patched cache after child part edit, partId={partId}");
     }
 
     /// <summary>
