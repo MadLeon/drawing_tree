@@ -59,6 +59,21 @@ public partial class PartDetailControl : UserControl
 
         var header = _partRepository.GetPartHeader(partId);
         _header = header;
+
+        // Child parts (BOM sub-components) share their parent's order_item_id, since they have no
+        // order_item of their own. GetMpContext resolves part fields via order_item.part_id, which
+        // in that case points at the PARENT part — patch them back to the part actually being viewed
+        // so New Dir/New MP build files for this part, not its parent.
+        if (_mpContext != null && header != null && _mpContext.PartId != partId)
+        {
+            _mpContext = _mpContext with
+            {
+                PartId = header.PartId,
+                DrawingNumber = header.DrawingNumber,
+                Revision = header.Revision,
+                Description = header.Description
+            };
+        }
         TitleLabel.Text = header == null
             ? $"Drawing Number: (part #{partId} not found)"
             : $"Drawing Number: {header.DrawingNumber}";
