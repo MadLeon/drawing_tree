@@ -56,7 +56,7 @@ public class PartEditorRow : INotifyPropertyChanged
         set { if (_previousDrawingNumber != value) { _previousDrawingNumber = value; OnPropertyChanged(); } }
     }
 
-    /// <summary>Display only. Quantity is stored in part_tree and managed by the Tree Builder.</summary>
+    /// <summary>Quantity this part appears with in its parent assembly (stored in part_tree).</summary>
     public string QuantityInAssembly
     {
         get => _quantityInAssembly;

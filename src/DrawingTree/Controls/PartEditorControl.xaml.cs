@@ -29,6 +29,9 @@ namespace DrawingTree.Controls;
 /// </summary>
 public partial class PartEditorControl : UserControl
 {
+    /// <summary>Quantity used when a part has no part_tree entry yet.</summary>
+    private const string DefaultQuantity = "1";
+
     private readonly DrawingRepository _drawingRepository = new();
     private readonly ObservableCollection<PartEditorRow> _rows = new();
     private readonly Dictionary<PartEditorRow, Process> _openPdfProcesses = new();
@@ -86,6 +89,7 @@ public partial class PartEditorControl : UserControl
                     IsAssembly         = dbInfo?.IsAssembly  ?? false,
                     PdfPath            = dbInfo?.PdfPath.Length > 0 ? dbInfo.PdfPath : pdfPath,
                     PreviousDrawingNumber = dbInfo?.PreviousDrawingNumber ?? string.Empty,
+                    QuantityInAssembly = LoadQuantity(dbInfo?.PartId),
                 });
             }
 
@@ -134,6 +138,10 @@ public partial class PartEditorControl : UserControl
             Logger.Instance.Warning($"PartEditor save: GetDrawingInfo returned null for '{row.DrawingNumber}'");
             return;
         }
+
+        // Quantity lives in part_tree, not part, so it is saved independently of the
+        // part field diff/overwrite confirmation below.
+        _drawingRepository.UpdatePartTreeQuantity(row.PartId.Value, row.QuantityInAssembly);
 
         bool same = row.Revision              == dbInfo.Revision              &&
                     row.Description           == dbInfo.Description           &&
@@ -249,10 +257,23 @@ public partial class PartEditorControl : UserControl
         row.Description = dbInfo?.Description ?? string.Empty;
         row.IsAssembly  = dbInfo?.IsAssembly  ?? false;
         row.PreviousDrawingNumber = dbInfo?.PreviousDrawingNumber ?? string.Empty;
+        row.QuantityInAssembly    = LoadQuantity(dbInfo?.PartId);
         if (!string.IsNullOrEmpty(dbInfo?.PdfPath)) row.PdfPath = dbInfo.PdfPath;
         row.Status      = SaveStatus.None;
 
         Logger.Instance.Info($"PartEditor: Drawing Number changed to '{newNumber}', row refreshed from DB (PartId={row.PartId})");
+    }
+
+    /// <summary>
+    /// Moves focus down the Previous Drawing # column, so the whole column can be filled
+    /// in one pass without reaching for the mouse.
+    /// </summary>
+    /// <param name="sender">Previous Drawing # text box that lost focus</param>
+    /// <param name="e">Routed event args</param>
+    private void PreviousDrawingNumber_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement el || el.DataContext is not PartEditorRow row) return;
+        FocusNextRowElement(row, "PreviousDrawingTextBox");
     }
 
     private void RowOpenPdfButton_Click(object sender, RoutedEventArgs e)
@@ -351,6 +372,15 @@ public partial class PartEditorControl : UserControl
     }
 
     private void FocusNextRowOpenPdfButton(PartEditorRow row)
+        => FocusNextRowElement(row, "OpenPdfButton");
+
+    /// <summary>
+    /// Moves keyboard focus to the tagged element of the row following <paramref name="row"/>.
+    /// No-op when the row is the last one or its container is not realized.
+    /// </summary>
+    /// <param name="row">Current row</param>
+    /// <param name="tag">Tag of the target element inside the next row's template</param>
+    private void FocusNextRowElement(PartEditorRow row, string tag)
     {
         int index = _rows.IndexOf(row);
         if (index < 0 || index + 1 >= _rows.Count) return;
@@ -358,7 +388,20 @@ public partial class PartEditorControl : UserControl
         var container = PartList.ItemContainerGenerator.ContainerFromItem(_rows[index + 1]);
         if (container == null) return;
 
-        FindTaggedElement(container, "OpenPdfButton")?.Focus();
+        FindTaggedElement(container, tag)?.Focus();
+    }
+
+    /// <summary>
+    /// Reads the part's quantity in its parent assembly from part_tree.
+    /// Falls back to <see cref="DefaultQuantity"/> for new parts or parts not yet in a tree.
+    /// </summary>
+    /// <param name="partId">part.id, or null for a part that does not exist yet</param>
+    /// <returns>Quantity string, never empty</returns>
+    private string LoadQuantity(int? partId)
+    {
+        if (partId == null) return DefaultQuantity;
+        string qty = _drawingRepository.GetPartQuantity(partId.Value);
+        return string.IsNullOrWhiteSpace(qty) ? DefaultQuantity : qty;
     }
 
     private static FrameworkElement? FindTaggedElement(DependencyObject parent, string tag)
