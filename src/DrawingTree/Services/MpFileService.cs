@@ -21,14 +21,46 @@ public static class MpFileService
 
     /// <summary>
     /// Builds the target folder path: \\rtdnas2\Manufacturing Process\{folderName}\{PO}
+    /// The PO revision suffix is stripped ("RT98-88040-PN-R004-R. 1" -> "RT98-88040-PN-R004"),
+    /// since the folder on disk is named after the base order only. An existing folder whose name
+    /// contains the PO number as a token is preferred over the bare PO path — see FindPoFolder.
     /// </summary>
     /// <param name="folderName">Already-resolved customer folder name from MpConfig.</param>
     private static string BuildTargetFolder(string folderName, string? poNumber)
     {
-        var po = SanitizeFolderName(poNumber);
-        return string.IsNullOrEmpty(po)
-            ? Path.Combine(NetworkBase, folderName)
-            : Path.Combine(NetworkBase, folderName, po);
+        var customerRoot = Path.Combine(NetworkBase, folderName);
+
+        var po = SanitizeFolderName(OeNormalization.GetPoBase(poNumber));
+        if (string.IsNullOrEmpty(po)) return customerRoot;
+
+        return FindPoFolder(customerRoot, po) ?? Path.Combine(customerRoot, po);
+    }
+
+    /// <summary>
+    /// Looks for an existing sub-folder that belongs to the given PO. Folder names often carry a
+    /// trailing description, e.g. "RT98-88040-PN-R004  FC Axial Adjustment Tool J-72775" — so the
+    /// name is split on whitespace and matched against the PO number token by token.
+    /// </summary>
+    /// <param name="customerRoot">Customer folder to search in</param>
+    /// <param name="po">Base PO number to match (revision suffix already stripped)</param>
+    /// <returns>Full path of the matching folder, or null when none matches or the root is unreachable</returns>
+    private static string? FindPoFolder(string customerRoot, string po)
+    {
+        try
+        {
+            if (!Directory.Exists(customerRoot)) return null;
+
+            return Directory.EnumerateDirectories(customerRoot)
+                .OrderBy(d => d, StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault(d => Path.GetFileName(d)
+                    .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+                    .Any(token => token.Equals(po, StringComparison.OrdinalIgnoreCase)));
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Warning($"MpFileService.FindPoFolder: could not scan '{customerRoot}': {ex.Message}");
+            return null;
+        }
     }
 
     /// <summary>
@@ -63,6 +95,25 @@ public static class MpFileService
     /// Throws <see cref="MpFolderNotConfiguredException"/> when the customer has no configured folder.
     /// </summary>
     public static string ResolveFolder(MpContext ctx)
+        => BuildTargetFolder(ResolveFolderName(ctx), ctx.PoNumber);
+
+    /// <summary>
+    /// Resolves the customer's own MP folder (one level above the PO folder), used as the starting
+    /// point when the user picks an MP file manually.
+    /// Throws <see cref="MpFolderNotConfiguredException"/> when the customer has no configured folder.
+    /// </summary>
+    /// <param name="ctx">Order item context carrying the customer name</param>
+    /// <returns>Full path of the customer folder under the MP network base</returns>
+    public static string ResolveCustomerFolder(MpContext ctx)
+        => Path.Combine(NetworkBase, ResolveFolderName(ctx));
+
+    /// <summary>
+    /// Looks up the configured folder name for the context's customer.
+    /// </summary>
+    /// <param name="ctx">Order item context carrying the customer name</param>
+    /// <returns>Folder name from config.txt</returns>
+    /// <exception cref="MpFolderNotConfiguredException">The customer has no folder configured.</exception>
+    private static string ResolveFolderName(MpContext ctx)
     {
         var customerName = ctx.CustomerName ?? "Unknown";
         var folderName   = MpConfig.GetFolderName(customerName);
@@ -73,7 +124,7 @@ public static class MpFileService
             throw new MpFolderNotConfiguredException(customerName, MpConfig.ConfigFilePath, unconfigured);
         }
 
-        return BuildTargetFolder(folderName, ctx.PoNumber);
+        return folderName;
     }
 
     /// <summary>

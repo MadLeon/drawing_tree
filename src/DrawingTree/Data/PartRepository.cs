@@ -5,6 +5,7 @@
 /// </summary>
 
 using DrawingTree.Logging;
+using DrawingTree.Models;
 
 namespace DrawingTree.Data;
 
@@ -127,6 +128,70 @@ public class PartRepository
             Logger.Instance.Error($"PartRepository.GetProcessSteps failed for partId={partId}, orderItemId={orderItemId}: {ex.Message}");
         }
         return results;
+    }
+
+    /// <summary>
+    /// Checks whether the part already has any process template steps.
+    /// </summary>
+    /// <param name="partId">part.id</param>
+    /// <returns>True if at least one process_template row exists for the part</returns>
+    public bool HasProcessSteps(int partId)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT 1 FROM process_template WHERE part_id = @partId LIMIT 1";
+            cmd.Parameters.AddWithValue("@partId", partId);
+            using var reader = cmd.ExecuteReader();
+            return reader.Read();
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.HasProcessSteps failed for partId={partId}: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Inserts process template steps for the part in a single transaction.
+    /// </summary>
+    /// <param name="partId">part.id</param>
+    /// <param name="steps">Steps extracted from the MP workbook</param>
+    /// <returns>Number of rows inserted; 0 on failure</returns>
+    public int AddProcessSteps(int partId, IEnumerable<MpProcessStep> steps)
+    {
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var tx = conn.BeginTransaction();
+
+            var inserted = 0;
+            foreach (var step in steps)
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.Transaction = tx;
+                cmd.CommandText = """
+                    INSERT INTO process_template (part_id, row_number, shop_code, description)
+                    VALUES (@partId, @rowNumber, @shopCode, @description)
+                    """;
+                cmd.Parameters.AddWithValue("@partId", partId);
+                cmd.Parameters.AddWithValue("@rowNumber", step.RowNumber);
+                cmd.Parameters.AddWithValue("@shopCode", step.ShopCode);
+                cmd.Parameters.AddWithValue("@description",
+                    string.IsNullOrWhiteSpace(step.ProcessDescription) ? DBNull.Value : step.ProcessDescription);
+                inserted += cmd.ExecuteNonQuery();
+            }
+
+            tx.Commit();
+            Logger.Instance.Info($"PartRepository.AddProcessSteps: inserted {inserted} step(s) for partId={partId}");
+            return inserted;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.AddProcessSteps failed for partId={partId}: {ex.Message}");
+            return 0;
+        }
     }
 
     /// <summary>

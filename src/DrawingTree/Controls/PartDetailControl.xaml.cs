@@ -11,7 +11,9 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using DrawingTree.Data;
+using DrawingTree.Dialogs;
 using DrawingTree.Logging;
+using DrawingTree.Models;
 using DrawingTree.Services;
 
 using UserControl      = System.Windows.Controls.UserControl;
@@ -677,39 +679,35 @@ public partial class PartDetailControl : UserControl
         if (_mpContext == null || _header == null) return;
 
         var folder = BubbleConfig.GetBubbleFolder(_mpContext.CustomerName ?? string.Empty);
-        if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
-        {
-            MessageBox.Show(
-                $"No bubble drawing folder configured (or folder missing) for customer '{_mpContext.CustomerName}'.\n\n" +
-                $"Please open config.txt and set the folder under [BubbleDrawingPaths]:\n" +
-                $"  {_mpContext.CustomerName}=\n\n" +
-                $"Config file:\n{BubbleConfig.ConfigFilePath}",
-                "Bubble Folder Not Configured", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
+        var folderUsable = !string.IsNullOrWhiteSpace(folder) && Directory.Exists(folder);
+        if (!folderUsable)
+            Logger.Instance.Warning($"PartDetailControl.AssociateBubble: no usable bubble folder for customer '{_mpContext.CustomerName}'");
 
         var existing = _partRepository.GetBubbleAttachmentsByDrawingNumber(_header.DrawingNumber);
         var existingPaths = existing.Select(a => a.FilePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        var searchPattern = $"{_header.DrawingNumber} Rev* *-ballooned.pdf";
-        var diskFiles = Directory.GetFiles(folder, searchPattern);
-
         var added = 0;
-        foreach (var filePath in diskFiles)
+        if (folderUsable)
         {
-            if (existingPaths.Contains(filePath)) continue;
+            var searchPattern = $"{_header.DrawingNumber} Rev* *-ballooned.pdf";
+            var diskFiles = Directory.GetFiles(folder!, searchPattern);
 
-            var fileName = System.IO.Path.GetFileName(filePath);
-            var revision = ExtractRevisionFromFileName(fileName);
-            var partId = _partRepository.GetPartIdByDrawingNumberAndRevision(_header.DrawingNumber, revision);
-            if (partId == null)
+            foreach (var filePath in diskFiles)
             {
-                Logger.Instance.Warning($"PartDetailControl: skipped '{fileName}', no part record for drawing '{_header.DrawingNumber}' rev '{revision}'");
-                continue;
-            }
+                if (existingPaths.Contains(filePath)) continue;
 
-            _partRepository.AddBubbleAttachment(partId.Value, fileName, filePath);
-            added++;
+                var fileName = System.IO.Path.GetFileName(filePath);
+                var revision = ExtractRevisionFromFileName(fileName);
+                var partId = _partRepository.GetPartIdByDrawingNumberAndRevision(_header.DrawingNumber, revision);
+                if (partId == null)
+                {
+                    Logger.Instance.Warning($"PartDetailControl: skipped '{fileName}', no part record for drawing '{_header.DrawingNumber}' rev '{revision}'");
+                    continue;
+                }
+
+                _partRepository.AddBubbleAttachment(partId.Value, fileName, filePath);
+                added++;
+            }
         }
 
         var missing = existing.Where(a => !File.Exists(a.FilePath)).ToList();
@@ -722,11 +720,97 @@ public partial class PartDetailControl : UserControl
                 _partRepository.RemoveBubbleAttachment(attachment.AttachmentId);
         }
 
+        // Nothing found automatically and nothing linked before: offer a manual pick.
+        if (added == 0 && existing.Count == missing.Count)
+        {
+            var manualPath = PromptForFile(
+                "Bubble Drawing Not Found",
+                $"No bubble drawing was found automatically for drawing '{_header.DrawingNumber}'.\n\n" +
+                "Select the bubble drawing manually?",
+                "Select Bubble Drawing",
+                "PDF Files (*.pdf)|*.pdf|All Files (*.*)|*.*",
+                folderUsable ? folder : null);
+
+            if (manualPath != null && !existingPaths.Contains(manualPath))
+            {
+                _partRepository.AddBubbleAttachment(_partId, System.IO.Path.GetFileName(manualPath), manualPath);
+                added++;
+            }
+        }
+
         if (added > 0 || missing.Count > 0)
             LoadBubbleSection();
     }
 
+    // ── Manual file association ─────────────────────────────────────────
+
+    /// <summary>
+    /// Asks whether to locate a file manually and, if confirmed, opens a file dialog.
+    /// Shared by the MP, Bubble Drawing and Drawing PDF sections.
+    /// </summary>
+    /// <param name="promptTitle">Caption of the confirmation message box</param>
+    /// <param name="promptMessage">Body of the confirmation message box</param>
+    /// <param name="dialogTitle">Caption of the file dialog</param>
+    /// <param name="filter">File dialog filter string</param>
+    /// <param name="initialFolder">Folder to start browsing in; ignored when missing</param>
+    /// <returns>The chosen file path, or null when the user declines or cancels</returns>
+    private string? PromptForFile(
+        string promptTitle, string promptMessage, string dialogTitle, string filter, string? initialFolder)
+    {
+        var choice = MessageBox.Show(promptMessage, promptTitle,
+            MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (choice != MessageBoxResult.Yes) return null;
+
+        using var dialog = new System.Windows.Forms.OpenFileDialog
+        {
+            Title  = dialogTitle,
+            Filter = filter
+        };
+        if (!string.IsNullOrWhiteSpace(initialFolder) && Directory.Exists(initialFolder))
+            dialog.InitialDirectory = initialFolder;
+
+        return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? dialog.FileName : null;
+    }
+
     // ── Drawing PDF ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Links a manually chosen PDF to this part, starting the file dialog in the folder of the
+    /// PDF already on record. The chosen file becomes the part's active drawing file.
+    /// </summary>
+    /// <param name="sender">Associate button</param>
+    /// <param name="e">Routed event args</param>
+    private void AssociatePdfButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_header == null) return;
+
+        var currentFiles = _partRepository.GetDrawingFiles(_partId);
+        var initialFolder = currentFiles.Count > 0
+            ? System.IO.Path.GetDirectoryName(currentFiles[0].FilePath)
+            : null;
+
+        var filePath = PromptForFile(
+            "Associate Drawing PDF",
+            $"Select the drawing PDF for '{_header.DrawingNumber}' manually?\n\n" +
+            "The selected file becomes the active drawing file for this part.",
+            "Select Drawing PDF",
+            "PDF Files (*.pdf)|*.pdf|All Files (*.*)|*.*",
+            initialFolder);
+        if (filePath == null) return;
+
+        var ok = new DrawingRepository().UpsertDrawingFile(
+            _partId, System.IO.Path.GetFileName(filePath), filePath, _header.Revision ?? "-");
+
+        if (!ok)
+        {
+            MessageBox.Show($"Failed to associate the PDF:\n{filePath}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        Logger.Instance.Info($"PartDetailControl.AssociatePdf: linked '{filePath}' to partId={_partId}");
+        LoadPdfFiles();
+    }
 
     private void LoadPdfFiles()
     {
@@ -747,7 +831,7 @@ public partial class PartDetailControl : UserControl
             PdfListPanel.Children.Add(BuildPdfRow(file));
     }
 
-    private static readonly int[] PdfColumnWidths = { 260, 60, 70, 140, 28 };
+    private static readonly int[] PdfColumnWidths = { 260, 60, 70, 140, 28, 70 };
 
     private Grid BuildPdfHeader()
     {
@@ -755,7 +839,7 @@ public partial class PartDetailControl : UserControl
         foreach (var w in PdfColumnWidths)
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(w) });
 
-        var headers = new[] { "File Name", "Rev", "Active", "Last Modified", "PDF" };
+        var headers = new[] { "File Name", "Rev", "Active", "Last Modified", "PDF", "Copy Path" };
         for (int i = 0; i < headers.Length; i++)
         {
             var block = new TextBox
@@ -822,14 +906,145 @@ public partial class PartDetailControl : UserControl
         Grid.SetColumn(openBtn, 4);
         grid.Children.Add(openBtn);
 
+        var copyPathBtn = new Button
+        {
+            Style = (Style)FindResource("IconLinkBtn"), Padding = new Thickness(2, 0, 2, 0),
+            ToolTip = "Copy folder path",
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+            Content = new Path
+            {
+                Data = (Geometry)Resources["ContentCopyGeo"], Stretch = Stretch.Uniform,
+                Fill = Brushes.DimGray, Width = 13, Height = 13
+            }
+        };
+        copyPathBtn.Click += (_, _) => CopyPdfFolderPath(file.FilePath);
+        Grid.SetColumn(copyPathBtn, 5);
+        grid.Children.Add(copyPathBtn);
+
         return grid;
+    }
+
+    /// <summary>
+    /// Copies the folder containing the given PDF to the clipboard.
+    /// </summary>
+    /// <param name="filePath">Full path of the drawing PDF</param>
+    private void CopyPdfFolderPath(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath)) return;
+
+        var folder = System.IO.Path.GetDirectoryName(filePath);
+        if (string.IsNullOrWhiteSpace(folder))
+        {
+            Logger.Instance.Warning($"CopyPdfFolderPath: no folder resolved from '{filePath}'");
+            return;
+        }
+
+        System.Windows.Clipboard.SetText(folder);
+        Logger.Instance.Info($"CopyPdfFolderPath: copied '{folder}'");
     }
 
     // ── Process Template ────────────────────────────────────────────────
 
+    /// <summary>
+    /// Looks for the MP file of this order item and imports it. When no file is found automatically,
+    /// offers to let the user pick one manually, starting in the customer's MP folder.
+    /// </summary>
+    /// <param name="sender">Associate button</param>
+    /// <param name="e">Routed event args</param>
+    private void AssociateMpButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_mpContext == null) return;
+
+        string? filePath = null;
+        try
+        {
+            var folder = MpFileService.ResolveFolder(_mpContext);
+            // GetExistingFiles is ordered by last write time descending, so the newest file wins.
+            filePath = MpFileService.GetExistingFiles(folder, _mpContext.DrawingNumber).FirstOrDefault();
+
+            if (filePath == null)
+                Logger.Instance.Info($"PartDetailControl.AssociateMp: no MP file for drawing '{_mpContext.DrawingNumber}' in '{folder}'");
+        }
+        catch (MpFolderNotConfiguredException ex)
+        {
+            Logger.Instance.Warning($"PartDetailControl.AssociateMp: no MP folder configured for '{ex.CustomerName}'");
+        }
+
+        filePath ??= PromptForMpFile();
+        if (filePath == null) return;
+
+        ImportMpFile(filePath);
+    }
+
+    /// <summary>
+    /// Asks whether to pick the MP file manually and, if confirmed, opens a file dialog starting
+    /// in the customer's configured MP folder.
+    /// </summary>
+    /// <returns>The chosen file path, or null when the user declines or cancels</returns>
+    private string? PromptForMpFile()
+    {
+        string? initialFolder = null;
+        try { initialFolder = MpFileService.ResolveCustomerFolder(_mpContext!); }
+        catch (MpFolderNotConfiguredException ex)
+        {
+            Logger.Instance.Warning($"PartDetailControl.PromptForMpFile: no MP folder configured for '{ex.CustomerName}'");
+        }
+
+        return PromptForFile(
+            "MP File Not Found",
+            $"No MP file was found automatically for drawing '{_mpContext!.DrawingNumber}'.\n\n" +
+            "Select the MP file manually?",
+            "Select MP File",
+            "MP Files (*.xlsm)|*.xlsm|Excel Files (*.xlsx;*.xlsm)|*.xlsx;*.xlsm|All Files (*.*)|*.*",
+            initialFolder);
+    }
+
+    /// <summary>
+    /// Previews the MP file and, on confirmation, imports its process steps and links the file
+    /// to the current part / order item.
+    /// </summary>
+    /// <param name="filePath">Full path of the MP file to import</param>
+    private void ImportMpFile(string filePath)
+    {
+        MpExtractionResult result;
+        try
+        {
+            result = MpExtractorService.Extract(filePath);
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartDetailControl.ImportMpFile: failed to read '{filePath}': {ex.Message}");
+            MessageBox.Show($"Failed to read MP file:\n{filePath}\n\n{ex.Message}", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        var stepsWillBeSkipped = _partRepository.HasProcessSteps(_partId);
+        var dialog = new MpAssociateDialog(result, stepsWillBeSkipped)
+        {
+            Owner = System.Windows.Window.GetWindow(this)
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        if (stepsWillBeSkipped)
+            Logger.Instance.Warning($"PartDetailControl.ImportMpFile: partId={_partId} already has process templates - step import skipped");
+        else if (result.ProcessSteps.Count > 0)
+            _partRepository.AddProcessSteps(_partId, result.ProcessSteps);
+
+        var alreadyLinked = _partRepository.GetMpAttachments(_partId)
+            .Any(a => string.Equals(a.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+        if (!alreadyLinked)
+            _partRepository.AddMpAttachment(_partId, _orderItemId, result.FileName, filePath);
+
+        LoadMpSection();
+        LoadProcessSteps();
+    }
+
     private void LoadProcessSteps()
     {
         ProcessStepsPanel.Children.Clear();
+        AssociateMpButton.Visibility = _mpContext != null ? Visibility.Visible : Visibility.Collapsed;
+
         var steps = _partRepository.GetProcessSteps(_partId, _orderItemId);
         if (steps.Count == 0)
         {

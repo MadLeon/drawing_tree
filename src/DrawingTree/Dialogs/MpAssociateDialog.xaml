@@ -1,0 +1,98 @@
+<Window x:Class="DrawingTree.Dialogs.MpAssociateDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Associate Manufacturing Process"
+        Width="820" Height="640"
+        MinWidth="640" MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        ShowInTaskbar="False">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Source file -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock x:Name="FileNameText" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis"/>
+            <TextBlock x:Name="FilePathText" FontSize="11" Foreground="Gray" TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
+
+        <!-- Info fields -->
+        <Border Grid.Row="1" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="3"
+                Padding="10" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="22"/>
+                    <RowDefinition Height="22"/>
+                    <RowDefinition Height="22"/>
+                    <RowDefinition Height="22"/>
+                    <RowDefinition Height="22"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="PO Number" FontSize="12" Foreground="Gray" VerticalAlignment="Center"/>
+                <TextBox   Grid.Row="0" Grid.Column="1" x:Name="PoNumberText" Style="{StaticResource SelectableText}" FontSize="12"/>
+                <TextBlock Grid.Row="0" Grid.Column="3" Text="OE Number" FontSize="12" Foreground="Gray" VerticalAlignment="Center"/>
+                <TextBox   Grid.Row="0" Grid.Column="4" x:Name="OeNumberText" Style="{StaticResource SelectableText}" FontSize="12"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Job Number" FontSize="12" Foreground="Gray" VerticalAlignment="Center"/>
+                <TextBox   Grid.Row="1" Grid.Column="1" x:Name="JobNumberText" Style="{StaticResource SelectableText}" FontSize="12"/>
+                <TextBlock Grid.Row="1" Grid.Column="3" Text="Line" FontSize="12" Foreground="Gray" VerticalAlignment="Center"/>
+                <TextBox   Grid.Row="1" Grid.Column="4" x:Name="LineNumberText" Style="{StaticResource SelectableText}" FontSize="12"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Drawing Number" FontSize="12" Foreground="Gray" VerticalAlignment="Center"/>
+                <TextBox   Grid.Row="2" Grid.Column="1" x:Name="DrawingNumberText" Style="{StaticResource SelectableText}" FontSize="12"/>
+                <TextBlock Grid.Row="2" Grid.Column="3" Text="Revision" FontSize="12" Foreground="Gray" VerticalAlignment="Center"/>
+                <TextBox   Grid.Row="2" Grid.Column="4" x:Name="RevisionText" Style="{StaticResource SelectableText}" FontSize="12"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Release Date" FontSize="12" Foreground="Gray" VerticalAlignment="Center"/>
+                <TextBox   Grid.Row="3" Grid.Column="1" x:Name="ReleaseDateText" Style="{StaticResource SelectableText}" FontSize="12"/>
+                <TextBlock Grid.Row="3" Grid.Column="3" Text="Delivery Date" FontSize="12" Foreground="Gray" VerticalAlignment="Center"/>
+                <TextBox   Grid.Row="3" Grid.Column="4" x:Name="DeliveryDateText" Style="{StaticResource SelectableText}" FontSize="12"/>
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Description" FontSize="12" Foreground="Gray" VerticalAlignment="Center"/>
+                <TextBox   Grid.Row="4" Grid.Column="1" x:Name="DescriptionText" Style="{StaticResource SelectableText}" FontSize="12"/>
+                <TextBlock Grid.Row="4" Grid.Column="3" Text="Quantity" FontSize="12" Foreground="Gray" VerticalAlignment="Center"/>
+                <TextBox   Grid.Row="4" Grid.Column="4" x:Name="QuantityText" Style="{StaticResource SelectableText}" FontSize="12"/>
+            </Grid>
+        </Border>
+
+        <!-- Skip notice when the part already has a process template -->
+        <TextBlock Grid.Row="2" x:Name="SkipNoticeText"
+                   FontSize="12" Foreground="#B8860B" TextWrapping="Wrap"
+                   Margin="0,0,0,8" Visibility="Collapsed"
+                   Text="This part already has a process template. The steps below will not be imported — only the MP file will be linked."/>
+
+        <!-- Process steps -->
+        <Border Grid.Row="3" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="3" Padding="10">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="Process Steps" FontWeight="SemiBold"
+                           FontSize="12" Margin="0,0,0,6"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="StepsPanel"/>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button x:Name="CancelButton" Content="Cancel"
+                    Width="80" Height="28" FontSize="11" Margin="0,0,8,0"
+                    IsCancel="True" Click="CancelButton_Click"/>
+            <Button x:Name="AssociateButton" Content="Associate"
+                    Width="80" Height="28" FontSize="11"
+                    IsDefault="True" Click="AssociateButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

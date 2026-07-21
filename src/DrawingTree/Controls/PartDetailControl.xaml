@@ -120,8 +120,15 @@
                 <!-- Drawing PDF -->
                 <Border BorderBrush="#CCCCCC" BorderThickness="1" Margin="0,0,0,12" Padding="10" Background="White">
                     <StackPanel>
-                        <TextBox Text="Drawing PDF" Style="{StaticResource SelectableTitleText}"
-                                 FontWeight="Bold" FontSize="13" Margin="0,0,0,8"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBox Text="Drawing PDF" Style="{StaticResource SelectableTitleText}"
+                                     FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                            <Button x:Name="AssociatePdfButton" Content="Associate"
+                                    Height="24" FontSize="11" Padding="8,0"
+                                    Margin="8,0,0,0" VerticalAlignment="Center"
+                                    ToolTip="Link a drawing PDF to this part manually"
+                                    Click="AssociatePdfButton_Click"/>
+                        </StackPanel>
                         <StackPanel x:Name="PdfListPanel"/>
                     </StackPanel>
                 </Border>
@@ -190,8 +197,15 @@
                 <!-- Process Template -->
                 <Border BorderBrush="#CCCCCC" BorderThickness="1" Margin="0,0,0,12" Padding="10" Background="White">
                     <StackPanel>
-                        <TextBox Text="Process Template" Style="{StaticResource SelectableTitleText}"
-                                 FontWeight="Bold" FontSize="13" Margin="0,0,0,8"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBox Text="Process Template" Style="{StaticResource SelectableTitleText}"
+                                     FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                            <Button x:Name="AssociateMpButton" Content="Associate"
+                                    Height="24" FontSize="11" Padding="8,0"
+                                    Margin="8,0,0,0" VerticalAlignment="Center"
+                                    ToolTip="Import process steps from the MP file in the target folder"
+                                    Click="AssociateMpButton_Click"/>
+                        </StackPanel>
                         <StackPanel x:Name="ProcessStepsPanel"/>
                     </StackPanel>
                 </Border>
