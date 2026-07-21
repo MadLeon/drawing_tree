@@ -13,6 +13,13 @@ namespace DrawingTree.Data;
 
 public class PartRepository
 {
+    /// <summary>step_tracker.status for a finished step; matches the part_attachment wording.</summary>
+    private const string StepStatusCompleted = "completed";
+
+    /// <summary>step_tracker.status for the step currently being worked on.</summary>
+    private const string StepStatusInProgress = "in progress";
+
+
     /// <summary>
     /// Queries the part header (revision/description/is_assembly) for the Part detail page.
     /// </summary>
@@ -199,10 +206,11 @@ public class PartRepository
 
     /// <summary>
     /// Marks the given process template step as the current progress of an order item.
-    /// Steps before it are forced to COMPLETED (missing trackers are created, missing end
-    /// times are filled with <paramref name="date"/>), the selected step becomes IN_PROGRESS
+    /// Steps before it are forced to "completed" (missing trackers are created, missing end
+    /// times are filled with <paramref name="date"/>), the selected step becomes "in progress"
     /// with no end time, and trackers of every later step are removed so that the current
     /// step is always the last tracked one. Runs in a single transaction.
+    /// Status wording matches part_attachment.status ("in progress" / "completed").
     /// </summary>
     /// <param name="orderItemId">order_item.id the progress belongs to</param>
     /// <param name="orderedTemplateIds">All process_template.id values of the part, ordered by row_number</param>
@@ -228,9 +236,9 @@ public class PartRepository
             {
                 var templateId = orderedTemplateIds[i];
                 if (i < selectedIndex)
-                    UpsertStepProgress(conn, tx, orderItemId, templateId, "COMPLETED", date, date);
+                    UpsertStepProgress(conn, tx, orderItemId, templateId, StepStatusCompleted, date, date);
                 else if (i == selectedIndex)
-                    UpsertStepProgress(conn, tx, orderItemId, templateId, "IN_PROGRESS", date, null);
+                    UpsertStepProgress(conn, tx, orderItemId, templateId, StepStatusInProgress, date, null);
                 else
                     DeleteStepProgress(conn, tx, orderItemId, templateId);
             }
@@ -515,26 +523,63 @@ public class PartRepository
     /// <param name="orderItemId">order_item.id</param>
     /// <param name="fileName">File name (without path)</param>
     /// <param name="filePath">Full file path</param>
-    public void AddMpAttachment(int partId, int orderItemId, string fileName, string filePath)
+    /// <param name="isActive">When true, the new record becomes the part's active MP file</param>
+    public void AddMpAttachment(int partId, int orderItemId, string fileName, string filePath, bool isActive = true)
+        => AddAttachment(partId, orderItemId, "mp", fileName, filePath, isActive);
+
+    /// <summary>
+    /// Inserts a part_attachment record of the given type. When <paramref name="isActive"/> is true
+    /// every other attachment of the same type on the same part is deactivated first, so at most one
+    /// active file exists per (part, type) — matching how drawing_file behaves.
+    /// </summary>
+    /// <param name="partId">part.id (0 if no part linked)</param>
+    /// <param name="orderItemId">order_item.id</param>
+    /// <param name="fileType">part_attachment.file_type value ("mp", "dir", "bubble", ...)</param>
+    /// <param name="fileName">File name (without path)</param>
+    /// <param name="filePath">Full file path</param>
+    /// <param name="isActive">Whether the new record is marked active</param>
+    private void AddAttachment(int partId, int orderItemId, string fileType,
+                               string fileName, string filePath, bool isActive)
     {
         try
         {
             using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var tx = conn.BeginTransaction();
+
+            if (isActive && partId > 0)
+            {
+                using var deactivate = conn.CreateCommand();
+                deactivate.Transaction = tx;
+                deactivate.CommandText = """
+                    UPDATE part_attachment
+                    SET is_active = 0, updated_at = datetime('now', 'localtime')
+                    WHERE part_id = @partId AND file_type = @type COLLATE NOCASE
+                    """;
+                deactivate.Parameters.AddWithValue("@partId", partId);
+                deactivate.Parameters.AddWithValue("@type",   fileType);
+                deactivate.ExecuteNonQuery();
+            }
+
             using var cmd = conn.CreateCommand();
+            cmd.Transaction = tx;
             cmd.CommandText = """
                 INSERT INTO part_attachment (part_id, order_item_id, file_type, file_name, file_path, is_active)
-                VALUES (@partId, @oid, 'mp', @name, @path, 1)
+                VALUES (@partId, @oid, @type, @name, @path, @active)
                 """;
             cmd.Parameters.AddWithValue("@partId", partId > 0 ? partId : DBNull.Value);
-            cmd.Parameters.AddWithValue("@oid",    orderItemId);
+            cmd.Parameters.AddWithValue("@oid",    orderItemId > 0 ? orderItemId : DBNull.Value);
+            cmd.Parameters.AddWithValue("@type",   fileType);
             cmd.Parameters.AddWithValue("@name",   fileName);
             cmd.Parameters.AddWithValue("@path",   filePath);
+            cmd.Parameters.AddWithValue("@active", isActive ? 1 : 0);
             cmd.ExecuteNonQuery();
-            Logger.Instance.Info($"PartRepository.AddMpAttachment: recorded '{filePath}'");
+
+            tx.Commit();
+            Logger.Instance.Info($"PartRepository.AddAttachment: recorded {fileType} '{filePath}' (active={isActive})");
         }
         catch (Exception ex)
         {
-            Logger.Instance.Error($"PartRepository.AddMpAttachment failed for '{filePath}': {ex.Message}");
+            Logger.Instance.Error($"PartRepository.AddAttachment failed for '{filePath}': {ex.Message}");
         }
     }
 
@@ -602,28 +647,9 @@ public class PartRepository
     /// <param name="orderItemId">order_item.id</param>
     /// <param name="fileName">File name (without path)</param>
     /// <param name="filePath">Full file path</param>
-    public void AddDirAttachment(int partId, int orderItemId, string fileName, string filePath)
-    {
-        try
-        {
-            using var conn = DatabaseConnectionFactory.OpenDevConnection();
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = """
-                INSERT INTO part_attachment (part_id, order_item_id, file_type, file_name, file_path, is_active)
-                VALUES (@partId, @oid, 'dir', @name, @path, 1)
-                """;
-            cmd.Parameters.AddWithValue("@partId", partId > 0 ? partId : DBNull.Value);
-            cmd.Parameters.AddWithValue("@oid",    orderItemId);
-            cmd.Parameters.AddWithValue("@name",   fileName);
-            cmd.Parameters.AddWithValue("@path",   filePath);
-            cmd.ExecuteNonQuery();
-            Logger.Instance.Info($"PartRepository.AddDirAttachment: recorded '{filePath}'");
-        }
-        catch (Exception ex)
-        {
-            Logger.Instance.Error($"PartRepository.AddDirAttachment failed for '{filePath}': {ex.Message}");
-        }
-    }
+    /// <param name="isActive">When true, the new record becomes the part's active DIR file</param>
+    public void AddDirAttachment(int partId, int orderItemId, string fileName, string filePath, bool isActive = true)
+        => AddAttachment(partId, orderItemId, "dir", fileName, filePath, isActive);
 
     /// <summary>
     /// Deletes a DIR attachment record from the database.
@@ -781,27 +807,9 @@ public class PartRepository
     /// <param name="partId">part.id</param>
     /// <param name="fileName">File name (without path)</param>
     /// <param name="filePath">Full file path</param>
-    public void AddBubbleAttachment(int partId, string fileName, string filePath)
-    {
-        try
-        {
-            using var conn = DatabaseConnectionFactory.OpenDevConnection();
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = """
-                INSERT INTO part_attachment (part_id, order_item_id, file_type, file_name, file_path, is_active)
-                VALUES (@partId, NULL, 'bubble', @name, @path, 1)
-                """;
-            cmd.Parameters.AddWithValue("@partId", partId);
-            cmd.Parameters.AddWithValue("@name",   fileName);
-            cmd.Parameters.AddWithValue("@path",   filePath);
-            cmd.ExecuteNonQuery();
-            Logger.Instance.Info($"PartRepository.AddBubbleAttachment: recorded '{filePath}'");
-        }
-        catch (Exception ex)
-        {
-            Logger.Instance.Error($"PartRepository.AddBubbleAttachment failed for '{filePath}': {ex.Message}");
-        }
-    }
+    /// <param name="isActive">When true, the new record becomes the part's active bubble drawing</param>
+    public void AddBubbleAttachment(int partId, string fileName, string filePath, bool isActive = true)
+        => AddAttachment(partId, 0, "bubble", fileName, filePath, isActive);
 
     /// <summary>
     /// Deletes a bubble drawing attachment record from the database.

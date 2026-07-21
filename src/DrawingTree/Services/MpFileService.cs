@@ -75,15 +75,19 @@ public static class MpFileService
         return $"{baseName} (J#{jobNumber.Trim()}).xlsm";
     }
 
+    /// <summary>Workbook extensions accepted as MP files. Most files on the share are .xlsx.</summary>
+    private static readonly string[] MpExtensions = { ".xlsm", ".xlsx" };
+
     /// <summary>
-    /// Returns .xlsm files in the folder whose names start with the given drawing number.
-    /// Returns an empty list if the folder does not exist.
+    /// Returns MP workbooks in the folder whose names start with the given drawing number,
+    /// newest first. Returns an empty list if the folder does not exist.
     /// </summary>
     public static List<string> GetExistingFiles(string folder, string? drawingNumber)
     {
         if (!Directory.Exists(folder)) return new List<string>();
 
-        return Directory.GetFiles(folder, "*.xlsm")
+        return Directory.GetFiles(folder)
+            .Where(f => MpExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
             .Where(f => string.IsNullOrWhiteSpace(drawingNumber) ||
                         Path.GetFileName(f).StartsWith(drawingNumber.Trim(), StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(f => File.GetLastWriteTime(f))

@@ -185,14 +185,18 @@ public class DrawingRepository
     }
 
     /// <summary>
-    /// Deactivates all existing drawing_file records for the part, then upserts the new file path.
+    /// Upserts a drawing_file record for the part. When <paramref name="isActive"/> is true every
+    /// other file of the part is deactivated first, so only one stays active; when false the record
+    /// is just added/refreshed alongside the existing active file.
     /// Uses ON CONFLICT(file_path) DO UPDATE to handle G-drive pre-scanned records.
     /// </summary>
     /// <param name="partId">part.id to associate</param>
     /// <param name="fileName">File name (basename)</param>
     /// <param name="filePath">Full file path (must be unique)</param>
     /// <param name="revision">Revision label</param>
-    public bool UpsertDrawingFile(int partId, string fileName, string filePath, string revision)
+    /// <param name="isActive">Whether the file becomes the part's active drawing</param>
+    public bool UpsertDrawingFile(int partId, string fileName, string filePath, string revision,
+                                  bool isActive = true)
     {
         try
         {
@@ -200,8 +204,9 @@ public class DrawingRepository
             using var tx = conn.BeginTransaction();
 
             // Step A: deactivate other active files for this part
-            using (var deactivate = conn.CreateCommand())
+            if (isActive)
             {
+                using var deactivate = conn.CreateCommand();
                 deactivate.Transaction = tx;
                 deactivate.CommandText = """
                     UPDATE drawing_file
@@ -219,11 +224,11 @@ public class DrawingRepository
                 upsert.Transaction = tx;
                 upsert.CommandText = """
                     INSERT INTO drawing_file (part_id, file_name, file_path, is_active, revision)
-                    VALUES (@pid, @fn, @fp, 1, @rev)
+                    VALUES (@pid, @fn, @fp, @active, @rev)
                     ON CONFLICT(file_path) DO UPDATE SET
                         part_id    = excluded.part_id,
                         file_name  = excluded.file_name,
-                        is_active  = 1,
+                        is_active  = excluded.is_active,
                         revision   = excluded.revision,
                         updated_at = datetime('now', 'localtime')
                     """;
@@ -231,6 +236,7 @@ public class DrawingRepository
                 upsert.Parameters.AddWithValue("@fn",  fileName);
                 upsert.Parameters.AddWithValue("@fp",  filePath);
                 upsert.Parameters.AddWithValue("@rev", revision);
+                upsert.Parameters.AddWithValue("@active", isActive ? 1 : 0);
                 upsert.ExecuteNonQuery();
             }
 

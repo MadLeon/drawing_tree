@@ -162,6 +162,11 @@
                                     Height="24" FontSize="11" Padding="8,0"
                                     Margin="8,0,0,0" VerticalAlignment="Center"
                                     Click="NewMpButton_Click"/>
+                            <Button x:Name="AssociateMpFileButton" Content="Associate"
+                                    Height="24" FontSize="11" Padding="8,0"
+                                    Margin="8,0,0,0" VerticalAlignment="Center"
+                                    ToolTip="Link an MP file in the target folder to this part"
+                                    Click="AssociateMpFileButton_Click"/>
                         </StackPanel>
                         <StackPanel x:Name="MpFilesPanel"/>
                     </StackPanel>
@@ -182,6 +187,11 @@
                                     Height="24" FontSize="11" Padding="8,0"
                                     Margin="8,0,0,0" VerticalAlignment="Center"
                                     Click="NewDirButton_Click"/>
+                            <Button x:Name="AssociateDirButton" Content="Associate"
+                                    Height="24" FontSize="11" Padding="8,0"
+                                    Margin="8,0,0,0" VerticalAlignment="Center"
+                                    ToolTip="Link a DIR file in the target folder to this part"
+                                    Click="AssociateDirButton_Click"/>
                         </StackPanel>
                         <StackPanel x:Name="DirFilesPanel"/>
                     </StackPanel>

@@ -44,6 +44,27 @@ public static class DirFileService
         => $"{(drawingNumber ?? string.Empty).Trim()} REV. {(revision ?? string.Empty).Trim()} @{jobNumber.Trim()}"
             .ToUpperInvariant() + ".xlsm";
 
+    /// <summary>Workbook extensions accepted as DIR files.</summary>
+    private static readonly string[] DirExtensions = { ".xlsm", ".xlsx" };
+
+    /// <summary>
+    /// Returns DIR workbooks in the folder whose names start with the given drawing number,
+    /// newest first. Returns an empty list if the folder does not exist.
+    /// </summary>
+    /// <param name="folder">Folder to scan</param>
+    /// <param name="drawingNumber">Drawing number the file name must start with; null matches all</param>
+    public static List<string> GetExistingFiles(string folder, string? drawingNumber)
+    {
+        if (!Directory.Exists(folder)) return new List<string>();
+
+        return Directory.GetFiles(folder)
+            .Where(f => DirExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
+            .Where(f => string.IsNullOrWhiteSpace(drawingNumber) ||
+                        Path.GetFileName(f).StartsWith(drawingNumber.Trim(), StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(f => File.GetLastWriteTime(f))
+            .ToList();
+    }
+
     /// <summary>
     /// Creates a new DIR file from the template into <paramref name="confirmedFolder"/>, pre-fills cells,
     /// records it in the database, and opens it in Excel. The caller must have already verified/created

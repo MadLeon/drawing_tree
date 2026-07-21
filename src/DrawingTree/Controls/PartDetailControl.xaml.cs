@@ -116,6 +116,7 @@ public partial class PartDetailControl : UserControl
         var hasOrderItemMp = _mpContext != null && _partRepository.HasOrderItemMpAttachment(_partId, _orderItemId);
         NewMpButton.Visibility = _mpContext != null && !hasOrderItemMp ? Visibility.Visible : Visibility.Collapsed;
         OpenMpFolderButton.Visibility = _orderItemId > 0 ? Visibility.Visible : Visibility.Collapsed;
+        AssociateMpFileButton.Visibility = _mpContext != null ? Visibility.Visible : Visibility.Collapsed;
 
         var attachments = _partRepository.GetMpAttachments(_partId);
 
@@ -134,12 +135,22 @@ public partial class PartDetailControl : UserControl
             MpFilesPanel.Children.Add(BuildMpFileRow(attachment));
     }
 
+    /// <summary>
+    /// Adds the MP list columns (file name, open button, trailing spacer) to the given grid.
+    /// The name column takes two thirds of the row so long MP file names stay readable.
+    /// </summary>
+    /// <param name="grid">Grid to add the column definitions to</param>
+    private static void AddMpColumns(Grid grid)
+    {
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.5, GridUnitType.Star) });
+    }
+
     private Grid BuildMpFilesHeader()
     {
         var grid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.5, GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        AddMpColumns(grid);
 
         var header = new TextBox
         {
@@ -155,9 +166,7 @@ public partial class PartDetailControl : UserControl
     private Grid BuildMpFileRow(MpAttachmentRow attachment)
     {
         var grid = new Grid { Margin = new Thickness(0, 2, 0, 2) };
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.5, GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        AddMpColumns(grid);
 
         var nameText = new TextBox
         {
@@ -277,6 +286,61 @@ public partial class PartDetailControl : UserControl
         }
     }
 
+    /// <summary>
+    /// Links an MP file to this part. With nothing listed yet the target folder is scanned by
+    /// drawing number first; when the section already lists files — or the scan finds nothing —
+    /// the user picks a file manually.
+    /// </summary>
+    /// <param name="sender">Associate button</param>
+    /// <param name="e">Routed event args</param>
+    private void AssociateMpFileButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_mpContext == null) return;
+
+        var existing = _partRepository.GetMpAttachments(_partId);
+        var existingPaths = existing.Select(a => a.FilePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        string? folder = null;
+        try { folder = MpFileService.ResolveFolder(_mpContext); }
+        catch (MpFolderNotConfiguredException ex)
+        {
+            Logger.Instance.Warning($"PartDetailControl.AssociateMpFile: no MP folder configured for '{ex.CustomerName}'");
+        }
+
+        if (existing.Count == 0 && folder != null)
+        {
+            var found = MpFileService.GetExistingFiles(folder, _mpContext.DrawingNumber)
+                .Where(f => !existingPaths.Contains(f))
+                .ToList();
+            if (found.Count > 0)
+            {
+                // GetExistingFiles is ordered newest first, so the first file is the active one.
+                for (int i = 0; i < found.Count; i++)
+                {
+                    _partRepository.AddMpAttachment(_partId, _orderItemId,
+                        System.IO.Path.GetFileName(found[i]), found[i], isActive: i == 0);
+                }
+                LoadMpSection();
+                return;
+            }
+        }
+
+        var pick = PromptForFile(
+            "Associate MP File",
+            BuildAssociateMessage(existing.Count > 0,
+                $"No MP file was found automatically for drawing '{_mpContext.DrawingNumber}'.\n\n" +
+                "Select the MP file manually?", "MP file"),
+            "Select MP File",
+            "MP Files (*.xlsm;*.xlsx)|*.xlsm;*.xlsx|All Files (*.*)|*.*",
+            folder,
+            existing.Count == 0);
+        if (pick == null || existingPaths.Contains(pick.FilePath)) return;
+
+        _partRepository.AddMpAttachment(_partId, _orderItemId,
+            System.IO.Path.GetFileName(pick.FilePath), pick.FilePath, pick.SetAsActive);
+        LoadMpSection();
+    }
+
     // ── DIR ─────────────────────────────────────────────────────────────
 
     private static readonly int[] DirColumnWidths = { 340, 50, 170, 110, 140, 28 };
@@ -288,6 +352,7 @@ public partial class PartDetailControl : UserControl
         var hasOrderItemDir = _mpContext != null && _partRepository.GetDirAttachmentForOrderItem(_partId, _orderItemId) != null;
         NewDirButton.Visibility = _mpContext != null && !hasOrderItemDir ? Visibility.Visible : Visibility.Collapsed;
         OpenDirFolderButton.Visibility = _orderItemId > 0 ? Visibility.Visible : Visibility.Collapsed;
+        AssociateDirButton.Visibility = _mpContext != null ? Visibility.Visible : Visibility.Collapsed;
 
         if (_header == null) return;
 
@@ -535,9 +600,63 @@ public partial class PartDetailControl : UserControl
         }
     }
 
+    /// <summary>
+    /// Links a DIR file to this part, mirroring <see cref="AssociateMpFileButton_Click"/>:
+    /// scan the target folder by drawing number when the section is empty, otherwise pick manually.
+    /// </summary>
+    /// <param name="sender">Associate button</param>
+    /// <param name="e">Routed event args</param>
+    private void AssociateDirButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_mpContext == null || _header == null) return;
+
+        var existing = _partRepository.GetDirAttachmentsByDrawingNumber(_header.DrawingNumber);
+        var existingPaths = existing.Select(a => a.FilePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        string? folder = null;
+        try { folder = DirFileService.ResolveFolder(_mpContext); }
+        catch (DirFolderNotConfiguredException ex)
+        {
+            Logger.Instance.Warning($"PartDetailControl.AssociateDir: no DIR folder configured for '{ex.CustomerName}'");
+        }
+
+        if (existing.Count == 0 && folder != null)
+        {
+            var found = DirFileService.GetExistingFiles(folder, _header.DrawingNumber)
+                .Where(f => !existingPaths.Contains(f))
+                .ToList();
+            if (found.Count > 0)
+            {
+                // GetExistingFiles is ordered newest first, so the first file is the active one.
+                for (int i = 0; i < found.Count; i++)
+                {
+                    _partRepository.AddDirAttachment(_partId, _orderItemId,
+                        System.IO.Path.GetFileName(found[i]), found[i], isActive: i == 0);
+                }
+                LoadDirSection();
+                return;
+            }
+        }
+
+        var pick = PromptForFile(
+            "Associate DIR File",
+            BuildAssociateMessage(existing.Count > 0,
+                $"No DIR file was found automatically for drawing '{_header.DrawingNumber}'.\n\n" +
+                "Select the DIR file manually?", "DIR file"),
+            "Select DIR File",
+            "DIR Files (*.xlsm;*.xlsx)|*.xlsm;*.xlsx|All Files (*.*)|*.*",
+            folder,
+            existing.Count == 0);
+        if (pick == null || existingPaths.Contains(pick.FilePath)) return;
+
+        _partRepository.AddDirAttachment(_partId, _orderItemId,
+            System.IO.Path.GetFileName(pick.FilePath), pick.FilePath, pick.SetAsActive);
+        LoadDirSection();
+    }
+
     // ── Bubble Drawing ───────────────────────────────────────────────────
 
-    private static readonly int[] BubbleColumnWidths = { 300, 60, 140, 28 };
+    private static readonly int[] BubbleColumnWidths = { 600, 60, 140, 28 };
 
     private void LoadBubbleSection()
     {
@@ -686,6 +805,16 @@ public partial class PartDetailControl : UserControl
         var existing = _partRepository.GetBubbleAttachmentsByDrawingNumber(_header.DrawingNumber);
         var existingPaths = existing.Select(a => a.FilePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+        // With files already listed, the automatic scan can only re-find them — prune the entries
+        // whose file has since disappeared, then go straight to a manual pick so the user can add one more.
+        if (existing.Count > 0)
+        {
+            var removed = PruneMissingBubbleAttachments(existing);
+            if (removed > 0) LoadBubbleSection();
+            AssociateBubbleManually(folderUsable ? folder : null, existingPaths, hasExisting: removed < existing.Count);
+            return;
+        }
+
         var added = 0;
         if (folderUsable)
         {
@@ -710,56 +839,93 @@ public partial class PartDetailControl : UserControl
             }
         }
 
-        var missing = existing.Where(a => !File.Exists(a.FilePath)).ToList();
-        foreach (var attachment in missing)
+        // Nothing found automatically: offer a manual pick.
+        if (added == 0)
+        {
+            AssociateBubbleManually(folderUsable ? folder : null, existingPaths, hasExisting: false);
+            return;
+        }
+
+        LoadBubbleSection();
+    }
+
+    /// <summary>
+    /// Offers to drop the database entries whose bubble drawing no longer exists on disk.
+    /// </summary>
+    /// <param name="existing">Bubble attachments currently on record</param>
+    /// <returns>Number of entries the user removed</returns>
+    private int PruneMissingBubbleAttachments(List<BubbleAttachmentRow> existing)
+    {
+        var removed = 0;
+        foreach (var attachment in existing.Where(a => !File.Exists(a.FilePath)))
         {
             var choice = MessageBox.Show(
                 $"File not found:\n{attachment.FilePath}\n\nRemove this entry from the database?",
                 "File Not Found", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (choice == MessageBoxResult.Yes)
-                _partRepository.RemoveBubbleAttachment(attachment.AttachmentId);
+            if (choice != MessageBoxResult.Yes) continue;
+
+            _partRepository.RemoveBubbleAttachment(attachment.AttachmentId);
+            removed++;
         }
+        return removed;
+    }
 
-        // Nothing found automatically and nothing linked before: offer a manual pick.
-        if (added == 0 && existing.Count == missing.Count)
-        {
-            var manualPath = PromptForFile(
-                "Bubble Drawing Not Found",
-                $"No bubble drawing was found automatically for drawing '{_header.DrawingNumber}'.\n\n" +
-                "Select the bubble drawing manually?",
-                "Select Bubble Drawing",
-                "PDF Files (*.pdf)|*.pdf|All Files (*.*)|*.*",
-                folderUsable ? folder : null);
+    /// <summary>
+    /// Prompts for a bubble drawing, links the picked file to this part and refreshes the section.
+    /// </summary>
+    /// <param name="initialFolder">Folder the file dialog starts in; null when unknown</param>
+    /// <param name="existingPaths">Paths already linked, used to skip duplicates</param>
+    /// <param name="hasExisting">Whether the section already lists files</param>
+    private void AssociateBubbleManually(string? initialFolder, HashSet<string> existingPaths, bool hasExisting)
+    {
+        var pick = PromptForFile(
+            "Associate Bubble Drawing",
+            BuildAssociateMessage(hasExisting,
+                $"No bubble drawing was found automatically for drawing '{_header!.DrawingNumber}'.\n\n" +
+                "Select the bubble drawing manually?", "bubble drawing"),
+            "Select Bubble Drawing",
+            "PDF Files (*.pdf)|*.pdf|All Files (*.*)|*.*",
+            initialFolder,
+            !hasExisting);
+        if (pick == null || existingPaths.Contains(pick.FilePath)) return;
 
-            if (manualPath != null && !existingPaths.Contains(manualPath))
-            {
-                _partRepository.AddBubbleAttachment(_partId, System.IO.Path.GetFileName(manualPath), manualPath);
-                added++;
-            }
-        }
-
-        if (added > 0 || missing.Count > 0)
-            LoadBubbleSection();
+        _partRepository.AddBubbleAttachment(
+            _partId, System.IO.Path.GetFileName(pick.FilePath), pick.FilePath, pick.SetAsActive);
+        LoadBubbleSection();
     }
 
     // ── Manual file association ─────────────────────────────────────────
 
     /// <summary>
-    /// Asks whether to locate a file manually and, if confirmed, opens a file dialog.
-    /// Shared by the MP, Bubble Drawing and Drawing PDF sections.
+    /// Outcome of a manual file association: the picked file plus whether it should become active.
     /// </summary>
-    /// <param name="promptTitle">Caption of the confirmation message box</param>
-    /// <param name="promptMessage">Body of the confirmation message box</param>
+    /// <param name="FilePath">Full path of the file the user picked</param>
+    /// <param name="SetAsActive">True when the user ticked "set as active" in the prompt</param>
+    private record FilePick(string FilePath, bool SetAsActive);
+
+    /// <summary>
+    /// Asks whether to locate a file manually and, if confirmed, opens a file dialog.
+    /// Shared by the MP, DIR, Bubble Drawing and Drawing PDF sections. The prompt carries a
+    /// "set as active" checkbox, ticked by default only when the section is still empty —
+    /// linking an extra file to a section that already lists files should not silently
+    /// take over the active flag.
+    /// </summary>
+    /// <param name="promptTitle">Caption of the confirmation dialog</param>
+    /// <param name="promptMessage">Body of the confirmation dialog</param>
     /// <param name="dialogTitle">Caption of the file dialog</param>
     /// <param name="filter">File dialog filter string</param>
     /// <param name="initialFolder">Folder to start browsing in; ignored when missing</param>
-    /// <returns>The chosen file path, or null when the user declines or cancels</returns>
-    private string? PromptForFile(
-        string promptTitle, string promptMessage, string dialogTitle, string filter, string? initialFolder)
+    /// <param name="setActiveByDefault">Initial state of the "set as active" checkbox</param>
+    /// <returns>The pick, or null when the user declines or cancels</returns>
+    private FilePick? PromptForFile(
+        string promptTitle, string promptMessage, string dialogTitle, string filter,
+        string? initialFolder, bool setActiveByDefault)
     {
-        var choice = MessageBox.Show(promptMessage, promptTitle,
-            MessageBoxButton.YesNo, MessageBoxImage.Question);
-        if (choice != MessageBoxResult.Yes) return null;
+        var prompt = new AssociateFileDialog(promptTitle, promptMessage, setActiveByDefault)
+        {
+            Owner = System.Windows.Window.GetWindow(this)
+        };
+        if (prompt.ShowDialog() != true) return null;
 
         using var dialog = new System.Windows.Forms.OpenFileDialog
         {
@@ -769,8 +935,23 @@ public partial class PartDetailControl : UserControl
         if (!string.IsNullOrWhiteSpace(initialFolder) && Directory.Exists(initialFolder))
             dialog.InitialDirectory = initialFolder;
 
-        return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK ? dialog.FileName : null;
+        return dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK
+            ? new FilePick(dialog.FileName, prompt.SetAsActive)
+            : null;
     }
+
+    /// <summary>
+    /// Builds the prompt text for a manual association, wording it as "link another file"
+    /// once the section already lists something.
+    /// </summary>
+    /// <param name="hasExisting">Whether the section already shows at least one file</param>
+    /// <param name="emptyMessage">Message used when the section is empty</param>
+    /// <param name="what">Noun describing the file kind, e.g. "MP file"</param>
+    /// <returns>Message to show in the confirmation dialog</returns>
+    private static string BuildAssociateMessage(bool hasExisting, string emptyMessage, string what)
+        => hasExisting
+            ? $"This section already lists at least one {what}.\n\nSelect another {what} to add to the list?"
+            : emptyMessage;
 
     // ── Drawing PDF ──────────────────────────────────────────────────────
 
@@ -789,26 +970,30 @@ public partial class PartDetailControl : UserControl
             ? System.IO.Path.GetDirectoryName(currentFiles[0].FilePath)
             : null;
 
-        var filePath = PromptForFile(
+        var hasExisting = currentFiles.Count > 0;
+        var pick = PromptForFile(
             "Associate Drawing PDF",
-            $"Select the drawing PDF for '{_header.DrawingNumber}' manually?\n\n" +
-            "The selected file becomes the active drawing file for this part.",
+            BuildAssociateMessage(hasExisting,
+                $"Select the drawing PDF for '{_header.DrawingNumber}' manually?", "drawing PDF"),
             "Select Drawing PDF",
             "PDF Files (*.pdf)|*.pdf|All Files (*.*)|*.*",
-            initialFolder);
-        if (filePath == null) return;
+            initialFolder,
+            !hasExisting);
+        if (pick == null) return;
 
         var ok = new DrawingRepository().UpsertDrawingFile(
-            _partId, System.IO.Path.GetFileName(filePath), filePath, _header.Revision ?? "-");
+            _partId, System.IO.Path.GetFileName(pick.FilePath), pick.FilePath,
+            _header.Revision ?? "-", pick.SetAsActive);
 
         if (!ok)
         {
-            MessageBox.Show($"Failed to associate the PDF:\n{filePath}", "Error",
+            MessageBox.Show($"Failed to associate the PDF:\n{pick.FilePath}", "Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
-        Logger.Instance.Info($"PartDetailControl.AssociatePdf: linked '{filePath}' to partId={_partId}");
+        Logger.Instance.Info(
+            $"PartDetailControl.AssociatePdf: linked '{pick.FilePath}' to partId={_partId} (active={pick.SetAsActive})");
         LoadPdfFiles();
     }
 
@@ -995,8 +1180,9 @@ public partial class PartDetailControl : UserControl
             $"No MP file was found automatically for drawing '{_mpContext!.DrawingNumber}'.\n\n" +
             "Select the MP file manually?",
             "Select MP File",
-            "MP Files (*.xlsm)|*.xlsm|Excel Files (*.xlsx;*.xlsm)|*.xlsx;*.xlsm|All Files (*.*)|*.*",
-            initialFolder);
+            "MP Files (*.xlsm;*.xlsx)|*.xlsm;*.xlsx|All Files (*.*)|*.*",
+            initialFolder,
+            setActiveByDefault: true)?.FilePath;
     }
 
     /// <summary>
