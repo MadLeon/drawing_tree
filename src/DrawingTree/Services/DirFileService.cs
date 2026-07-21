@@ -4,7 +4,6 @@
 /// Excel cell population via COM Interop (requires Excel installed).
 /// </summary>
 
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using DrawingTree.Data;
@@ -38,11 +37,12 @@ public static class DirFileService
     }
 
     /// <summary>
-    /// Generates the DIR file name: {DrawingNumber} REV. {Revision} @{JobNumber}.xlsm (uppercase).
+    /// Generates the DIR file name: {DrawingNumber} REV. {Revision} @{JobNumber}.xlsm
+    /// (base name uppercase, extension lowercase).
     /// </summary>
     public static string BuildFileName(string? drawingNumber, string? revision, string jobNumber)
-        => $"{(drawingNumber ?? string.Empty).Trim()} REV. {(revision ?? string.Empty).Trim()} @{jobNumber.Trim()}.xlsm"
-            .ToUpperInvariant();
+        => $"{(drawingNumber ?? string.Empty).Trim()} REV. {(revision ?? string.Empty).Trim()} @{jobNumber.Trim()}"
+            .ToUpperInvariant() + ".xlsm";
 
     /// <summary>
     /// Creates a new DIR file from the template into <paramref name="confirmedFolder"/>, pre-fills cells,
@@ -68,12 +68,11 @@ public static class DirFileService
 
         File.Copy(TemplatePath, target);
 
-        FillCells(target, ctx);
+        OpenAndFillCells(target, ctx);
 
         // Record in database
         new PartRepository().AddDirAttachment(ctx.PartId, ctx.OrderItemId, fileName, target);
 
-        Process.Start(new ProcessStartInfo { FileName = target, UseShellExecute = true });
         Logger.Instance.Info($"DirFileService: created and opened '{target}'");
         return target;
     }
@@ -81,24 +80,25 @@ public static class DirFileService
     // ── Private helpers ──────────────────────────────────────────────────────
 
     /// <summary>
-    /// Opens the file with invisible Excel COM, sets the required cells (uppercased), then saves and releases.
+    /// Opens the copied file in a visible Excel, fills the required cells (uppercased) and leaves
+    /// the workbook open for the user. Reuses an already running Excel when there is one, which is
+    /// what keeps this fast: no hidden instance is started, saved, closed and then re-launched.
+    /// The workbook is intentionally left unsaved so the user owns the first save.
     /// </summary>
-    private static void FillCells(string filePath, MpContext ctx)
+    /// <param name="filePath">Full path of the freshly copied DIR file</param>
+    /// <param name="ctx">Order item context used to populate the cells</param>
+    private static void OpenAndFillCells(string filePath, MpContext ctx)
     {
-        var excelType = Type.GetTypeFromProgID("Excel.Application")
-            ?? throw new InvalidOperationException("Excel is not installed or not registered.");
-
         dynamic? app = null;
         dynamic? wb  = null;
         dynamic? ws  = null;
 
         try
         {
-            app = Activator.CreateInstance(excelType)!;
-            app.Visible              = false;
-            app.DisplayAlerts        = false;
-            app.ScreenUpdating       = false;
-            app.AskToUpdateLinks     = false;
+            app = GetOrCreateExcel();
+            app.Visible     = true;
+            // Keep Excel alive once the COM references below are released.
+            app.UserControl = true;
 
             wb = app.Workbooks.Open(
                 filePath,
@@ -117,17 +117,46 @@ public static class DirFileService
             SetCell(ws, "H7",  ctx.OeNumber);
             SetCell(ws, "H8",  OeNormalization.GetPoBase(ctx.PoNumber));
 
-            wb.Save();
+            try { app.ActiveWindow.Activate(); } catch { /* window focus is best effort */ }
         }
         finally
         {
-            if (ws  != null) { Marshal.ReleaseComObject(ws);  ws  = null; }
-            if (wb  != null) { wb.Close(false); Marshal.ReleaseComObject(wb);  wb  = null; }
-            if (app != null) { app.Quit();      Marshal.ReleaseComObject(app); app = null; }
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+            // Release our references only — the workbook and Excel stay open for the user.
+            if (ws  != null) Marshal.ReleaseComObject(ws);
+            if (wb  != null) Marshal.ReleaseComObject(wb);
+            if (app != null) Marshal.ReleaseComObject(app);
         }
     }
+
+    /// <summary>
+    /// Returns the running Excel instance, or starts a new one when Excel is not running.
+    /// </summary>
+    /// <returns>Excel.Application COM object</returns>
+    /// <exception cref="InvalidOperationException">Excel is not installed or not registered.</exception>
+    private static dynamic GetOrCreateExcel()
+    {
+        try
+        {
+            CLSIDFromProgID("Excel.Application", out Guid clsid);
+            GetActiveObject(ref clsid, IntPtr.Zero, out object running);
+            return running;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Debug($"DirFileService: no running Excel to reuse ({ex.Message}), starting a new one");
+        }
+
+        var excelType = Type.GetTypeFromProgID("Excel.Application")
+            ?? throw new InvalidOperationException("Excel is not installed or not registered.");
+        return Activator.CreateInstance(excelType)!;
+    }
+
+    [DllImport("ole32.dll", PreserveSig = false)]
+    private static extern void CLSIDFromProgID([MarshalAs(UnmanagedType.LPWStr)] string progId, out Guid clsid);
+
+    [DllImport("oleaut32.dll", PreserveSig = false)]
+    private static extern void GetActiveObject(ref Guid clsid, IntPtr reserved,
+        [MarshalAs(UnmanagedType.IUnknown)] out object unknown);
 
     private static void SetCell(dynamic ws, string address, string? value)
         => ws.Range[address].Value2 = (value ?? string.Empty).ToUpperInvariant();
