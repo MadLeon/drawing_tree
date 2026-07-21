@@ -33,6 +33,12 @@
                 <TextBox x:Name="TitleLabel" Style="{StaticResource SelectableTitleText}"
                          FontWeight="Bold" FontSize="14"
                          VerticalAlignment="Center" Foreground="#333"/>
+                <Button x:Name="CopyDrawingNumberButton" Style="{StaticResource IconLinkBtn}"
+                        Margin="6,0,0,0" Padding="2" VerticalAlignment="Center"
+                        ToolTip="Copy drawing number"
+                        Click="CopyDrawingNumberButton_Click">
+                    <Path Data="{StaticResource ContentCopyGeo}" Stretch="Uniform" Fill="#555555" Width="14" Height="14"/>
+                </Button>
             </StackPanel>
         </Border>
 

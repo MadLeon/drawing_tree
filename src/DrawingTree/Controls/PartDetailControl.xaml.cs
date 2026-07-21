@@ -654,6 +654,17 @@ public partial class PartDetailControl : UserControl
         return match.Success ? match.Groups[1].Value : string.Empty;
     }
 
+    /// <summary>
+    /// Copies the current drawing number to the clipboard.
+    /// </summary>
+    /// <param name="sender">Copy button</param>
+    /// <param name="e">Routed event args</param>
+    private void CopyDrawingNumberButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(_header?.DrawingNumber)) return;
+        System.Windows.Clipboard.SetText(_header.DrawingNumber);
+    }
+
     private void CopyBubbleNameButton_Click(object sender, RoutedEventArgs e)
     {
         if (_header == null) return;
