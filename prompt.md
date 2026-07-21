@@ -8,3 +8,5 @@
 OE 同步 - 逻辑图解
 https://claude.ai/code/artifact/290147f1-b050-4494-acc9-4d5b65be2b31
 
+修改当前步骤的功能 template 区域
+刷新页面的功能: Drawing Detail
