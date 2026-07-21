@@ -8,7 +8,3 @@
 OE 同步 - 逻辑图解
 https://claude.ai/code/artifact/290147f1-b050-4494-acc9-4d5b65be2b31
 
-树构筑界面
-
-is assembly 默认值改不了
-quantity 默认值应该设置成1
