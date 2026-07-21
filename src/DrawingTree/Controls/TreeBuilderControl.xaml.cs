@@ -203,6 +203,30 @@ public partial class TreeBuilderControl : UserControl
             var dbInfo = _drawingRepository.GetDrawingInfo(group.PartId);
             rootInfo = dbInfo ?? new DrawingInfo { DrawingNumber = group.DrawingNumber };
         }
+
+        // The left panel is enriched by drawing number, which resolves to the newest revision.
+        // When the drawing number is duplicated in part, the order item may reference an older
+        // row, so re-read that exact row: carrying one row's PartId together with another row's
+        // metadata makes Save write a revision that already belongs to the sibling row and trips
+        // the (drawing_number, revision) unique index.
+        if (rootInfo.PartId != group.PartId)
+        {
+            var groupInfo = _drawingRepository.GetDrawingInfo(group.PartId);
+            if (groupInfo != null)
+            {
+                rootInfo.Revision              = groupInfo.Revision;
+                rootInfo.Description           = groupInfo.Description;
+                rootInfo.IsAssembly            = groupInfo.IsAssembly;
+                rootInfo.PreviousDrawingNumber = groupInfo.PreviousDrawingNumber;
+                if (string.IsNullOrEmpty(rootInfo.PdfPath))
+                    rootInfo.PdfPath = groupInfo.PdfPath;
+
+                Logger.Instance.Info(
+                    $"TreeBuilder: root '{group.DrawingNumber}' re-read from part {group.PartId} " +
+                    $"(drawing-number lookup had resolved part {rootInfo.PartId})");
+            }
+        }
+
         rootInfo.PartId = group.PartId;
 
         var rootNode = new DrawingNode(rootInfo)
