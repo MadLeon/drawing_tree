@@ -4,6 +4,8 @@
 /// process_template + step_tracker join, and part_note CRUD.
 /// </summary>
 
+using Microsoft.Data.Sqlite;
+
 using DrawingTree.Logging;
 using DrawingTree.Models;
 
@@ -97,7 +99,7 @@ public class PartRepository
             using var conn = DatabaseConnectionFactory.OpenDevConnection();
             using var cmd = conn.CreateCommand();
             cmd.CommandText = """
-                SELECT pt.row_number, pt.shop_code, pt.description, pt.remark,
+                SELECT pt.id, pt.row_number, pt.shop_code, pt.description, pt.remark,
                        st.operator_id, st.machine_id, st.status, st.start_time, st.end_time
                 FROM process_template pt
                 LEFT JOIN step_tracker st
@@ -113,14 +115,15 @@ public class PartRepository
             {
                 results.Add(new ProcessStepRow(
                     reader.GetInt32(0),
-                    reader.GetString(1),
-                    reader.IsDBNull(2) ? null : reader.GetString(2),
+                    reader.GetInt32(1),
+                    reader.GetString(2),
                     reader.IsDBNull(3) ? null : reader.GetString(3),
                     reader.IsDBNull(4) ? null : reader.GetString(4),
                     reader.IsDBNull(5) ? null : reader.GetString(5),
                     reader.IsDBNull(6) ? null : reader.GetString(6),
                     reader.IsDBNull(7) ? null : reader.GetString(7),
-                    reader.IsDBNull(8) ? null : reader.GetString(8)));
+                    reader.IsDBNull(8) ? null : reader.GetString(8),
+                    reader.IsDBNull(9) ? null : reader.GetString(9)));
             }
         }
         catch (Exception ex)
@@ -192,6 +195,147 @@ public class PartRepository
             Logger.Instance.Error($"PartRepository.AddProcessSteps failed for partId={partId}: {ex.Message}");
             return 0;
         }
+    }
+
+    /// <summary>
+    /// Marks the given process template step as the current progress of an order item.
+    /// Steps before it are forced to COMPLETED (missing trackers are created, missing end
+    /// times are filled with <paramref name="date"/>), the selected step becomes IN_PROGRESS
+    /// with no end time, and trackers of every later step are removed so that the current
+    /// step is always the last tracked one. Runs in a single transaction.
+    /// </summary>
+    /// <param name="orderItemId">order_item.id the progress belongs to</param>
+    /// <param name="orderedTemplateIds">All process_template.id values of the part, ordered by row_number</param>
+    /// <param name="selectedTemplateId">process_template.id marked as the current step</param>
+    /// <param name="date">ISO date (yyyy-MM-dd) used for created start / end times</param>
+    /// <returns>True when the change was committed</returns>
+    public bool SetCurrentStep(int orderItemId, IReadOnlyList<int> orderedTemplateIds,
+                               int selectedTemplateId, string date)
+    {
+        var selectedIndex = orderedTemplateIds.ToList().IndexOf(selectedTemplateId);
+        if (selectedIndex < 0)
+        {
+            Logger.Instance.Error($"PartRepository.SetCurrentStep: template {selectedTemplateId} not in the step list");
+            return false;
+        }
+
+        try
+        {
+            using var conn = DatabaseConnectionFactory.OpenDevConnection();
+            using var tx = conn.BeginTransaction();
+
+            for (int i = 0; i < orderedTemplateIds.Count; i++)
+            {
+                var templateId = orderedTemplateIds[i];
+                if (i < selectedIndex)
+                    UpsertStepProgress(conn, tx, orderItemId, templateId, "COMPLETED", date, date);
+                else if (i == selectedIndex)
+                    UpsertStepProgress(conn, tx, orderItemId, templateId, "IN_PROGRESS", date, null);
+                else
+                    DeleteStepProgress(conn, tx, orderItemId, templateId);
+            }
+
+            tx.Commit();
+            Logger.Instance.Info(
+                $"PartRepository.SetCurrentStep: orderItemId={orderItemId} currentTemplateId={selectedTemplateId} " +
+                $"({selectedIndex + 1}/{orderedTemplateIds.Count})");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Instance.Error($"PartRepository.SetCurrentStep failed for orderItemId={orderItemId}: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Inserts or updates the step_tracker row of one (order item, process template) pair.
+    /// An existing start time is never overwritten; an existing end time is kept unless
+    /// <paramref name="endTime"/> is null, which clears it.
+    /// </summary>
+    /// <param name="conn">Open connection</param>
+    /// <param name="tx">Enclosing transaction</param>
+    /// <param name="orderItemId">order_item.id</param>
+    /// <param name="templateId">process_template.id</param>
+    /// <param name="status">Status value to store</param>
+    /// <param name="startTime">Start time used when the row is created or has none</param>
+    /// <param name="endTime">End time to store; null clears the existing value</param>
+    private static void UpsertStepProgress(SqliteConnection conn, SqliteTransaction tx,
+                                           int orderItemId, int templateId,
+                                           string status, string startTime, string? endTime)
+    {
+        using var checkCmd = conn.CreateCommand();
+        checkCmd.Transaction = tx;
+        checkCmd.CommandText = """
+            SELECT id, start_time, end_time FROM step_tracker
+            WHERE order_item_id = @oi AND process_template_id = @pt
+            LIMIT 1
+            """;
+        checkCmd.Parameters.AddWithValue("@oi", orderItemId);
+        checkCmd.Parameters.AddWithValue("@pt", templateId);
+
+        int? existingId = null;
+        string? existingStart = null;
+        string? existingEnd = null;
+        using (var reader = checkCmd.ExecuteReader())
+        {
+            if (reader.Read())
+            {
+                existingId = reader.GetInt32(0);
+                existingStart = reader.IsDBNull(1) ? null : reader.GetString(1);
+                existingEnd = reader.IsDBNull(2) ? null : reader.GetString(2);
+            }
+        }
+
+        using var cmd = conn.CreateCommand();
+        cmd.Transaction = tx;
+        if (existingId.HasValue)
+        {
+            cmd.CommandText = """
+                UPDATE step_tracker
+                SET status = @status, start_time = @start, end_time = @end,
+                    updated_at = datetime('now', 'localtime')
+                WHERE id = @id
+                """;
+            cmd.Parameters.AddWithValue("@id", existingId.Value);
+        }
+        else
+        {
+            cmd.CommandText = """
+                INSERT INTO step_tracker (order_item_id, process_template_id, status, start_time, end_time)
+                VALUES (@oi, @pt, @status, @start, @end)
+                """;
+            cmd.Parameters.AddWithValue("@oi", orderItemId);
+            cmd.Parameters.AddWithValue("@pt", templateId);
+        }
+
+        // Keep the real start date once it exists; only fill in the end date when it is still missing.
+        cmd.Parameters.AddWithValue("@status", status);
+        cmd.Parameters.AddWithValue("@start", existingStart ?? startTime);
+        cmd.Parameters.AddWithValue("@end",
+            endTime == null ? DBNull.Value : (object)(existingEnd ?? endTime));
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Removes the step_tracker row of one (order item, process template) pair, if any.
+    /// </summary>
+    /// <param name="conn">Open connection</param>
+    /// <param name="tx">Enclosing transaction</param>
+    /// <param name="orderItemId">order_item.id</param>
+    /// <param name="templateId">process_template.id</param>
+    private static void DeleteStepProgress(SqliteConnection conn, SqliteTransaction tx,
+                                           int orderItemId, int templateId)
+    {
+        using var cmd = conn.CreateCommand();
+        cmd.Transaction = tx;
+        cmd.CommandText = """
+            DELETE FROM step_tracker
+            WHERE order_item_id = @oi AND process_template_id = @pt
+            """;
+        cmd.Parameters.AddWithValue("@oi", orderItemId);
+        cmd.Parameters.AddWithValue("@pt", templateId);
+        cmd.ExecuteNonQuery();
     }
 
     /// <summary>
@@ -724,6 +868,7 @@ public record PartHeader(int PartId, string DrawingNumber, string Revision, stri
 /// <param name="LastModifiedAt">drawing_file.last_modified_at</param>
 public record PartDrawingFile(string FileName, string FilePath, bool IsActive, string Revision, string? LastModifiedAt);
 
+/// <param name="ProcessTemplateId">process_template.id</param>
 /// <param name="RowNumber">process_template.row_number</param>
 /// <param name="ShopCode">process_template.shop_code</param>
 /// <param name="Description">process_template.description</param>
@@ -734,7 +879,7 @@ public record PartDrawingFile(string FileName, string FilePath, bool IsActive, s
 /// <param name="StartTime">step_tracker.start_time; null if not yet tracked</param>
 /// <param name="EndTime">step_tracker.end_time; null if not yet tracked</param>
 public record ProcessStepRow(
-    int RowNumber, string ShopCode, string? Description, string? Remark,
+    int ProcessTemplateId, int RowNumber, string ShopCode, string? Description, string? Remark,
     string? OperatorId, string? MachineId, string? Status, string? StartTime, string? EndTime);
 
 /// <param name="Id">part_note.id</param>

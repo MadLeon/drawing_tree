@@ -1046,6 +1046,8 @@ public partial class PartDetailControl : UserControl
         AssociateMpButton.Visibility = _mpContext != null ? Visibility.Visible : Visibility.Collapsed;
 
         var steps = _partRepository.GetProcessSteps(_partId, _orderItemId);
+        UpdateStepButton.Visibility = steps.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
         if (steps.Count == 0)
         {
             ProcessStepsPanel.Children.Add(new TextBox
@@ -1056,9 +1058,58 @@ public partial class PartDetailControl : UserControl
             return;
         }
 
+        var currentIndex = FindCurrentStepIndex(steps);
         ProcessStepsPanel.Children.Add(BuildProcessStepsHeader());
-        foreach (var step in steps)
-            ProcessStepsPanel.Children.Add(BuildProcessStepRow(step));
+        for (int i = 0; i < steps.Count; i++)
+            ProcessStepsPanel.Children.Add(BuildProcessStepRow(steps[i], i == currentIndex));
+    }
+
+    /// <summary>
+    /// Finds the current step: the last step (in row order) that has a step_tracker record.
+    /// SetCurrentStep removes trackers of later steps, so this is always the marked step.
+    /// </summary>
+    /// <param name="steps">Steps of the part, ordered by row number</param>
+    /// <returns>Index into <paramref name="steps"/>, or -1 when nothing is tracked yet</returns>
+    private static int FindCurrentStepIndex(List<ProcessStepRow> steps)
+    {
+        for (int i = steps.Count - 1; i >= 0; i--)
+        {
+            var step = steps[i];
+            if (step.Status != null || step.StartTime != null || step.EndTime != null)
+                return i;
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// Opens the current-step dialog and writes the chosen progress to the database.
+    /// </summary>
+    /// <param name="sender">Update button</param>
+    /// <param name="e">Routed event args</param>
+    private void UpdateStepButton_Click(object sender, RoutedEventArgs e)
+    {
+        var steps = _partRepository.GetProcessSteps(_partId, _orderItemId);
+        if (steps.Count == 0) return;
+
+        var currentIndex = FindCurrentStepIndex(steps);
+        int? currentTemplateId = currentIndex >= 0 ? steps[currentIndex].ProcessTemplateId : null;
+
+        var dialog = new CurrentStepDialog(steps, currentTemplateId)
+        {
+            Owner = System.Windows.Window.GetWindow(this)
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        var templateIds = steps.Select(s => s.ProcessTemplateId).ToList();
+        var today = DateTime.Now.ToString("yyyy-MM-dd");
+        if (!_partRepository.SetCurrentStep(_orderItemId, templateIds, dialog.SelectedProcessTemplateId, today))
+        {
+            MessageBox.Show("Failed to update the current step. See the log for details.", "Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        LoadProcessSteps();
     }
 
     private Grid BuildProcessStepsHeader()
@@ -1078,7 +1129,7 @@ public partial class PartDetailControl : UserControl
             grid.Children.Add(block);
         }
 
-        var headers = new[] { "Row", "Shop Code", "Description", "Remark", "Operator", "Machine", "Status", "Start", "End" };
+        var headers = new[] { "", "Row", "Shop Code", "Description", "Remark", "Operator", "Machine", "Status", "Start", "End" };
         for (int i = 0; i < headers.Length; i++)
             AddHeader(i, headers[i]);
 
@@ -1087,6 +1138,7 @@ public partial class PartDetailControl : UserControl
 
     private static readonly GridLength[] StepColumnWidths =
     {
+        new GridLength(75), // Current-step marker
         new GridLength(40),
         new GridLength(80),
         new GridLength(1, GridUnitType.Star), // Description fills remaining width (~65% of section)
@@ -1098,15 +1150,27 @@ public partial class PartDetailControl : UserControl
         new GridLength(110)
     };
 
-    private Grid BuildProcessStepRow(ProcessStepRow step)
+    /// <summary>
+    /// Builds one process step row, optionally prefixed with the current-step marker.
+    /// </summary>
+    /// <param name="step">Step to render</param>
+    /// <param name="isCurrent">True when this step is the current progress of the order item</param>
+    private Grid BuildProcessStepRow(ProcessStepRow step, bool isCurrent)
     {
         var grid = new Grid { Margin = new Thickness(0, 1, 0, 1) };
         foreach (var width in StepColumnWidths)
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = width });
 
+        if (isCurrent)
+        {
+            var marker = BuildCurrentStepMarker();
+            Grid.SetColumn(marker, 0);
+            grid.Children.Add(marker);
+        }
+
         var values = new[]
         {
-            step.RowNumber.ToString(), step.ShopCode, step.Description ?? string.Empty,
+            step.RowNumber.ToString(), step.ShopCode, FlattenText(step.Description),
             step.Remark ?? string.Empty, step.OperatorId ?? string.Empty, step.MachineId ?? string.Empty,
             step.Status ?? string.Empty, step.StartTime ?? string.Empty, step.EndTime ?? string.Empty
         };
@@ -1118,11 +1182,46 @@ public partial class PartDetailControl : UserControl
                 Text = values[i], Style = (Style)FindResource("SelectableText"),
                 FontSize = 12, VerticalAlignment = VerticalAlignment.Center
             };
-            Grid.SetColumn(block, i);
+            Grid.SetColumn(block, i + 1);
             grid.Children.Add(block);
         }
 
         return grid;
+    }
+
+    /// <summary>
+    /// Builds the "Current →" marker shown in the first column of the current step's row.
+    /// </summary>
+    private StackPanel BuildCurrentStepMarker()
+    {
+        var panel = new StackPanel
+        {
+            Orientation = System.Windows.Controls.Orientation.Horizontal,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        panel.Children.Add(new TextBlock
+        {
+            Text = "Current", FontSize = 11, FontWeight = FontWeights.Bold,
+            Foreground = Brushes.Red, VerticalAlignment = VerticalAlignment.Center
+        });
+        panel.Children.Add(new TextBlock
+        {
+            Text = "→", FontSize = 14, FontWeight = FontWeights.Bold,
+            Foreground = Brushes.Red, Margin = new Thickness(4, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center
+        });
+        return panel;
+    }
+
+    /// <summary>
+    /// Collapses line breaks into single spaces so multi-line MP descriptions stay on one row.
+    /// </summary>
+    /// <param name="text">Raw text, possibly containing CR/LF</param>
+    /// <returns>Single-line text; empty string when the input is null</returns>
+    private static string FlattenText(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return string.Empty;
+        return text.Replace("\r\n", " ").Replace('\n', ' ').Replace('\r', ' ').Trim();
     }
 
     // ── Notes ────────────────────────────────────────────────────────────
@@ -1173,6 +1272,15 @@ public partial class PartDetailControl : UserControl
     private void BackButton_Click(object sender, RoutedEventArgs e)
     {
         BackRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Reloads the whole page from the database using the current part / order item.
+    /// </summary>
+    private void RefreshButton_Click(object sender, RoutedEventArgs e)
+    {
+        Logger.Instance.Info($"PartDetailControl: refresh requested for partId={_partId}");
+        LoadPart(_partId, _orderItemId);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────
