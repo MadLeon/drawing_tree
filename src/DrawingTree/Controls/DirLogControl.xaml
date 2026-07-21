@@ -21,14 +21,6 @@
                     Background="#F0F0F0" Padding="8,6" Height="40">
                 <Grid>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button x:Name="BackButton"
-                                Style="{StaticResource IconBtn}"
-                                Width="28" Height="28" Margin="0,0,8,0"
-                                ToolTip="Back"
-                                Click="BackButton_Click">
-                            <Path Data="{StaticResource ChevronLeftGeo}"
-                                  Stretch="Uniform" Fill="#333333" Width="14" Height="14"/>
-                        </Button>
                         <TextBlock Text="DIR Log" FontSize="13" FontWeight="SemiBold"
                                    Foreground="#333333" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <Button x:Name="RefreshButton"

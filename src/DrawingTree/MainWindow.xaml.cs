@@ -31,7 +31,6 @@ public partial class MainWindow : Window
     private PoDetailControl? _poDetailControl;
     private PartDetailControl? _partDetailControl;
     private ManufacturingScheduleControl? _manufacturingScheduleControl;
-    private DirLogControl? _dirLogControl;
 
     private string ImportsDir =>
         Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "imports");
@@ -575,23 +574,13 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Opens the DIR Log page (Issue #48).
+    /// Opens the DIR Log dialog (Issue #48).
     /// </summary>
     private void DirLogMenu_Click(object sender, RoutedEventArgs e)
     {
         Logger.Instance.Info("DIR Log menu clicked");
-        MainDisplayArea.Children.Clear();
-
-        _dirLogControl = new DirLogControl();
-        _dirLogControl.BackRequested += (_, _) =>
-        {
-            MainDisplayArea.Children.Clear();
-            _dirLogControl = null;
-            Logger.Instance.Info("Returned to main view from DIR Log");
-        };
-
-        MainDisplayArea.Children.Add(_dirLogControl);
-        Logger.Instance.Info("DIR Log control displayed");
+        var dlg = new Dialogs.DirLogDialog { Owner = this };
+        dlg.ShowDialog();
     }
 
     /// <summary>

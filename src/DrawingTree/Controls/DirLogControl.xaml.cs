@@ -35,8 +35,6 @@ public partial class DirLogControl : UserControl
     private List<DirLogRow> _allRows = new();
     private bool _loaded;
 
-    public event EventHandler? BackRequested;
-
     public DirLogControl()
     {
         InitializeComponent();
@@ -49,8 +47,6 @@ public partial class DirLogControl : UserControl
         _loaded = true;
         _ = LoadDataAsync();
     }
-
-    private void BackButton_Click(object sender, RoutedEventArgs e) => BackRequested?.Invoke(this, EventArgs.Empty);
 
     private void RefreshButton_Click(object sender, RoutedEventArgs e) => _ = LoadDataAsync();
 
