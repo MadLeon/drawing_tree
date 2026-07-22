@@ -786,11 +786,32 @@ public partial class PartDetailControl : UserControl
         System.Windows.Clipboard.SetText(_header.DrawingNumber);
     }
 
+    /// <summary>
+    /// Copies the bubble drawing name to the clipboard. The description is reduced to its last
+    /// segment, since descriptions spell out the whole assembly chain
+    /// ("Hook Assembly of Extension Tool - Hook Weldment - Hook" -> "Hook").
+    /// </summary>
+    /// <param name="sender">Copy button</param>
+    /// <param name="e">Routed event args</param>
     private void CopyBubbleNameButton_Click(object sender, RoutedEventArgs e)
     {
         if (_header == null) return;
-        var text = $"{_header.DrawingNumber} Rev{_header.Revision} {_header.Description}";
+        var text = $"{_header.DrawingNumber} Rev{_header.Revision} {LastDescriptionSegment(_header.Description)}";
         System.Windows.Clipboard.SetText(text);
+    }
+
+    /// <summary>
+    /// Returns the part of the description after the last dash, or the description unchanged
+    /// when it contains no dash.
+    /// </summary>
+    /// <param name="description">Full description, possibly an assembly chain joined by dashes</param>
+    /// <returns>Trimmed last segment of the description</returns>
+    private static string LastDescriptionSegment(string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description)) return string.Empty;
+
+        var dash = description.LastIndexOf('-');
+        return dash < 0 ? description.Trim() : description[(dash + 1)..].Trim();
     }
 
     private void AssociateBubbleButton_Click(object sender, RoutedEventArgs e)
@@ -1163,13 +1184,19 @@ public partial class PartDetailControl : UserControl
 
     /// <summary>
     /// Asks whether to pick the MP file manually and, if confirmed, opens a file dialog starting
-    /// in the customer's configured MP folder.
+    /// in the order's MP folder ({customer MP folder}\{PO number without revision suffix}).
     /// </summary>
     /// <returns>The chosen file path, or null when the user declines or cancels</returns>
     private string? PromptForMpFile()
     {
         string? initialFolder = null;
-        try { initialFolder = MpFileService.ResolveCustomerFolder(_mpContext!); }
+        try
+        {
+            initialFolder = MpFileService.ResolveFolder(_mpContext!);
+            // Fall back to the customer folder when the order has no folder on the share yet.
+            if (!Directory.Exists(initialFolder))
+                initialFolder = MpFileService.ResolveCustomerFolder(_mpContext!);
+        }
         catch (MpFolderNotConfiguredException ex)
         {
             Logger.Instance.Warning($"PartDetailControl.PromptForMpFile: no MP folder configured for '{ex.CustomerName}'");
