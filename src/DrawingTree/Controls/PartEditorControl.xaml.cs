@@ -29,7 +29,7 @@ namespace DrawingTree.Controls;
 /// </summary>
 public partial class PartEditorControl : UserControl
 {
-    /// <summary>Quantity used when a part has no part_tree entry yet.</summary>
+    /// <summary>Quantity written to part_tree on save; the column is not user-editable here.</summary>
     private const string DefaultQuantity = "1";
 
     private readonly DrawingRepository _drawingRepository = new();
@@ -89,7 +89,6 @@ public partial class PartEditorControl : UserControl
                     IsAssembly         = dbInfo?.IsAssembly  ?? false,
                     PdfPath            = dbInfo?.PdfPath.Length > 0 ? dbInfo.PdfPath : pdfPath,
                     PreviousDrawingNumber = dbInfo?.PreviousDrawingNumber ?? string.Empty,
-                    QuantityInAssembly = LoadQuantity(dbInfo?.PartId),
                 });
             }
 
@@ -140,8 +139,9 @@ public partial class PartEditorControl : UserControl
         }
 
         // Quantity lives in part_tree, not part, so it is saved independently of the
-        // part field diff/overwrite confirmation below.
-        _drawingRepository.UpdatePartTreeQuantity(row.PartId.Value, row.QuantityInAssembly);
+        // part field diff/overwrite confirmation below. It is not editable in this page
+        // and is always stored as DefaultQuantity.
+        _drawingRepository.UpdatePartTreeQuantity(row.PartId.Value, DefaultQuantity);
 
         bool same = row.Revision              == dbInfo.Revision              &&
                     row.Description           == dbInfo.Description           &&
@@ -257,7 +257,6 @@ public partial class PartEditorControl : UserControl
         row.Description = dbInfo?.Description ?? string.Empty;
         row.IsAssembly  = dbInfo?.IsAssembly  ?? false;
         row.PreviousDrawingNumber = dbInfo?.PreviousDrawingNumber ?? string.Empty;
-        row.QuantityInAssembly    = LoadQuantity(dbInfo?.PartId);
         if (!string.IsNullOrEmpty(dbInfo?.PdfPath)) row.PdfPath = dbInfo.PdfPath;
         row.Status      = SaveStatus.None;
 
@@ -389,19 +388,6 @@ public partial class PartEditorControl : UserControl
         if (container == null) return;
 
         FindTaggedElement(container, tag)?.Focus();
-    }
-
-    /// <summary>
-    /// Reads the part's quantity in its parent assembly from part_tree.
-    /// Falls back to <see cref="DefaultQuantity"/> for new parts or parts not yet in a tree.
-    /// </summary>
-    /// <param name="partId">part.id, or null for a part that does not exist yet</param>
-    /// <returns>Quantity string, never empty</returns>
-    private string LoadQuantity(int? partId)
-    {
-        if (partId == null) return DefaultQuantity;
-        string qty = _drawingRepository.GetPartQuantity(partId.Value);
-        return string.IsNullOrWhiteSpace(qty) ? DefaultQuantity : qty;
     }
 
     private static FrameworkElement? FindTaggedElement(DependencyObject parent, string tag)

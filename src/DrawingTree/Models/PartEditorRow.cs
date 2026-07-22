@@ -16,7 +16,6 @@ public class PartEditorRow : INotifyPropertyChanged
     private string _revision = string.Empty;
     private string _description = string.Empty;
     private string _previousDrawingNumber = string.Empty;
-    private string _quantityInAssembly = string.Empty;
     private bool _isAssembly;
     private string _pdfPath = string.Empty;
     private SaveStatus _status = SaveStatus.None;
@@ -54,13 +53,6 @@ public class PartEditorRow : INotifyPropertyChanged
     {
         get => _previousDrawingNumber;
         set { if (_previousDrawingNumber != value) { _previousDrawingNumber = value; OnPropertyChanged(); } }
-    }
-
-    /// <summary>Quantity this part appears with in its parent assembly (stored in part_tree).</summary>
-    public string QuantityInAssembly
-    {
-        get => _quantityInAssembly;
-        set { if (_quantityInAssembly != value) { _quantityInAssembly = value; OnPropertyChanged(); } }
     }
 
     public bool IsAssembly

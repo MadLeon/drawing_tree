@@ -442,32 +442,6 @@ public class DrawingRepository
     }
 
     /// <summary>
-    /// Returns the quantity from part_tree for the given child part.
-    /// If the part appears in multiple assemblies, returns the first found value.
-    /// Returns empty string if the part has no part_tree entry.
-    /// </summary>
-    /// <param name="partId">part.id of the child part</param>
-    public string GetPartQuantity(int partId)
-    {
-        try
-        {
-            using var conn = DatabaseConnectionFactory.OpenDevConnection();
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT quantity FROM part_tree WHERE child_id = @pid LIMIT 1";
-            cmd.Parameters.AddWithValue("@pid", partId);
-            var result = cmd.ExecuteScalar();
-            return result == null || result == DBNull.Value
-                ? string.Empty
-                : result.ToString() ?? string.Empty;
-        }
-        catch (Exception ex)
-        {
-            Logger.Instance.Error($"DrawingRepository.GetPartQuantity failed for partId={partId}: {ex.Message}");
-            return string.Empty;
-        }
-    }
-
-    /// <summary>
     /// Updates quantity for all part_tree entries where this part is a child.
     /// No-op when quantity is empty. Parses value as integer; defaults to 1 on parse failure.
     /// </summary>
