@@ -20,8 +20,13 @@ public static class DirFileService
     /// </summary>
     public static bool TemplateExists() => File.Exists(TemplatePath);
 
+    /// <summary>Only this customer archives DIR files in a per-PO subfolder; everyone else uses the root.</summary>
+    private const string PoSubfolderCustomer = "Candu";
+
     /// <summary>
     /// Resolves the DIR target folder for the given context without creating any files.
+    /// For <see cref="PoSubfolderCustomer"/> the folder is {DIR Folder}\{PO number}; for every other
+    /// customer it is the configured {DIR Folder} itself.
     /// The PO revision suffix (e.g. "-R.1", "-R01") is stripped via <see cref="OeNormalization.GetPoBase"/>
     /// so that different revisions of the same order share one target folder.
     /// Throws <see cref="DirFolderNotConfiguredException"/> when the customer has no configured folder.
@@ -31,6 +36,9 @@ public static class DirFileService
         var customerName = ctx.CustomerName ?? "Unknown";
         var baseFolder = DirConfig.GetDirFolder(customerName)
             ?? throw new DirFolderNotConfiguredException(customerName, DirConfig.ConfigFilePath);
+
+        if (!customerName.Trim().Equals(PoSubfolderCustomer, StringComparison.OrdinalIgnoreCase))
+            return baseFolder;
 
         var po = SanitizeFolderName(OeNormalization.GetPoBase(ctx.PoNumber));
         return string.IsNullOrEmpty(po) ? baseFolder : Path.Combine(baseFolder, po);
