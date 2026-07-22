@@ -278,6 +278,13 @@ public class OeColumnConfig : INotifyPropertyChanged
 
 public partial class AllPosControl : UserControl
 {
+    /// <summary>
+    /// Upper bound on child rows auto-expanded by a search. A broad term (a single letter) can
+    /// match thousands of descendants; past this many the remaining hits stay collapsed so the
+    /// mount pass never stalls. Users can still expand those rows manually.
+    /// </summary>
+    private const int MaxAutoExpandChildRows = 200;
+
     private readonly PoRepository _repository = new();
     private readonly DrawingRepository _drawingRepository = new();
     private List<PoListRow> _allRows = new();
@@ -288,9 +295,16 @@ public partial class AllPosControl : UserControl
     private bool _isSimpleView;
     private bool _isDataLoaded;
     private readonly DispatcherTimer _debounceTimer;
+    private readonly DispatcherTimer _overlayTimer;
 
     /// <summary>Bumped on every load/search/filter/toggle trigger; stale async work checks this to bail out.</summary>
     private int _loadGeneration;
+
+    /// <summary>Generation whose first screen has been mounted; equal to _loadGeneration once idle.</summary>
+    private int _mountedGeneration;
+
+    /// <summary>Data item the current search should centre in the viewport; null when nothing to scroll to.</summary>
+    private object? _scrollTarget;
 
     // ── Filter panel state (Customer / Contact / Due Date range) ────────────
     private string? _filterCustomer;
@@ -342,6 +356,17 @@ public partial class AllPosControl : UserControl
             var term = PoSearchBox.Text.Trim();
             SearchTerm = term;
             _ = ApplySearchAsync(term);
+        };
+
+        // A search rebuild usually finishes in a few dozen milliseconds. The mask is dark and
+        // full-screen, so showing it for that long reads as the page flashing black on every
+        // keystroke — only raise it once a rebuild proves slow enough to need feedback.
+        _overlayTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
+        _overlayTimer.Tick += (_, _) =>
+        {
+            _overlayTimer.Stop();
+            if (_loadGeneration != _mountedGeneration)
+                LoadingOverlay.Visibility = Visibility.Visible;
         };
 
         Loaded += OnLoaded;
@@ -439,39 +464,48 @@ public partial class AllPosControl : UserControl
         var childrenByPartId = _childrenByPartId;
         bool simple = _isSimpleView;
 
-        LoadingOverlay.Visibility = Visibility.Visible;
+        _overlayTimer.Stop();
+        _overlayTimer.Start();
         try
         {
             if (simple)
             {
                 var groups = await Task.Run(() =>
                 {
-                    var filtered = FilterRows(allRows, term, filterCustomer, filterContact, filterDueFrom, filterDueTo);
+                    var filtered = FilterRows(allRows, term, filterCustomer, filterContact, filterDueFrom, filterDueTo, childrenByPartId);
                     return BuildSimpleGroupsFull(filtered, term, pdfPartIds, mpPartIds, dirPartIds, childrenByPartId);
                 });
                 if (gen != _loadGeneration) return;
 
+                _scrollTarget = FindSimpleScrollTarget(groups, term);
                 SwitchViewVisibility(simple: true);
                 await MountIncrementallyAsync(SimpleViewList, groups, g => g.Items.Count, gen);
+                await ScrollTargetIntoViewAsync(SimpleViewScroll, gen);
             }
             else
             {
                 var groups = await Task.Run(() =>
                 {
-                    var filtered = FilterRows(allRows, term, filterCustomer, filterContact, filterDueFrom, filterDueTo);
-                    return BuildOeGroups(filtered, term, pdfPartIds, mpPartIds, dirPartIds);
+                    var filtered = FilterRows(allRows, term, filterCustomer, filterContact, filterDueFrom, filterDueTo, childrenByPartId);
+                    return BuildOeGroups(filtered, term, pdfPartIds, mpPartIds, dirPartIds, childrenByPartId);
                 });
                 if (gen != _loadGeneration) return;
 
+                _scrollTarget = FindOeScrollTarget(groups, term);
                 SwitchViewVisibility(simple: false);
                 await MountIncrementallyAsync(OeGroupsList, groups, g => g.Items.Count, gen);
+                await ScrollTargetIntoViewAsync(OeGroupsScroll, gen);
             }
         }
         catch (Exception ex)
         {
             Logger.Instance.Error("AllPosControl: failed to apply search/filter", ex);
             if (gen == _loadGeneration)
+            {
+                _overlayTimer.Stop();
+                _mountedGeneration = gen;
                 LoadingOverlay.Visibility = Visibility.Collapsed;
+            }
         }
     }
 
@@ -498,6 +532,8 @@ public partial class AllPosControl : UserControl
         // otherwise the user briefly sees a half-empty list instead of a spinner.
         await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Loaded);
         if (gen != _loadGeneration) return;
+        _overlayTimer.Stop();
+        _mountedGeneration = gen;
         LoadingOverlay.Visibility = Visibility.Collapsed;
 
         while (i < groups.Count)
@@ -511,6 +547,89 @@ public partial class AllPosControl : UserControl
         }
     }
 
+    // ── Scroll the first search hit into view ────────────────────────────────
+
+    /// <summary>
+    /// Picks the Simple View child row the viewport should centre on: the first matching descendant
+    /// drawing. Returns null when any top-level row matches, since that hit is what the user is
+    /// looking at and scrolling past it would be disorienting.
+    /// </summary>
+    /// <param name="groups">Built Simple View groups</param>
+    /// <param name="term">Search keyword</param>
+    /// <returns>The ChildDrawingItem to centre, or null when no scrolling is wanted</returns>
+    private static object? FindSimpleScrollTarget(List<PoSimpleGroup> groups, string term)
+    {
+        if (string.IsNullOrEmpty(term)) return null;
+
+        var items = groups.SelectMany(g => g.Items).ToList();
+        if (items.Any(i => RowMatchesTerm(i.Row, term))) return null;
+
+        return items.Where(i => i.IsExpanded)
+                    .SelectMany(i => i.Children)
+                    .FirstOrDefault(c => Contains(c.DrawingNumber, term) || Contains(c.Description, term));
+    }
+
+    /// <summary>OE View counterpart of FindSimpleScrollTarget; child rows are flattened into the group's row list.</summary>
+    /// <param name="groups">Built OE View groups</param>
+    /// <param name="term">Search keyword</param>
+    /// <returns>The child OeRowItem to centre, or null when no scrolling is wanted</returns>
+    private static object? FindOeScrollTarget(List<OePoGroup> groups, string term)
+    {
+        if (string.IsNullOrEmpty(term)) return null;
+
+        var items = groups.SelectMany(g => g.Items).ToList();
+        if (items.Any(i => !i.IsChildRow && RowMatchesTerm(i.Row, term))) return null;
+
+        return items.FirstOrDefault(i => i.IsChildRow
+            && (Contains(i.DrawingNumber, term) || Contains(i.Description, term)));
+    }
+
+    /// <summary>
+    /// Centres <see cref="_scrollTarget"/> in the given ScrollViewer once the mounted rows have been
+    /// laid out. Neither view virtualizes (see the ItemsPanel notes in AllPosControl.xaml), so the
+    /// target's container is guaranteed to exist by the time this runs.
+    /// </summary>
+    /// <param name="scroll">The active view's ScrollViewer</param>
+    /// <param name="gen">Load generation this scroll belongs to; a newer one supersedes it</param>
+    private async Task ScrollTargetIntoViewAsync(ScrollViewer scroll, int gen)
+    {
+        var target = _scrollTarget;
+        if (target == null) return;
+
+        await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Loaded);
+        if (gen != _loadGeneration) return;
+
+        var element = FindElementForItem(scroll, target);
+        if (element == null)
+        {
+            Logger.Instance.Warning("AllPosControl: search hit container not found, skipping scroll");
+            return;
+        }
+
+        var pos = element.TransformToAncestor(scroll).Transform(new System.Windows.Point(0, 0));
+        scroll.ScrollToVerticalOffset(
+            scroll.VerticalOffset + pos.Y - (scroll.ViewportHeight - element.ActualHeight) / 2);
+    }
+
+    /// <summary>Depth-first search of the visual tree for the first element bound to <paramref name="item"/>.</summary>
+    /// <param name="root">Subtree root to search</param>
+    /// <param name="item">The data item to locate</param>
+    /// <returns>The element whose DataContext is that item, or null</returns>
+    private static FrameworkElement? FindElementForItem(DependencyObject root, object item)
+    {
+        int count = VisualTreeHelper.GetChildrenCount(root);
+        for (int i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is FrameworkElement fe && ReferenceEquals(fe.DataContext, item))
+                return fe;
+
+            var found = FindElementForItem(child, item);
+            if (found != null) return found;
+        }
+        return null;
+    }
+
     private void SwitchViewVisibility(bool simple)
     {
         OeViewRoot.Visibility       = simple ? Visibility.Collapsed : Visibility.Visible;
@@ -521,7 +640,8 @@ public partial class AllPosControl : UserControl
     }
 
     private static List<PoListRow> FilterRows(List<PoListRow> allRows, string term,
-        string? filterCustomer, string? filterContact, DateTime? filterDueFrom, DateTime? filterDueTo)
+        string? filterCustomer, string? filterContact, DateTime? filterDueFrom, DateTime? filterDueTo,
+        Dictionary<int, List<ChildDrawingRow>> childrenByPartId)
     {
         bool hasFilter = filterCustomer != null || filterContact != null
             || filterDueFrom.HasValue || filterDueTo.HasValue;
@@ -530,7 +650,9 @@ public partial class AllPosControl : UserControl
             return allRows;
 
         var matchingPoIds = allRows
-            .Where(r => (string.IsNullOrEmpty(term) || RowMatchesTerm(r, term))
+            .Where(r => (string.IsNullOrEmpty(term)
+                            || RowMatchesTerm(r, term)
+                            || ChildMatchesTerm(r, term, childrenByPartId))
                         && RowMatchesFilters(r, filterCustomer, filterContact, filterDueFrom, filterDueTo))
             .Select(r => r.PoId)
             .ToHashSet();
@@ -541,6 +663,22 @@ public partial class AllPosControl : UserControl
         Contains(r.PoNumber,     term) || Contains(r.OeNumber,    term) ||
         Contains(r.JobNumber,    term) || Contains(r.DrawingNumber, term) ||
         Contains(r.Description,  term) || Contains(r.CustomerName, term);
+
+    /// <summary>
+    /// True when any prefetched descendant drawing of the row's part matches the term.
+    /// Descendants are collapsed in the UI, so without this a child drawing number is unsearchable.
+    /// </summary>
+    /// <param name="r">Top-level order-item row</param>
+    /// <param name="term">Search keyword</param>
+    /// <param name="childrenByPartId">Descendant drawings keyed by root part id (see LoadDataAsync)</param>
+    /// <returns>True if at least one descendant's drawing number or description contains the term</returns>
+    private static bool ChildMatchesTerm(PoListRow r, string term,
+        Dictionary<int, List<ChildDrawingRow>> childrenByPartId)
+    {
+        if (!r.PartId.HasValue || !childrenByPartId.TryGetValue(r.PartId.Value, out var children))
+            return false;
+        return children.Any(c => Contains(c.DrawingNumber, term) || Contains(c.Description, term));
+    }
 
     private static bool Contains(string? text, string term) =>
         text != null && text.Contains(term, StringComparison.OrdinalIgnoreCase);
@@ -650,31 +788,75 @@ public partial class AllPosControl : UserControl
     /// Builds the OE view's PO groups from scratch, mirroring BuildSimpleGroupsFull. Pure data
     /// construction (no UI element touched) so it can run on a background thread — see
     /// ApplySearchAsync. Expand state is not preserved across search/reload, matching Simple View.
+    /// Rows are collapsed by default; only rows whose sole match is a descendant drawing are
+    /// pre-expanded, so the hit is visible without the user hunting for it.
     /// </summary>
     private static List<OePoGroup> BuildOeGroups(List<PoListRow> rows, string term,
-        HashSet<int> pdfPartIds, HashSet<int> mpPartIds, HashSet<int> dirPartIds)
+        HashSet<int> pdfPartIds, HashSet<int> mpPartIds, HashSet<int> dirPartIds,
+        Dictionary<int, List<ChildDrawingRow>> childrenByPartId)
     {
         var groups = new List<OePoGroup>();
+        int autoExpanded = 0;
+
         foreach (var g in rows.GroupBy(r => r.PoId).OrderBy(g => g.First().OeNumber ?? g.First().PoNumber))
         {
             var group = new OePoGroup { PoId = g.Key };
             bool isFirst = true;
             foreach (var row in g.OrderBy(r => r.JobNumber).ThenBy(r => r.LineNumber))
             {
-                group.Items.Add(new OeRowItem(row, term)
+                var item = new OeRowItem(row, term)
                 {
                     IsFirstInPoGroup = isFirst,
                     HasPdf = row.PartId.HasValue && pdfPartIds.Contains(row.PartId.Value),
                     HasMp  = row.PartId.HasValue && mpPartIds.Contains(row.PartId.Value),
                     HasDir = row.PartId.HasValue && dirPartIds.Contains(row.PartId.Value),
                     ParentList = group.Items
-                });
+                };
+                group.Items.Add(item);
                 isFirst = false;
+
+                if (!ShouldAutoExpand(row, term, childrenByPartId, autoExpanded)) continue;
+
+                // Same child-row shape as OeExpandItem_Click, so a manual collapse removes them cleanly.
+                var children = childrenByPartId[row.PartId!.Value];
+                foreach (var c in children)
+                {
+                    var childItem = new OeRowItem(row, term)
+                    {
+                        IsChildRow = true,
+                        ChildData  = c,
+                        HasPdf     = pdfPartIds.Contains(c.PartId),
+                        HasMp      = mpPartIds.Contains(c.PartId),
+                        HasDir     = dirPartIds.Contains(c.PartId),
+                        ParentList = group.Items
+                    };
+                    group.Items.Add(childItem);
+                    item.ChildRows.Add(childItem);
+                }
+                item.IsExpanded = true;
+                autoExpanded += children.Count;
             }
             groups.Add(group);
         }
         return groups;
     }
+
+    /// <summary>
+    /// Decides whether a row should open automatically for the current search. Only rows that do
+    /// not match on their own fields qualify — a PO-number or customer search returns whole POs and
+    /// must not blow them open — and expansion stops once MaxAutoExpandChildRows is reached.
+    /// </summary>
+    /// <param name="row">Top-level order-item row</param>
+    /// <param name="term">Search keyword; empty means no auto-expansion at all</param>
+    /// <param name="childrenByPartId">Descendant drawings keyed by root part id</param>
+    /// <param name="autoExpandedSoFar">Child rows already auto-expanded in this build</param>
+    /// <returns>True when the row's descendants should be shown expanded</returns>
+    private static bool ShouldAutoExpand(PoListRow row, string term,
+        Dictionary<int, List<ChildDrawingRow>> childrenByPartId, int autoExpandedSoFar)
+        => !string.IsNullOrEmpty(term)
+           && autoExpandedSoFar < MaxAutoExpandChildRows
+           && !RowMatchesTerm(row, term)
+           && ChildMatchesTerm(row, term, childrenByPartId);
 
     /// <summary>Keeps the OE view's global sticky header in horizontal lockstep with the content below it.</summary>
     private void OeGroupsScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -695,6 +877,7 @@ public partial class AllPosControl : UserControl
         Dictionary<int, List<ChildDrawingRow>> childrenByPartId)
     {
         var groups = BuildSimpleGroups(rows, term);
+        int autoExpanded = 0;
 
         foreach (var item in groups.SelectMany(g => g.Items))
         {
@@ -718,6 +901,12 @@ public partial class AllPosControl : UserControl
                         HasDir = dirPartIds.Contains(c.PartId),
                         HasPdf = pdfPartIds.Contains(c.PartId)
                     });
+
+                if (ShouldAutoExpand(item.Row, term, childrenByPartId, autoExpanded))
+                {
+                    item.IsExpanded = true;
+                    autoExpanded += children.Count;
+                }
             }
         }
 
