@@ -27,7 +27,7 @@ public class PartEditorRow : INotifyPropertyChanged
     public string DrawingNumber
     {
         get => _drawingNumber;
-        set { if (_drawingNumber != value) { _drawingNumber = value; OnPropertyChanged(); } }
+        set { if (_drawingNumber != value) { _drawingNumber = value; OnPropertyChanged(); ClearStatus(); } }
     }
 
     public int? PartId
@@ -39,26 +39,26 @@ public class PartEditorRow : INotifyPropertyChanged
     public string Revision
     {
         get => _revision;
-        set { if (_revision != value) { _revision = value; OnPropertyChanged(); } }
+        set { if (_revision != value) { _revision = value; OnPropertyChanged(); ClearStatus(); } }
     }
 
     public string Description
     {
         get => _description;
-        set { if (_description != value) { _description = value; OnPropertyChanged(); } }
+        set { if (_description != value) { _description = value; OnPropertyChanged(); ClearStatus(); } }
     }
 
     /// <summary>Drawing number this part carried before a rename, as plain historical text (optional)</summary>
     public string PreviousDrawingNumber
     {
         get => _previousDrawingNumber;
-        set { if (_previousDrawingNumber != value) { _previousDrawingNumber = value; OnPropertyChanged(); } }
+        set { if (_previousDrawingNumber != value) { _previousDrawingNumber = value; OnPropertyChanged(); ClearStatus(); } }
     }
 
     public bool IsAssembly
     {
         get => _isAssembly;
-        set { if (_isAssembly != value) { _isAssembly = value; OnPropertyChanged(); } }
+        set { if (_isAssembly != value) { _isAssembly = value; OnPropertyChanged(); ClearStatus(); } }
     }
 
     public string PdfPath
@@ -81,6 +81,12 @@ public class PartEditorRow : INotifyPropertyChanged
             }
         }
     }
+
+    /// <summary>
+    /// Drops the save result icon as soon as an editable field changes, so the icon
+    /// always reflects the values currently shown in the row rather than an older save.
+    /// </summary>
+    private void ClearStatus() => Status = SaveStatus.None;
 
     public bool IsSuccess => _status == SaveStatus.Success;
     public bool IsError   => _status == SaveStatus.Error;

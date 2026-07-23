@@ -29,8 +29,8 @@ namespace DrawingTree.Controls;
 /// </summary>
 public partial class PartEditorControl : UserControl
 {
-    /// <summary>Quantity written to part_tree on save; the column is not user-editable here.</summary>
-    private const string DefaultQuantity = "1";
+    /// <summary>Revision pre-filled when the drawing has no matching part in the DB.</summary>
+    private const string DefaultRevision = "0";
 
     private readonly DrawingRepository _drawingRepository = new();
     private readonly ObservableCollection<PartEditorRow> _rows = new();
@@ -84,7 +84,7 @@ public partial class PartEditorControl : UserControl
                     PartId                  = dbInfo?.PartId,
                     OriginalDrawingNumber   = drawingNumber,
                     DrawingNumber           = drawingNumber,
-                    Revision           = dbInfo?.Revision    ?? string.Empty,
+                    Revision           = dbInfo?.Revision    ?? DefaultRevision,
                     Description        = dbInfo?.Description ?? string.Empty,
                     IsAssembly         = dbInfo?.IsAssembly  ?? false,
                     PdfPath            = dbInfo?.PdfPath.Length > 0 ? dbInfo.PdfPath : pdfPath,
@@ -138,11 +138,8 @@ public partial class PartEditorControl : UserControl
             return;
         }
 
-        // Quantity lives in part_tree, not part, so it is saved independently of the
-        // part field diff/overwrite confirmation below. It is not editable in this page
-        // and is always stored as DefaultQuantity.
-        _drawingRepository.UpdatePartTreeQuantity(row.PartId.Value, DefaultQuantity);
-
+        // Quantity is not touched here: it belongs to part_tree (a parent/child relationship),
+        // which only exists once the tree is built. Tree Builder defaults it to 1 on save.
         bool same = row.Revision              == dbInfo.Revision              &&
                     row.Description           == dbInfo.Description           &&
                     row.IsAssembly            == dbInfo.IsAssembly            &&
@@ -253,7 +250,7 @@ public partial class PartEditorControl : UserControl
         // Refresh the row from DB
         DrawingInfo? dbInfo = _drawingRepository.GetDrawingInfo(newNumber);
         row.PartId      = dbInfo?.PartId;
-        row.Revision    = dbInfo?.Revision    ?? string.Empty;
+        row.Revision    = dbInfo?.Revision    ?? DefaultRevision;
         row.Description = dbInfo?.Description ?? string.Empty;
         row.IsAssembly  = dbInfo?.IsAssembly  ?? false;
         row.PreviousDrawingNumber = dbInfo?.PreviousDrawingNumber ?? string.Empty;
@@ -264,15 +261,19 @@ public partial class PartEditorControl : UserControl
     }
 
     /// <summary>
-    /// Moves focus down the Previous Drawing # column, so the whole column can be filled
-    /// in one pass without reaching for the mouse.
+    /// Moves focus down the Previous Drawing # column on Enter, so the whole column can be
+    /// filled in one pass without reaching for the mouse. Bound to a key press rather than
+    /// LostFocus, because stealing focus whenever the box is left cascades down every row.
     /// </summary>
-    /// <param name="sender">Previous Drawing # text box that lost focus</param>
-    /// <param name="e">Routed event args</param>
-    private void PreviousDrawingNumber_LostFocus(object sender, RoutedEventArgs e)
+    /// <param name="sender">Previous Drawing # text box being typed in</param>
+    /// <param name="e">Key event args</param>
+    private void PreviousDrawingNumber_PreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (e.Key != Key.Enter) return;
         if (sender is not FrameworkElement el || el.DataContext is not PartEditorRow row) return;
+
         FocusNextRowElement(row, "PreviousDrawingTextBox");
+        e.Handled = true;
     }
 
     private void RowOpenPdfButton_Click(object sender, RoutedEventArgs e)

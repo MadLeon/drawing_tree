@@ -139,7 +139,7 @@
                                              Text="{Binding PreviousDrawingNumber, UpdateSourceTrigger=PropertyChanged}"
                                              Height="26" Padding="4,3" FontSize="12" Margin="2,1"
                                              Tag="PreviousDrawingTextBox"
-                                             LostFocus="PreviousDrawingNumber_LostFocus"/>
+                                             PreviewKeyDown="PreviousDrawingNumber_PreviewKeyDown"/>
 
                                     <!-- Col 5: Revision -->
                                     <TextBox Grid.Column="5"
