@@ -5,13 +5,6 @@
 - DISCUS 是否具备输出中间json的可能性
 - 是否有图纸标注的开源项目
 
-添加dir的粗糙度问题
-bubble drawing 区域点击复制按钮后, 复制的信息为最后一个'-'后面的内容, 
-- 举例, Hook Assembly of Extension Tool - Hook Weldment - Hook -> Hook
-- 如果没有破折号, 则原样输出
-
-process detail 关联时, 定位到的文件夹应该是 {mp文件夹}\{经过过滤的PO号}这个文件夹, 而不是config中的mp文件夹或者没经过过滤的PO
-
 ---
 
 OE 同步 - 逻辑图解

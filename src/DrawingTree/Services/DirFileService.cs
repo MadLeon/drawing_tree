@@ -52,6 +52,39 @@ public static class DirFileService
         => $"{(drawingNumber ?? string.Empty).Trim()} REV. {(revision ?? string.Empty).Trim()} @{jobNumber.Trim()}"
             .ToUpperInvariant() + ".xlsm";
 
+    /// <summary>
+    /// Extracts the job number embedded in a DIR file name, i.e. the part after the last '@'
+    /// in "{DrawingNumber} REV. {Revision} @{JobNumber}.xlsm". Returns null when absent.
+    /// </summary>
+    /// <param name="fileName">DIR file name or full path</param>
+    /// <returns>Job number without extension, or null when the name carries no '@' marker</returns>
+    public static string? ExtractJobNumber(string? fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName)) return null;
+
+        var baseName = Path.GetFileNameWithoutExtension(fileName);
+        var at = baseName.LastIndexOf('@');
+        if (at < 0) return null;
+
+        var job = baseName[(at + 1)..].Trim();
+        return job.Length > 0 ? job : null;
+    }
+
+    /// <summary>
+    /// Returns whether a DIR file belongs to the given job, based on the job number in its file name.
+    /// A file whose name carries no job number is treated as not belonging to the job, so that
+    /// associating an older order's DIR never marks it as the current order's file.
+    /// </summary>
+    /// <param name="fileName">DIR file name or full path</param>
+    /// <param name="jobNumber">Job number of the current order item</param>
+    /// <returns>True when both job numbers are present and equal</returns>
+    public static bool BelongsToJob(string? fileName, string? jobNumber)
+    {
+        var fileJob = ExtractJobNumber(fileName);
+        return fileJob != null && !string.IsNullOrWhiteSpace(jobNumber) &&
+               fileJob.Equals(jobNumber.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+
     /// <summary>Workbook extensions accepted as DIR files.</summary>
     private static readonly string[] DirExtensions = { ".xlsm", ".xlsx" };
 
@@ -140,7 +173,7 @@ public static class DirFileService
 
             SetCell(ws, "C6",  ctx.CustomerName);
             SetCell(ws, "C7",  $"{ctx.DrawingNumber} REV. {ctx.Revision}");
-            SetCell(ws, "C8",  ctx.Description);
+            SetCell(ws, "C8",  DescriptionFormatter.LastSegment(ctx.Description));
             SetCell(ws, "C11", "INCH");
             SetCell(ws, "H6",  ctx.JobNumber);
             SetCell(ws, "H7",  ctx.OeNumber);

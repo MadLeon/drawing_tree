@@ -630,8 +630,9 @@ public partial class PartDetailControl : UserControl
                 // GetExistingFiles is ordered newest first, so the first file is the active one.
                 for (int i = 0; i < found.Count; i++)
                 {
-                    _partRepository.AddDirAttachment(_partId, _orderItemId,
-                        System.IO.Path.GetFileName(found[i]), found[i], isActive: i == 0);
+                    var name = System.IO.Path.GetFileName(found[i]);
+                    _partRepository.AddDirAttachment(_partId, ResolveDirOrderItemId(name),
+                        name, found[i], isActive: i == 0);
                 }
                 LoadDirSection();
                 return;
@@ -649,10 +650,21 @@ public partial class PartDetailControl : UserControl
             existing.Count == 0);
         if (pick == null || existingPaths.Contains(pick.FilePath)) return;
 
-        _partRepository.AddDirAttachment(_partId, _orderItemId,
-            System.IO.Path.GetFileName(pick.FilePath), pick.FilePath, pick.SetAsActive);
+        var pickedName = System.IO.Path.GetFileName(pick.FilePath);
+        _partRepository.AddDirAttachment(_partId, ResolveDirOrderItemId(pickedName),
+            pickedName, pick.FilePath, pick.SetAsActive);
         LoadDirSection();
     }
+
+    /// <summary>
+    /// Decides which order item an associated DIR file belongs to. A file whose name carries this
+    /// order's job number is linked to the current order item; anything else (an earlier order's DIR,
+    /// or a name without a job number) is stored unlinked so it shows up as "archived".
+    /// </summary>
+    /// <param name="fileName">DIR file name being associated</param>
+    /// <returns>Current order item id, or 0 when the file belongs to another order</returns>
+    private int ResolveDirOrderItemId(string fileName)
+        => DirFileService.BelongsToJob(fileName, _mpContext?.JobNumber) ? _orderItemId : 0;
 
     // ── Bubble Drawing ───────────────────────────────────────────────────
 
@@ -796,22 +808,8 @@ public partial class PartDetailControl : UserControl
     private void CopyBubbleNameButton_Click(object sender, RoutedEventArgs e)
     {
         if (_header == null) return;
-        var text = $"{_header.DrawingNumber} Rev{_header.Revision} {LastDescriptionSegment(_header.Description)}";
+        var text = $"{_header.DrawingNumber} Rev{_header.Revision} {DescriptionFormatter.LastSegment(_header.Description)}";
         System.Windows.Clipboard.SetText(text);
-    }
-
-    /// <summary>
-    /// Returns the part of the description after the last dash, or the description unchanged
-    /// when it contains no dash.
-    /// </summary>
-    /// <param name="description">Full description, possibly an assembly chain joined by dashes</param>
-    /// <returns>Trimmed last segment of the description</returns>
-    private static string LastDescriptionSegment(string? description)
-    {
-        if (string.IsNullOrWhiteSpace(description)) return string.Empty;
-
-        var dash = description.LastIndexOf('-');
-        return dash < 0 ? description.Trim() : description[(dash + 1)..].Trim();
     }
 
     private void AssociateBubbleButton_Click(object sender, RoutedEventArgs e)
