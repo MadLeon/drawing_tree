@@ -5,6 +5,13 @@
 - DISCUS 是否具备输出中间json的可能性
 - 是否有图纸标注的开源项目
 
+UI
+项目重构
+扫描功能
+
+Process Detail点击 update之后, 应该直接更新成completed, 而不是 in progress
+同时, 当这个件是总装图时, 应该尝试更新每个其包含的零件的process template到最后一步
+
 ---
 
 OE 同步 - 逻辑图解
