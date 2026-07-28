@@ -12,6 +12,16 @@ UI
 Process Detail点击 update之后, 应该直接更新成completed, 而不是 in progress
 同时, 当这个件是总装图时, 应该尝试更新每个其包含的零件的process template到最后一步
 
+OE 界面, DIR列的显示逻辑不正确, archive的数据存在时, 也会打check mark
+
+part details 界面的 MP 区域, 关联按钮模仿 dir 区域的行为, 在没有找到合适的关联对象时, 弹出手动选择对话框
+
+dir添加ra选项
+SR surface roughness
+
+SR-MRR material removal required
+
+
 ---
 
 OE 同步 - 逻辑图解
